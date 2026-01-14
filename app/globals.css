@@ -1,0 +1,170 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Smooth transitions */
+.hover-lift {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px -10px rgba(0, 0, 0, 0.1);
+}
+
+.hover-scale {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-scale:hover {
+  transform: scale(1.05);
+}
+
+.hover-rotate {
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-rotate:hover {
+  transform: rotate(12deg);
+}
+
+html,
+body,
+:root {
+  height: 100%;
+}
+
+@layer base {
+  :root {
+    /* Akomapa LMS Color Scheme */
+    --background: 180 20% 99%; /* Brilliance #fdfefe */
+    --foreground: 215 28% 17%; /* Dark Slate #1e293b */
+
+    --card: 0 0% 100%;
+    --card-foreground: 215 28% 17%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 28% 17%;
+
+    --primary: 189 100% 35%; /* Munsell Blue #0097b2 */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 189 47% 89%; /* Ice Cold #d5edf1 */
+    --secondary-foreground: 215 28% 17%;
+
+    --muted: 189 47% 89%; /* Ice Cold #d5edf1 */
+    --muted-foreground: 215 17% 50%; /* Slate #64748b */
+
+    --accent: 44 83% 55%; /* Nicotine Gold #ebb92b */
+    --accent-foreground: 215 28% 17%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 189 47% 78%; /* Light Blue #aadce5 */
+    --input: 189 47% 89%; /* Ice Cold #d5edf1 */
+    --ring: 189 100% 35%; /* Munsell Blue #0097b2 */
+
+    --radius: 0.5rem;
+
+    /* Akomapa Brand Colors */
+    --akomapa-teal: 189 100% 35%;
+    --akomapa-teal-dark: 188 97% 36%;
+    --akomapa-teal-light: 190 69% 44%;
+    --akomapa-gold: 44 83% 55%;
+    --akomapa-ice: 189 47% 89%;
+    --akomapa-light-blue: 189 47% 78%;
+    --akomapa-cream: 180 20% 99%;
+  }
+
+  .dark {
+    --background: 215 28% 10%;
+    --foreground: 189 47% 95%;
+
+    --card: 215 28% 12%;
+    --card-foreground: 189 47% 95%;
+
+    --popover: 215 28% 12%;
+    --popover-foreground: 189 47% 95%;
+
+    --primary: 189 100% 40%; /* Lighter teal for dark mode */
+    --primary-foreground: 215 28% 10%;
+
+    --secondary: 215 28% 20%;
+    --secondary-foreground: 189 47% 95%;
+
+    --muted: 215 28% 20%;
+    --muted-foreground: 189 47% 70%;
+
+    --accent: 44 83% 55%; /* Nicotine Gold */
+    --accent-foreground: 215 28% 10%;
+
+    --destructive: 0 62% 40%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 215 28% 25%;
+    --input: 215 28% 25%;
+    --ring: 189 100% 40%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+.ql-container {
+  font-size: 16px !important;
+}
+
+@import "~@uploadthing/react/styles.css"
