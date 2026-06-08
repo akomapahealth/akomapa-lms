@@ -1,4 +1,4 @@
-# Akomapa LMS Platform
+# Akomapa Academy
 
 <div align="center">
 
