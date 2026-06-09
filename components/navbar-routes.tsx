@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { UserButton, useAuth } from "@clerk/nextjs";
 import { usePathname} from "next/navigation";
 import { LogOut } from "lucide-react";
@@ -22,8 +23,10 @@ export const NavbarRoutes = () => {
     return (
         <>
         {isSearchPage && (
-            <div className="hidden md:block pl-56">
-                <SearchInput />
+            <div className="hidden md:block flex-1 max-w-md mx-4">
+                <Suspense fallback={null}>
+                    <SearchInput />
+                </Suspense>
             </div>
         )}
             <div className="flex gap-x-2 ml-auto">
@@ -47,9 +50,7 @@ export const NavbarRoutes = () => {
                         </Button>
                     </Link>
                 ) : null}
-                <UserButton 
-                    afterSignOutUrl="/sign-in"
-                />
+                <UserButton />
             </div>
         </>
     )

@@ -34,7 +34,7 @@ export const SidebarItem = ({
             onClick={onClick}
             type="button"
             className={cn(
-                "flex items-center gap-x-2 text-slate-500 text-sm font-[500] pl-6 transition-all hover:text-akomapa-teal hover:bg-akomapa-ice/50", 
+                "flex items-center gap-x-2 text-slate-500 text-sm font-[500] pl-6 w-full transition-all hover:text-akomapa-teal hover:bg-akomapa-ice/50", 
                 isActive && "text-akomapa-teal bg-akomapa-ice/50 hover:bg-akomapa-ice/50 hover:text-akomapa-teal"
             )}
         >
