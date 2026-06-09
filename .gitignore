@@ -37,3 +37,8 @@ yarn-error.log*
 next-env.d.ts
 
 CHANGELOG.md
+
+# local agent / IDE skill directories
+.claude/
+.codex/
+.cursor/
