@@ -9,6 +9,7 @@ export const Logo = () => {
                 alt="Akomapa LMS"
                 src="/akomapa-logo.png"
                 className="object-contain"
+                style={{ width: "auto", height: "auto" }}
             />
         </div>
     )

@@ -16,6 +16,7 @@ const AuthLayout = ({
                     src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=2670&auto=format&fit=crop"
                     alt="Healthcare professionals training"
                     fill
+                    sizes="(max-width: 767px) 0px, 50vw"
                     className="object-cover hover-scale transition-transform duration-700"
                     priority
                 />
@@ -113,6 +114,7 @@ const AuthLayout = ({
                                 alt="Akomapa Health Logo" 
                                 src="/akomapa-logo.png"
                                 className="object-contain hover-rotate"
+                                style={{ width: "auto", height: "auto" }}
                             />
                             {/* <div className="text-center">
                                 <h1 className="text-3xl font-bold text-akomapa-teal">Akomapa LMS</h1>
