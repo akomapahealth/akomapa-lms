@@ -2,31 +2,15 @@ import path from "node:path";
 import { defineConfig } from "prisma/config";
 import { config } from "dotenv";
 
-// Load environment variables from .env file
 config();
 
+const cliDatabaseUrl = process.env.DIRECT_URL ?? process.env.DATABASE_URL;
+
 export default defineConfig({
-  earlyAccess: true,
   schema: path.join(__dirname, "prisma", "schema.prisma"),
-
-  datasource: {
-    url: process.env.DATABASE_URL!,
-    directUrl: process.env.DIRECT_URL,
-  },
-
-  migrate: {
-    async resolveSchema() {
-      return {
-        kind: "file",
-        path: path.join(__dirname, "prisma", "schema.prisma"),
-      };
-    },
-    async resolveDatasource() {
-      return {
-        url: process.env.DATABASE_URL!,
-        directUrl: process.env.DIRECT_URL,
-      };
-    },
+  ...(cliDatabaseUrl ? { datasource: { url: cliDatabaseUrl } } : {}),
+  migrations: {
+    path: path.join(__dirname, "prisma", "migrations"),
+    seed: "tsx scripts/seed.ts",
   },
 });
-
