@@ -4,8 +4,10 @@ import { NextResponse } from "next/server";
 
 export async function PATCH(
     req: Request,
-    { params }: { params: { courseId: string } }
+    { params }: { params: Promise<{ courseId: string }> }
 ) {
+        const routeParams = await params;
+
     try {
         const { userId } = await auth();
 
@@ -15,7 +17,7 @@ export async function PATCH(
 
         const course = await db.course.findUnique({
             where: {
-                id: params.courseId,
+                id: routeParams.courseId,
                 userId,
             },
         });
@@ -26,7 +28,7 @@ export async function PATCH(
 
         const unpublishedCourse = await db.course.update({
             where: {
-                id: params.courseId,
+                id: routeParams.courseId,
             },
             data: {
                 isPublished: false,
