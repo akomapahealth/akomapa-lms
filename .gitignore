@@ -35,3 +35,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+CHANGELOG.md
+
+# local agent / IDE skill directories
+.claude/
+.codex/
+.cursor/

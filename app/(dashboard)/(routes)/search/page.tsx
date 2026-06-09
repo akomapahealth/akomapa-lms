@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 
 import { db } from "@/lib/db";
 
@@ -39,12 +40,16 @@ const SearchPage = async ({
     return (
         <> 
             <div className="px-6 pt-6 md:hidden md:mb-0 block">
-                <SearchInput />
+                <Suspense fallback={null}>
+                    <SearchInput />
+                </Suspense>
             </div>
             <div className="p-6 space-y-4">
-                <Categories 
-                    items={categories}
-                />
+                <Suspense fallback={null}>
+                    <Categories 
+                        items={categories}
+                    />
+                </Suspense>
                 <CoursesList 
                     items={courses}
                 />

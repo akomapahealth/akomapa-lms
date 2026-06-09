@@ -3,11 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "prisma generate && prisma migrate deploy && next build",
+    "dev": "next dev --webpack",
+    "build": "prisma generate && prisma migrate deploy && next build --webpack",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio",
+    "seed": "tsx scripts/seed.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.15.0",
@@ -16,8 +19,8 @@
     "@hookform/resolvers": "^3.4.2",
     "@mux/mux-node": "^8.7.1",
     "@mux/mux-player-react": "^2.7.0",
-    "@prisma/adapter-pg": "^7.2.0",
-    "@prisma/client": "^7.2.0",
+    "@prisma/adapter-pg": "7.8.0",
+    "@prisma/client": "7.8.0",
     "@radix-ui/react-alert-dialog": "^1.0.5",
     "@radix-ui/react-checkbox": "^1.0.4",
     "@radix-ui/react-dialog": "^1.0.5",
@@ -28,15 +31,16 @@
     "@radix-ui/react-separator": "^1.0.3",
     "@radix-ui/react-slot": "^1.0.2",
     "@tanstack/react-table": "^8.17.3",
-    "@uploadthing/react": "^6.6.0",
+    "@uploadthing/react": "^7.3.3",
     "axios": "^1.7.2",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
+    "dotenv": "^16.4.5",
     "framer-motion": "^12.14.0",
     "lucide-react": "^0.379.0",
     "mdb-react-ui-kit": "^8.0.0",
-    "next": "^15.1.0",
+    "next": "^16.2.6",
     "pg": "^8.16.3",
     "query-string": "^9.0.0",
     "react": "^18",
@@ -46,16 +50,15 @@
     "react-hook-form": "^7.51.5",
     "react-hot-toast": "^2.4.1",
     "react-icons": "^5.2.1",
-    "react-quill": "^0.0.2",
+    "react-quill": "^2.0.0",
     "recharts": "^2.12.7",
     "stripe": "^15.12.0",
     "svix": "^1.33.0",
     "tailwind-merge": "^2.3.0",
     "tailwindcss-animate": "^1.0.7",
-    "uploadthing": "^6.12.0",
+    "uploadthing": "^7.7.4",
     "zod": "^3.23.8",
-    "zustand": "^4.5.2",
-    "dotenv": "^16.4.5"
+    "zustand": "^4.5.2"
   },
   "devDependencies": {
     "@types/node": "^20",
@@ -65,8 +68,9 @@
     "eslint": "^8",
     "eslint-config-next": "^15.1.0",
     "postcss": "^8",
-    "prisma": "^7.2.0",
+    "prisma": "7.8.0",
     "tailwindcss": "^3.4.1",
+    "tsx": "^4.22.4",
     "typescript": "^5"
   }
 }

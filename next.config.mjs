@@ -1,5 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    transpilePackages: [
+        "@uploadthing/react",
+        "uploadthing",
+        "@uploadthing/shared",
+        "@uploadthing/mime-types",
+    ],
     images: {
         remotePatterns: [
             {

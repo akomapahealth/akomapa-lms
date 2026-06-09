@@ -14,8 +14,10 @@ const Video  = mux.video;
 
 export async function DELETE(
     req: Request,
-    { params }: { params: { courseId: string } }
+    { params }: { params: Promise<{ courseId: string }> }
 ) {
+        const routeParams = await params;
+
     try {
         const { userId } = await auth();
 
@@ -25,7 +27,7 @@ export async function DELETE(
 
         const course = await db.course.findUnique({
             where: {
-                id: params.courseId,
+                id: routeParams.courseId,
                 userId: userId,
             },
             include: {
@@ -49,7 +51,7 @@ export async function DELETE(
 
         const deletedCourse = await db.course.delete({
             where: {
-                id: params.courseId,
+                id: routeParams.courseId,
             },
         });
 
@@ -62,11 +64,11 @@ export async function DELETE(
 
 export async function PATCH(
     req: Request,
-    { params }: { params: { courseId: string } }
+    { params }: { params: Promise<{ courseId: string }> }
 ) {
     try {
         const { userId } = await auth();
-        const { courseId } = params;
+        const { courseId } = await params;
         const values = await req.json();
 
         if (!userId || !(await isTeacherServer(userId))) {
