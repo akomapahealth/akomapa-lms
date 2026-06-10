@@ -50,6 +50,28 @@ const CourseLayout = async ({
                     },
                 },
             },
+            quizzes: {
+                where: {
+                    isPublished: true,
+                },
+                select: {
+                    id: true,
+                    title: true,
+                    type: true,
+                    attempts: {
+                        where: {
+                            userId,
+                            completedAt: { not: null },
+                        },
+                        orderBy: { score: "desc" },
+                        take: 1,
+                        select: {
+                            score: true,
+                            totalPoints: true,
+                        },
+                    },
+                },
+            },
         },
     })
 
@@ -68,6 +90,21 @@ const CourseLayout = async ({
 
     const progressCount = await getProgress(userId, course.id);
 
+    // Map quizzes for the sidebar
+    const sidebarQuizzes = course.quizzes.map((q) => {
+        const bestAttempt = q.attempts[0];
+        const passed = bestAttempt && bestAttempt.totalPoints
+            ? (bestAttempt.score! / bestAttempt.totalPoints) * 100 >= 70
+            : false;
+        return {
+            id: q.id,
+            title: q.title,
+            type: q.type,
+            hasAttempt: q.attempts.length > 0,
+            passed,
+        };
+    });
+
     return (
         <div className="h-full">
             <div className="h-[80px] md:pl-80 fixed inset-y-0 w-full z-50">
@@ -76,6 +113,7 @@ const CourseLayout = async ({
                     modules={course.modules}
                     progressCount={progressCount}
                     isPurchased={!!purchase}
+                    quizzes={sidebarQuizzes}
                 />
             </div>
             <div className="hidden md:flex h-full w-80 flex-col fixed inset-y-0 z-50">
@@ -84,6 +122,7 @@ const CourseLayout = async ({
                     modules={course.modules}
                     progressCount={progressCount}
                     isPurchased={!!purchase}
+                    quizzes={sidebarQuizzes}
                 />
             </div>
             <main className="md:pl-80 pt-[80px] h-full">

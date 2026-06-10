@@ -84,7 +84,7 @@ export default async function Dashboard({
             <TopicProgressSection
               modules={progressBreakdown?.modules ?? []}
             />
-            <QuizProgressSection quizzes={quizProgress} />
+            <QuizProgressSection quizzes={quizProgress} courseId={courseId} />
           </div>
 
           <TimeProgressChart

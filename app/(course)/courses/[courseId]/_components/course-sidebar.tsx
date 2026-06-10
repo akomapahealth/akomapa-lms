@@ -1,11 +1,15 @@
 "use client";
 
+import Link from "next/link";
 import { Course, Module, Topic, UserProgress } from "@prisma/client";
+import { FileQuestion, Lock, CheckCircle2, Circle } from "lucide-react";
 import { CourseProgress } from "@/components/course-progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Accordion } from "@/components/ui/accordion";
+import { Separator } from "@/components/ui/separator";
 import { CourseSidebarModule } from "./course-sidebar-module";
 import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 type TopicWithProgress = Topic & {
   userProgress: UserProgress[] | null;
@@ -15,11 +19,20 @@ type ModuleWithTopics = Module & {
   topics: TopicWithProgress[];
 };
 
+export interface SidebarQuiz {
+  id: string;
+  title: string;
+  type: string;
+  hasAttempt: boolean;
+  passed: boolean;
+}
+
 interface CourseSidebarProps {
   course: Course;
   modules: ModuleWithTopics[];
   progressCount: number;
   isPurchased: boolean;
+  quizzes?: SidebarQuiz[];
 }
 
 export const CourseSidebar = ({
@@ -27,6 +40,7 @@ export const CourseSidebar = ({
   modules,
   progressCount,
   isPurchased,
+  quizzes = [],
 }: CourseSidebarProps) => {
   const pathname = usePathname();
 
@@ -41,6 +55,10 @@ export const CourseSidebar = ({
       acc + mod.topics.filter((t) => t.userProgress?.[0]?.isCompleted).length,
     0
   );
+
+  const preTest = quizzes.find((q) => q.type === "PRE_TEST");
+  const postTest = quizzes.find((q) => q.type === "POST_TEST");
+  const moduleQuizzes = quizzes.filter((q) => q.type === "MODULE_QUIZ");
 
   return (
     <div className="h-full border-r flex flex-col overflow-hidden shadow-sm">
@@ -59,6 +77,29 @@ export const CourseSidebar = ({
         )}
       </div>
       <ScrollArea className="flex-1">
+        {/* Pre-Test Link */}
+        {preTest && (
+          <div className="px-4 pt-3">
+            <Link
+              href={`/courses/${course.id}/quiz/${preTest.id}`}
+              className={cn(
+                "flex items-center gap-2 p-2 rounded-md text-sm transition hover:bg-slate-100",
+                pathname?.includes(preTest.id)
+                  ? "bg-akomapa-teal/10 text-akomapa-teal"
+                  : "text-slate-600"
+              )}
+            >
+              <FileQuestion className="h-4 w-4 flex-shrink-0" />
+              <span className="truncate">{preTest.title}</span>
+              {preTest.passed ? (
+                <CheckCircle2 className="h-3.5 w-3.5 ml-auto text-emerald-500 flex-shrink-0" />
+              ) : preTest.hasAttempt ? (
+                <Circle className="h-3.5 w-3.5 ml-auto text-amber-500 flex-shrink-0" />
+              ) : null}
+            </Link>
+          </div>
+        )}
+
         <Accordion
           type="multiple"
           defaultValue={activeModuleId ? [activeModuleId] : []}
@@ -74,6 +115,30 @@ export const CourseSidebar = ({
             />
           ))}
         </Accordion>
+
+        {/* Post-Test Link */}
+        {postTest && (
+          <div className="px-4 pb-3">
+            <Separator className="mb-3" />
+            <Link
+              href={`/courses/${course.id}/quiz/${postTest.id}`}
+              className={cn(
+                "flex items-center gap-2 p-2 rounded-md text-sm transition hover:bg-slate-100",
+                pathname?.includes(postTest.id)
+                  ? "bg-akomapa-teal/10 text-akomapa-teal"
+                  : "text-slate-600"
+              )}
+            >
+              <FileQuestion className="h-4 w-4 flex-shrink-0" />
+              <span className="truncate">{postTest.title}</span>
+              {postTest.passed ? (
+                <CheckCircle2 className="h-3.5 w-3.5 ml-auto text-emerald-500 flex-shrink-0" />
+              ) : (
+                <Lock className="h-3.5 w-3.5 ml-auto text-slate-400 flex-shrink-0" />
+              )}
+            </Link>
+          </div>
+        )}
       </ScrollArea>
     </div>
   );

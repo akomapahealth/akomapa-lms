@@ -7,7 +7,7 @@ import {
     SheetTrigger
 } from "@/components/ui/sheet";
 
-import { CourseSidebar } from "./course-sidebar";
+import { CourseSidebar, type SidebarQuiz } from "./course-sidebar";
 
 type TopicWithProgress = Topic & {
     userProgress: UserProgress[] | null;
@@ -22,6 +22,7 @@ interface CourseMobileSidebarProps {
     modules: ModuleWithTopics[];
     progressCount: number;
     isPurchased: boolean;
+    quizzes?: SidebarQuiz[];
 };
 
 export const CourseMobileSidebar = ({
@@ -29,6 +30,7 @@ export const CourseMobileSidebar = ({
     modules,
     progressCount,
     isPurchased,
+    quizzes,
 }: CourseMobileSidebarProps) => {
         return (
             <Sheet>
@@ -41,6 +43,7 @@ export const CourseMobileSidebar = ({
                         modules={modules}
                         progressCount={progressCount}
                         isPurchased={isPurchased}
+                        quizzes={quizzes}
                     />
                 </SheetContent>
             </Sheet>

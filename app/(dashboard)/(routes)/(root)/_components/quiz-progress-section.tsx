@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/status-badge";
 import { type QuizProgressItem } from "@/actions/get-quiz-progress";
@@ -5,6 +6,7 @@ import { FileQuestion } from "lucide-react";
 
 interface QuizProgressSectionProps {
   quizzes: QuizProgressItem[];
+  courseId?: string;
 }
 
 const quizStatusMap = {
@@ -15,6 +17,7 @@ const quizStatusMap = {
 
 export const QuizProgressSection = ({
   quizzes,
+  courseId,
 }: QuizProgressSectionProps) => {
   return (
     <Card className="p-4">
@@ -28,33 +31,51 @@ export const QuizProgressSection = ({
         </div>
       ) : (
         <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
-          {quizzes.map((quiz, index) => (
-            <div
-              key={quiz.quizId}
-              className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0"
-            >
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-slate-700 truncate">
-                  {index + 1}. {quiz.title}
-                </p>
-                {quiz.moduleName && (
-                  <p className="text-xs text-slate-400 truncate">
-                    {quiz.moduleName}
+          {quizzes.map((quiz, index) => {
+            const content = (
+              <div
+                className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0 hover:bg-slate-50/50 transition rounded -mx-1 px-1"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-slate-700 truncate">
+                    {index + 1}. {quiz.title}
                   </p>
-                )}
+                  {quiz.moduleName && (
+                    <p className="text-xs text-slate-400 truncate">
+                      {quiz.moduleName}
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 shrink-0 ml-2">
+                  {quiz.bestScore !== null && (
+                    <span className="text-sm font-medium text-slate-600">
+                      {Math.round(quiz.bestScore)}%
+                    </span>
+                  )}
+                  <StatusBadge status={quizStatusMap[quiz.status]} />
+                </div>
               </div>
-              <div className="flex items-center gap-2 shrink-0 ml-2">
-                {quiz.bestScore !== null && (
-                  <span className="text-sm font-medium text-slate-600">
-                    {Math.round(quiz.bestScore)}%
-                  </span>
-                )}
-                <StatusBadge status={quizStatusMap[quiz.status]} />
-              </div>
-            </div>
-          ))}
+            );
+
+            return courseId ? (
+              <Link
+                key={quiz.quizId}
+                href={`/courses/${courseId}/quiz/${quiz.quizId}`}
+              >
+                {content}
+              </Link>
+            ) : (
+              <div key={quiz.quizId}>{content}</div>
+            );
+          })}
         </div>
       )}
+      <Link
+        href="/grades"
+        className="block text-center text-xs text-akomapa-teal hover:underline mt-3 pt-2 border-t border-slate-100"
+      >
+        View All Grades →
+      </Link>
     </Card>
   );
 };
