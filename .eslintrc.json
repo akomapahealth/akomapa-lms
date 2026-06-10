@@ -1,3 +1,21 @@
 {
-  "extends": "next/core-web-vitals"
+  "extends": [
+    "next/core-web-vitals",
+    "plugin:security/recommended-legacy"
+  ],
+  "plugins": ["security"],
+  "rules": {
+    "security/detect-object-injection": "off",
+    "no-eval": "error",
+    "no-implied-eval": "error",
+    "no-new-func": "error"
+  },
+  "overrides": [
+    {
+      "files": ["scripts/**/*.ts"],
+      "rules": {
+        "security/detect-non-literal-fs-filename": "off"
+      }
+    }
+  ]
 }
