@@ -111,7 +111,7 @@ const AuthLayout = ({
                             <Image 
                                 height={200}
                                 width={200}
-                                alt="Akomapa Health Logo" 
+                                alt="Akomapa Academy Logo" 
                                 src="/akomapa-logo.png"
                                 className="object-contain hover-rotate"
                                 style={{ width: "auto", height: "auto" }}
@@ -153,7 +153,7 @@ const AuthLayout = ({
 
                     {/* Footer */}
                     <div className="mt-8 text-center text-sm text-gray-600 animate-fade-in">
-                        <p>© {currentYear} Akomapa Health Foundation. All rights reserved.</p>
+                        <p>© {currentYear} Akomapa Academy. All rights reserved.</p>
                         <div className="flex justify-center space-x-4 mt-2">
                             <a href="https://www.akomapa.org" target="_blank" rel="noopener noreferrer" className="hover:text-akomapa-teal transition-colors duration-300 hover-lift">Visit Website</a>
                             <a href="#" className="hover:text-akomapa-teal transition-colors duration-300 hover-lift">Privacy Policy</a>
