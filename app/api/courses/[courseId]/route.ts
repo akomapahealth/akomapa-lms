@@ -3,7 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
-import { isTeacherServer } from "@/lib/teacher-server";
+import { isFaculty } from "@/lib/roles";
 
 const mux = new Mux({
     tokenId: process.env.MUX_TOKEN_ID,
@@ -21,7 +21,7 @@ export async function DELETE(
     try {
         const { userId } = await auth();
 
-        if (!userId || !(await isTeacherServer(userId))) {
+        if (!userId || !(await isFaculty(userId))) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
@@ -31,9 +31,13 @@ export async function DELETE(
                 userId: userId,
             },
             include: {
-                chapters: {
+                modules: {
                     include: {
-                        muxData: true,
+                        topics: {
+                            include: {
+                                muxData: true,
+                            }
+                        }
                     }
                 }
             }
@@ -43,9 +47,11 @@ export async function DELETE(
             return new NextResponse("Course not found", { status: 404 });
         }
 
-        for (const chapter of course.chapters) {
-            if (chapter.muxData?.assetId) {
-                await Video.assets.delete(chapter.muxData.assetId);
+        for (const module of course.modules) {
+            for (const topic of module.topics) {
+                if (topic.muxData?.assetId) {
+                    await Video.assets.delete(topic.muxData.assetId);
+                }
             }
         }
 
@@ -71,7 +77,7 @@ export async function PATCH(
         const { courseId } = await params;
         const values = await req.json();
 
-        if (!userId || !(await isTeacherServer(userId))) {
+        if (!userId || !(await isFaculty(userId))) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
