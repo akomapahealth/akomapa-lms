@@ -1,11 +1,10 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { FileQuestion, Plus } from "lucide-react";
+import { FileQuestion } from "lucide-react";
 
 import { db } from "@/lib/db";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -15,20 +14,32 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-const AdminQuizzesPage = async () => {
+import { CreateQuizButton } from "./_components/create-quiz-button";
+
+const CourseQuizzesPage = async ({
+  params,
+}: {
+  params: Promise<{ courseId: string }>;
+}) => {
+  const { courseId } = await params;
   const { userId } = await auth();
 
   if (!userId) {
     return redirect("/sign-in");
   }
 
+  const course = await db.course.findUnique({
+    where: { id: courseId },
+    select: { title: true },
+  });
+
   const quizzes = await db.quiz.findMany({
+    where: { courseId },
     include: {
-      course: { select: { id: true, title: true } },
       module: { select: { title: true } },
       _count: { select: { questions: true, attempts: true } },
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: { createdAt: "asc" },
   });
 
   const typeLabels: Record<string, string> = {
@@ -40,7 +51,16 @@ const AdminQuizzesPage = async () => {
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-slate-800">All Quizzes</h1>
+        <div>
+          <p className="text-sm text-slate-500">
+            <Link href="/admin/courses" className="hover:text-akomapa-teal">
+              Courses
+            </Link>{" "}
+            / {course?.title}
+          </p>
+          <h1 className="text-2xl font-bold text-slate-800">Quizzes</h1>
+        </div>
+        <CreateQuizButton courseId={courseId} />
       </div>
 
       {quizzes.length === 0 ? (
@@ -49,7 +69,7 @@ const AdminQuizzesPage = async () => {
             <FileQuestion className="h-10 w-10 text-slate-400 mx-auto mb-2" />
             <p className="text-slate-500 text-lg">No quizzes yet</p>
             <p className="text-slate-400 text-sm mt-1">
-              Create quizzes from within a course
+              Create your first quiz for this course
             </p>
           </div>
         </div>
@@ -59,10 +79,11 @@ const AdminQuizzesPage = async () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Title</TableHead>
-                <TableHead>Course</TableHead>
                 <TableHead>Type</TableHead>
+                <TableHead>Module</TableHead>
                 <TableHead className="text-center">Questions</TableHead>
-                <TableHead className="text-center">Attempts</TableHead>
+                <TableHead className="text-center">Time Limit</TableHead>
+                <TableHead className="text-center">Passing</TableHead>
                 <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
@@ -71,30 +92,28 @@ const AdminQuizzesPage = async () => {
                 <TableRow key={quiz.id}>
                   <TableCell className="font-medium">
                     <Link
-                      href={`/admin/courses/${quiz.courseId}/quizzes/${quiz.id}`}
+                      href={`/admin/courses/${courseId}/quizzes/${quiz.id}`}
                       className="hover:text-akomapa-teal transition"
                     >
                       {quiz.title}
                     </Link>
-                  </TableCell>
-                  <TableCell className="text-sm text-slate-500">
-                    {quiz.course?.title ?? "—"}
-                    {quiz.module && (
-                      <span className="text-xs text-slate-400 block">
-                        {quiz.module.title}
-                      </span>
-                    )}
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline">
                       {typeLabels[quiz.type] ?? quiz.type}
                     </Badge>
                   </TableCell>
+                  <TableCell className="text-sm text-slate-500">
+                    {quiz.module?.title ?? "—"}
+                  </TableCell>
                   <TableCell className="text-center">
                     {quiz._count.questions}
                   </TableCell>
                   <TableCell className="text-center">
-                    {quiz._count.attempts}
+                    {quiz.timeLimitMinutes ? `${quiz.timeLimitMinutes}min` : "—"}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {quiz.passingScore}%
                   </TableCell>
                   <TableCell>
                     <Badge
@@ -115,4 +134,4 @@ const AdminQuizzesPage = async () => {
   );
 };
 
-export default AdminQuizzesPage;
+export default CourseQuizzesPage;
