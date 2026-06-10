@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { Pencil } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { Chapter } from "@prisma/client";
+import { Topic } from "@prisma/client";
 
 import {
     Form,
@@ -26,7 +26,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 
 interface ChapterAccessFormProps {
-    initialData: Chapter;
+    initialData: Topic;
     courseId: string;
     chapterId: string;
 };

@@ -1,10 +1,10 @@
 import { db } from "@/lib/db";
-import { Category, Chapter, Course } from "@prisma/client";
+import { Category, Topic, Course, Module } from "@prisma/client";
 import { getProgress } from "./get-progress";
 
 type CourseWithProgressWithCategory = Course & {
     category: Category;
-    chapters: Chapter[];
+    modules: (Module & { topics: Topic[] })[];
     progress: number | null;
 }
 
@@ -23,9 +23,16 @@ export const getDashboardCourses = async (userId: string): Promise<DashboardCour
                 course: {
                     include: {
                         category: true,
-                        chapters: {
+                        modules: {
                             where: {
                                 isPublished: true,
+                            },
+                            include: {
+                                topics: {
+                                    where: {
+                                        isPublished: true,
+                                    }
+                                }
                             }
                         }
                     }
@@ -41,7 +48,7 @@ export const getDashboardCourses = async (userId: string): Promise<DashboardCour
         }
 
         const completedCourses = courses.filter((course) => course.progress === 100);
-        const coursesInProgress = courses.filter((course) => (course.progress ?? 0) < 100); // ?? 0 is for nullish coalescing
+        const coursesInProgress = courses.filter((course) => (course.progress ?? 0) < 100);
 
         return {
             completedCourses,

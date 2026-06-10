@@ -13,22 +13,41 @@ const CourseId = async ({
             id: courseId,
         },
         include: {
-            chapters: {
+            modules: {
                 where: {
                     isPublished: true,
                 },
                 orderBy: {
                     position: "asc",
-                }
-            }
-        }
+                },
+                include: {
+                    topics: {
+                        where: {
+                            isPublished: true,
+                        },
+                        orderBy: {
+                            position: "asc",
+                        },
+                    },
+                },
+            },
+        },
     });
 
     if (!course) {
         return redirect("/");
     }
 
-    return redirect(`/courses/${course.id}/chapters/${course.chapters[0].id}`);
+    // Find the first published topic across all modules
+    const firstTopic = course.modules
+        .flatMap((mod) => mod.topics)
+        .at(0);
+
+    if (!firstTopic) {
+        return redirect("/");
+    }
+
+    return redirect(`/courses/${course.id}/chapters/${firstTopic.id}`);
 }
- 
+
 export default CourseId;

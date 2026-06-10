@@ -1,5 +1,5 @@
 import { getProgress } from "@/actions/get-progress";
-import { db} from "@/lib/db";
+import { db } from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { CourseSidebar } from "./_components/course-sidebar";
@@ -25,40 +25,55 @@ const CourseLayout = async ({
             id: courseId,
         },
         include: {
-            chapters: {
+            modules: {
                 where: {
                     isPublished: true,
                 },
-                include: {
-                    userProgress: {
-                        where: {
-                            userId,
-                        }
-                    }
-                },
                 orderBy: {
                     position: "asc",
-                }
-            }
-        }
+                },
+                include: {
+                    topics: {
+                        where: {
+                            isPublished: true,
+                        },
+                        include: {
+                            userProgress: {
+                                where: {
+                                    userId,
+                                },
+                            },
+                        },
+                        orderBy: {
+                            position: "asc",
+                        },
+                    },
+                },
+            },
+        },
     })
 
     if (!course) {
         return redirect("/");
     }
 
+    // Flatten topics from all modules for sidebar display
+    const topics = course.modules.flatMap((mod) => mod.topics);
+
     const progressCount = await getProgress(userId, course.id);
     return (
         <div className="h-full">
             <div className="h-[80px] md:pl-80 fixed inset-y-0 w-full z-50">
-                <CourseNavbar 
+                <CourseNavbar
                     course={course}
+                    topics={topics}
                     progressCount={progressCount}
                 />
             </div>
             <div className="hidden md:flex h-full w-80 flex-col fixed inset-y-0 z-50">
-                <CourseSidebar 
+                <CourseSidebar
                     course={course}
+                    topics={topics}
                     progressCount={progressCount}
                 />
             </div>

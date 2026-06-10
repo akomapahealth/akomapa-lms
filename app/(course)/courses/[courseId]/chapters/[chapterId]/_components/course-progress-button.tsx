@@ -10,17 +10,17 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 
 interface CourseProgressButtonProps {
-    chapterId: string;
+    topicId: string;
     courseId: string;
     isCompleted?: boolean
-    nextChapterId?: string;
+    nextTopicId?: string;
 }
 
 export const CourseProgressButton = ({
-    chapterId,
+    topicId,
     courseId,
     isCompleted,
-    nextChapterId,
+    nextTopicId,
 }: CourseProgressButtonProps) => {
     const router = useRouter();
     const confetti = useConfettiStore();
@@ -30,16 +30,16 @@ export const CourseProgressButton = ({
         try {
             setIsLoading(true);
 
-            await axios.put(`/api/courses/${courseId}/chapters/${chapterId}/progress`, {
+            await axios.put(`/api/courses/${courseId}/chapters/${topicId}/progress`, {
                 isCompleted: !isCompleted
             });
 
-            if (!isCompleted && !nextChapterId) {
+            if (!isCompleted && !nextTopicId) {
                 confetti.onOpen();
             }
 
-            if (!isCompleted && nextChapterId) {
-                router.push(`/courses/${courseId}/chapters/${nextChapterId}`);
+            if (!isCompleted && nextTopicId) {
+                router.push(`/courses/${courseId}/chapters/${nextTopicId}`);
             }
 
             toast.success("Progress updated");

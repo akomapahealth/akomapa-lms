@@ -27,26 +27,41 @@ export async function POST(
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        const lastChapter = await db.chapter.findFirst({
+        // Find or create a default module for the course
+        let defaultModule = await db.module.findFirst({
+            where: { courseId: routeParams.courseId, title: "General" },
+        });
+        if (!defaultModule) {
+            defaultModule = await db.module.create({
+                data: {
+                    title: "General",
+                    courseId: routeParams.courseId,
+                    position: 0,
+                    isPublished: true,
+                },
+            });
+        }
+
+        const lastTopic = await db.topic.findFirst({
             where: {
-                courseId: routeParams.courseId,
+                moduleId: defaultModule.id,
             },
             orderBy: {
                 position: "desc",
             },
         });
 
-        const newPosition = lastChapter ? lastChapter.position + 1 : 1;
+        const newPosition = lastTopic ? lastTopic.position + 1 : 1;
 
-        const chapter = await db.chapter.create({
+        const topic = await db.topic.create({
             data: {
                 title,
-                courseId: routeParams.courseId,
+                moduleId: defaultModule.id,
                 position: newPosition,
             }
         });
 
-        return NextResponse.json(chapter);
+        return NextResponse.json(topic);
 
     } catch (error) {
         console.log("[CHAPTERS]", error);

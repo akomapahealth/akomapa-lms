@@ -1,5 +1,5 @@
 import { Menu } from "lucide-react";
-import {  Chapter, Course, UserProgress } from "@prisma/client";
+import { Course, Topic, UserProgress } from "@prisma/client";
 
 import {
     Sheet,
@@ -7,19 +7,21 @@ import {
     SheetTrigger
 } from "@/components/ui/sheet";
 
-import { CourseSidebar } from "./course-sidebar"; 
+import { CourseSidebar } from "./course-sidebar";
+
+type TopicWithProgress = Topic & {
+    userProgress: UserProgress[] | null;
+};
 
 interface CourseMobileSidebarProps {
-    course: Course & {
-        chapters: (Chapter & {
-            userProgress: UserProgress[] | null;
-        })[];
-    };
+    course: Course;
+    topics: TopicWithProgress[];
     progressCount: number;
 };
 
 export const CourseMobileSidebar = ({
     course,
+    topics,
     progressCount,
 }: CourseMobileSidebarProps) => {
         return (
@@ -28,8 +30,9 @@ export const CourseMobileSidebar = ({
                     <Menu />
                 </SheetTrigger>
                 <SheetContent side="left" className="p-0 bg-white w-72">
-                    <CourseSidebar 
+                    <CourseSidebar
                         course={course}
+                        topics={topics}
                         progressCount={progressCount}
                     />
                 </SheetContent>

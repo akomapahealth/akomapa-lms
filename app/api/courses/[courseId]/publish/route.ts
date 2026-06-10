@@ -20,20 +20,17 @@ export async function PATCH(
                 id: routeParams.courseId,
                 userId,
             },
-            include: {
-                chapters: {
-                    include: {
-                        muxData: true,
-                    }
-                }
-            }
         });
 
         if (!course) {
             return new NextResponse("Course not found", { status: 404 });
         }
 
-        const hasPublishedChapter = course.chapters.some((chapter) => chapter.isPublished);
+        const publishedTopics = await db.topic.findMany({
+            where: { module: { courseId: routeParams.courseId }, isPublished: true }
+        });
+
+        const hasPublishedChapter = publishedTopics.length > 0;
 
         if (!course.title || !course.description || !course.imageUrl || !course.categoryId || !hasPublishedChapter) {
             return new NextResponse("Missing required fields", { status: 401 });

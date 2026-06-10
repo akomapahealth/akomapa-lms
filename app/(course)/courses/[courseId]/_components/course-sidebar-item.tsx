@@ -25,7 +25,7 @@ export const CourseSidebarItem = ({
     const Icon = isLocked ? Lock : (isCompleted ? CheckCircle : PlayCircle);
 
     const isActive = pathname?.includes(id);
-    
+
     const onClick = () => {
         router.push(`/courses/${courseId}/chapters/${id}`);
     }
@@ -41,7 +41,7 @@ export const CourseSidebarItem = ({
             )}
         >
             <div className="flex items-center gap-x-2 py-4">
-                <Icon 
+                <Icon
                     size={22}
                     className={cn(
                         "text-slate-500",
@@ -51,11 +51,11 @@ export const CourseSidebarItem = ({
                 />
                 {label}
             </div>
-            <div 
+            <div
                 className={cn(
                     "ml-auto opacity-0 border-2 border-akomapa-teal h-full transition-all",
                     isActive && "opacity-100",
-                    isCompleted && "border-emerald-700"     
+                    isCompleted && "border-emerald-700"
                 )}
             />
         </button>

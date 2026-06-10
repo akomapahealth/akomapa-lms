@@ -35,21 +35,20 @@ export async function DELETE(
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        const chapter = await db.chapter.findUnique({
+        const topic = await db.topic.findUnique({
             where:{
                 id: routeParams.chapterId,
-                courseId: routeParams.courseId
             }
         });
 
-        if (!chapter) {
-            return new NextResponse("Chapter Not Found", { status: 404 });
+        if (!topic) {
+            return new NextResponse("Topic Not Found", { status: 404 });
         }
 
-        if (chapter.videoUrl) {
+        if (topic.videoUrl) {
             const existingMuxData = await db.muxData.findFirst({
                 where: {
-                    chapterId: routeParams.chapterId,
+                    topicId: routeParams.chapterId,
                 }
             });
 
@@ -63,20 +62,20 @@ export async function DELETE(
             }
         }
 
-        const deletedChapter = await db.chapter.delete({
+        const deletedTopic = await db.topic.delete({
             where: {
                 id: routeParams.chapterId,
             }
         });
 
-        const publishedChaptersInCourse = await db.chapter.findMany({
+        const publishedTopicsInCourse = await db.topic.findMany({
             where: {
-                courseId: routeParams.courseId,
+                module: { courseId: routeParams.courseId },
                 isPublished: true,
             }
         });
 
-        if (!publishedChaptersInCourse.length) {
+        if (!publishedTopicsInCourse.length) {
             await db.course.update({
                 where: {
                     id: routeParams.courseId,
@@ -87,7 +86,7 @@ export async function DELETE(
             });
         }
 
-        return NextResponse.json(deletedChapter);
+        return NextResponse.json(deletedTopic);
     } catch (error) {
         console.log("[CHAPTER_ID_DELETE]", error);
 
@@ -121,10 +120,9 @@ export async function PATCH(
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        const chapter = await db.chapter.update({
+        const updatedTopic = await db.topic.update({
             where: {
                 id: routeParams.chapterId,
-                courseId: routeParams.courseId
             },
             data: {
                 ...values,
@@ -134,7 +132,7 @@ export async function PATCH(
         if (values.videoUrl) {
             const existingMuxData = await db.muxData.findFirst({
                 where: {
-                    chapterId: routeParams.chapterId,
+                    topicId: routeParams.chapterId,
                 }
             });
 
@@ -155,14 +153,14 @@ export async function PATCH(
 
             await db.muxData.create({
                 data: {
-                    chapterId: routeParams.chapterId,
+                    topicId: routeParams.chapterId,
                     assetId: asset.id,
                     playbackId: asset.playback_ids?.[0]?.id || 'defaultPlaybackId',
                 }
             });
         }
 
-        return NextResponse.json(chapter);
+        return NextResponse.json(updatedTopic);
 
     } catch (error) {
         console.log("[COURSES_CHAPTER_ID]", error);

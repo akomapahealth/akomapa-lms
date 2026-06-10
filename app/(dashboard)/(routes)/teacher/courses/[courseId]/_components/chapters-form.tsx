@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { Loader2, Pencil, PlusCircle } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { Course, Chapter } from "@prisma/client";
+import { Course, Topic } from "@prisma/client";
 
 import {
     Form,
@@ -25,7 +25,7 @@ import { ChaptersList } from "./chapters-list";
 
 
 interface ChaptersFormProps {
-    initialData: Course & { chapters: Chapter[] };
+    initialData: Course & { chapters: Topic[] };
     courseId: string;
 };
 

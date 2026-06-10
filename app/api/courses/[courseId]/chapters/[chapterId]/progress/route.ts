@@ -19,9 +19,9 @@ export async function PUT(
 
         const userProgress = await db.userProgress.upsert({
             where: {
-                userId_chapterId: {
+                userId_topicId: {
                     userId,
-                    chapterId: routeParams.chapterId,
+                    topicId: routeParams.chapterId,
                 }
             },
             update: {
@@ -29,7 +29,7 @@ export async function PUT(
             },
             create: {
                 userId,
-                chapterId: routeParams.chapterId,
+                topicId: routeParams.chapterId,
                 isCompleted,
             }
         });

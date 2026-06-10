@@ -33,7 +33,14 @@ const CourseIdPage = async ({
             userId
         },
         include: {
-            chapters: {
+            modules: {
+                include: {
+                    topics: {
+                        orderBy: {
+                            position: "asc",
+                        },
+                    },
+                },
                 orderBy: {
                     position: "asc",
                 },
@@ -62,7 +69,7 @@ const CourseIdPage = async ({
         course.imageUrl,
         course.price,
         course.categoryId,
-        course.chapters.some(chapter => chapter.isPublished),
+        course.modules.some(m => m.topics.some(t => t.isPublished)),
     ];
 
     const totalFields = requiredFields.length;
@@ -132,8 +139,11 @@ const CourseIdPage = async ({
                                     Course chapters
                                 </h2>
                             </div>
-                            <ChaptersForm 
-                                initialData={course}
+                            <ChaptersForm
+                                initialData={{
+                                    ...course,
+                                    chapters: course.modules.flatMap(m => m.topics),
+                                }}
                                 courseId={course.id}
                             />
                         </div>

@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { File } from "lucide-react";
 
-import { getChapter } from "@/actions/get-chapter";
+import { getTopic } from "@/actions/get-topic";
 import { Banner } from "@/components/banner";
 import { Separator } from "@/components/ui/separator";
 import { Preview } from "@/components/preview";
@@ -25,47 +25,47 @@ const ChapterIdPage = async ({
     }
 
     const {
-        chapter,
+        topic,
         course,
         muxData,
         attachments,
-        nextChapter,
+        nextTopic,
         userProgress,
         purchase,
-    } = await getChapter({
+    } = await getTopic({
         userId,
-        chapterId: chapterId,
+        topicId: chapterId,
         courseId: courseId,
     });
 
-    if (!chapter || !course) {
+    if (!topic || !course) {
         return redirect("/");
     }
 
-    const isLocked = !chapter.isFree && !purchase;
+    const isLocked = !topic.isFree && !purchase;
     const completeOnEnd = !!purchase && !userProgress?.isCompleted;
-    return ( 
+    return (
         <div>
             {userProgress?.isCompleted && (
-                <Banner 
+                <Banner
                     variant="success"
-                    label="You already complete the chapter"
+                    label="You already completed this topic"
                 />
             )}
             {isLocked && (
-                <Banner 
+                <Banner
                     variant="warning"
-                    label="You need to purchase this course to watch this chapter"
+                    label="You need to purchase this course to watch this topic"
                 />
             )}
 
             <div className="flex flex-col max-w-4xl mx-auto pb-20">
                 <div className="p-4">
-                    <VideoPlayer 
-                        chapterId={chapterId}
-                        title={chapter.title}
+                    <VideoPlayer
+                        topicId={chapterId}
+                        title={topic.title}
                         courseId={courseId}
-                        nextChapterId={nextChapter?.id}
+                        nextTopicId={nextTopic?.id}
                         playbackId={muxData?.playbackId!}
                         isLocked={isLocked}
                         completeOnEnd={completeOnEnd}
@@ -74,17 +74,17 @@ const ChapterIdPage = async ({
                 <div>
                     <div className="p-4 flex flex-col md:flex-row items-center justify-between">
                         <h2 className="text-2xl font-semibold mb-2">
-                            {chapter.title}
+                            {topic.title}
                         </h2>
                         {purchase ? (
-                            <CourseProgressButton 
-                                chapterId={chapterId}
+                            <CourseProgressButton
+                                topicId={chapterId}
                                 courseId={courseId}
-                                nextChapterId={nextChapter?.id}
+                                nextTopicId={nextTopic?.id}
                                 isCompleted={!!userProgress?.isCompleted}
                             />
                         ): (
-                            <CourseEnrollButton 
+                            <CourseEnrollButton
                                 courseId={courseId}
                                 price={course.price!}
                             />
@@ -92,7 +92,7 @@ const ChapterIdPage = async ({
                     </div>
                     <Separator />
                     <div>
-                        <Preview value={chapter.description!} />
+                        <Preview value={topic.description!} />
                     </div>
                     {!!attachments.length && (
                         <>
@@ -119,5 +119,5 @@ const ChapterIdPage = async ({
         </div>
      );
 }
- 
+
 export default ChapterIdPage;

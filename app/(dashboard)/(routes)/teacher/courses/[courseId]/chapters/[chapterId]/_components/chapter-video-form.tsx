@@ -6,7 +6,7 @@ import MuxPlayer from "@mux/mux-player-react";
 import { Pencil, PlusCircle, VideoIcon } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { Chapter, MuxData } from "@prisma/client";
+import { Topic, MuxData } from "@prisma/client";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
@@ -16,7 +16,7 @@ import { FileUpload } from "@/components/file-upload";
 
 
 interface ChapterVideoFormProps {
-    initialData: Chapter & { muxData?: MuxData | null };
+    initialData: Topic & { muxData?: MuxData | null };
     courseId: string;
     chapterId: string;
 };

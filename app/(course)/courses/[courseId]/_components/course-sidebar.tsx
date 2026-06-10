@@ -1,21 +1,23 @@
 import { db } from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
-import { Chapter, Course, UserProgress } from "@prisma/client";
+import { Course, Topic, UserProgress } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { CourseSidebarItem } from "./course-sidebar-item";
 import { CourseProgress } from "@/components/course-progress";
 
+type TopicWithProgress = Topic & {
+    userProgress: UserProgress[] | null;
+};
+
 interface CourseSidebarProps {
-    course: Course & {
-        chapters: (Chapter & {
-            userProgress: UserProgress[] | null;
-        })[]
-    };
+    course: Course;
+    topics: TopicWithProgress[];
     progressCount: number;
 };
 
 export const CourseSidebar = async ({
     course,
+    topics,
     progressCount
 }: CourseSidebarProps) => {
     const { userId } = await auth();
@@ -33,7 +35,7 @@ export const CourseSidebar = async ({
         }
     });
 
-    return ( 
+    return (
         <div className="h-full border-r flex flex-col overflow-y-auto shadow-sm">
             <div className="p-8 flex flex-col border-b">
                 <h1 className="font-semibold">
@@ -41,7 +43,7 @@ export const CourseSidebar = async ({
                 </h1>
                 {purchase && (
                     <div className="mt-10">
-                        <CourseProgress 
+                        <CourseProgress
                             variant="success"
                             value={progressCount}
                         />
@@ -49,14 +51,14 @@ export const CourseSidebar = async ({
                 )}
             </div>
             <div className="flex flex-col w-full">
-                {course.chapters.map((chapter) => (
-                    <CourseSidebarItem 
-                        key={chapter.id}
-                        id={chapter.id}
-                        label={chapter.title}
-                        isCompleted={!!chapter.userProgress?.[0]?.isCompleted}
+                {topics.map((topic) => (
+                    <CourseSidebarItem
+                        key={topic.id}
+                        id={topic.id}
+                        label={topic.title}
+                        isCompleted={!!topic.userProgress?.[0]?.isCompleted}
                         courseId={course.id}
-                        isLocked={!chapter.isFree && !purchase}
+                        isLocked={!topic.isFree && !purchase}
                     />
                 ))}
             </div>

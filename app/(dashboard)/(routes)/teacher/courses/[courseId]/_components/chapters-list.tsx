@@ -1,6 +1,6 @@
 "use client";
 
-import { Chapter } from "@prisma/client";
+import { Topic } from "@prisma/client";
 import { useEffect, useState } from "react";
 
 import {
@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
 interface ChaptersListProps {
-    items: Chapter[];
+    items: Topic[];
     onReorder: (updateData: {id: string; position: number}[]) => void;
     onEdit: (id: string) => void;
 };
