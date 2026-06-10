@@ -10,6 +10,7 @@ export const Logo = () => {
                 src="/akomapa-logo.png"
                 className="object-contain"
                 style={{ width: "auto", height: "auto" }}
+                priority
             />
         </div>
     )

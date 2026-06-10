@@ -23,7 +23,7 @@ const AnalyticsPage = async () => {
                 <DataCard 
                     label="Total Revenue"
                     value={totalRevenue}
-                    shouldFormart
+                    shouldFormat
                 />
                 <DataCard 
                     label="Total Sales"

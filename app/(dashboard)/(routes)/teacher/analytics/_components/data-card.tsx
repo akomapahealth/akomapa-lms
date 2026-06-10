@@ -9,13 +9,13 @@ import { formatPrice } from "@/lib/format";
 interface DataCardProps {
     value: number;
     label: string;
-    shouldFormart?: boolean;
+    shouldFormat?: boolean;
 };
 
 export const DataCard = ({
     value,
     label,
-    shouldFormart
+    shouldFormat
 }: DataCardProps) => {
     return (
         <Card>
@@ -26,7 +26,7 @@ export const DataCard = ({
             </CardHeader>
             <CardContent>
                 <div className="text-2xl font-bold">
-                    {shouldFormart ? formatPrice(value) : value}
+                    {shouldFormat ? formatPrice(value) : value}
                 </div>
             </CardContent>
         </Card>
