@@ -30,14 +30,18 @@ export const CourseProgressButton = ({
         try {
             setIsLoading(true);
 
-            await axios.put(`/api/courses/${courseId}/chapters/${topicId}/progress`, {
+            const response = await axios.put(`/api/courses/${courseId}/chapters/${topicId}/progress`, {
                 isCompleted: !isCompleted
             });
 
-            // Trigger confetti when completing the last topic (no next topic)
             if (!isCompleted && !nextTopicId) {
+                // Last topic in the entire course
                 confetti.onOpen();
                 toast.success("Course completed! Congratulations!");
+            } else if (!isCompleted && response.data.isModuleComplete) {
+                // Last topic in the current module
+                confetti.onOpen();
+                toast.success(`Module "${response.data.moduleName}" completed!`);
             } else if (!isCompleted) {
                 toast.success("Topic completed!");
             }

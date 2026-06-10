@@ -34,7 +34,48 @@ export async function PUT(
             }
         });
 
-        return NextResponse.json(userProgress);
+        // Check if this completion finishes the entire module
+        let isModuleComplete = false;
+        let moduleName = "";
+
+        if (isCompleted) {
+            const topic = await db.topic.findUnique({
+                where: { id: routeParams.chapterId },
+                select: {
+                    moduleId: true,
+                    module: {
+                        select: {
+                            title: true,
+                            topics: {
+                                where: { isPublished: true },
+                                select: {
+                                    id: true,
+                                    userProgress: {
+                                        where: { userId },
+                                        select: { isCompleted: true },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            });
+
+            if (topic?.module) {
+                moduleName = topic.module.title;
+                isModuleComplete = topic.module.topics.every((t) =>
+                    t.id === routeParams.chapterId
+                        ? true // just completed this one
+                        : t.userProgress.some((p) => p.isCompleted)
+                );
+            }
+        }
+
+        return NextResponse.json({
+            ...userProgress,
+            isModuleComplete,
+            moduleName,
+        });
 
     } catch (error) {
         console.log("[CHAPTER_ID_PROGRESS]", error);
