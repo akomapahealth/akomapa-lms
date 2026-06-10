@@ -47,8 +47,8 @@ export async function DELETE(
             return new NextResponse("Course not found", { status: 404 });
         }
 
-        for (const module of course.modules) {
-            for (const topic of module.topics) {
+        for (const courseModule of course.modules) {
+            for (const topic of courseModule.topics) {
                 if (topic.muxData?.assetId) {
                     await Video.assets.delete(topic.muxData.assetId);
                 }

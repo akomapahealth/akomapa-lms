@@ -63,7 +63,7 @@ async function main() {
     }
 
     // Create default module
-    const module = await db.module.create({
+    const defaultModule = await db.module.create({
       data: {
         title: "General",
         courseId: course.id,
@@ -77,7 +77,7 @@ async function main() {
     // Assign chapters to module using raw SQL
     // (since the Prisma schema may not have courseId on Topic anymore)
     const result = await db.$executeRaw`
-      UPDATE "Chapter" SET "moduleId" = ${module.id} WHERE "courseId" = ${course.id}
+      UPDATE "Chapter" SET "moduleId" = ${defaultModule.id} WHERE "courseId" = ${course.id}
     `;
     chaptersUpdated += Number(result);
     console.log(`  Assigned ${result} chapters to module`);
