@@ -7,6 +7,7 @@ import {
   FileQuestion,
   GraduationCap,
   LayoutDashboard,
+  MessageSquare,
   Settings,
   Users,
 } from "lucide-react";
@@ -62,6 +63,11 @@ const adminRoutes = [
     icon: FileQuestion,
     label: "Quizzes",
     href: "/admin/quizzes",
+  },
+  {
+    icon: MessageSquare,
+    label: "Community",
+    href: "/admin/community",
   },
   {
     icon: BarChart,
