@@ -49,6 +49,7 @@ export const getTopic = async ({
         let muxData = null;
         let attachments: Attachment[] = [];
         let nextTopic: Topic | null = null;
+        let previousTopic: Topic | null = null;
 
         if (purchase) {
             attachments = await db.attachment.findMany({
@@ -109,6 +110,50 @@ export const getTopic = async ({
                     nextTopic = nextModule.topics[0];
                 }
             }
+
+            // Find the previous topic: first try within the same module, then in previous modules
+            previousTopic = await db.topic.findFirst({
+                where: {
+                    moduleId: topic.moduleId,
+                    isPublished: true,
+                    position: {
+                        lt: topic.position,
+                    }
+                },
+                orderBy: {
+                    position: "desc",
+                }
+            });
+
+            if (!previousTopic) {
+                const prevModule = await db.module.findFirst({
+                    where: {
+                        courseId: courseId,
+                        isPublished: true,
+                        position: {
+                            lt: topic.module.position,
+                        }
+                    },
+                    orderBy: {
+                        position: "desc",
+                    },
+                    include: {
+                        topics: {
+                            where: {
+                                isPublished: true,
+                            },
+                            orderBy: {
+                                position: "desc",
+                            },
+                            take: 1,
+                        }
+                    }
+                });
+
+                if (prevModule && prevModule.topics.length > 0) {
+                    previousTopic = prevModule.topics[0];
+                }
+            }
         }
 
         const userProgress = await db.userProgress.findUnique({
@@ -126,6 +171,7 @@ export const getTopic = async ({
             muxData,
             attachments,
             nextTopic,
+            previousTopic,
             userProgress,
             purchase,
         };
@@ -137,6 +183,7 @@ export const getTopic = async ({
             muxData: null,
             attachments: [],
             nextTopic: null,
+            previousTopic: null,
             userProgress: null,
             purchase: null,
         }
