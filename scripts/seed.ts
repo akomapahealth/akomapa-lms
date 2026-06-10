@@ -36,8 +36,22 @@ async function main() {
     });
 
     console.log("Seeded GHELP categories successfully.");
+
+    await database.forumCategory.createMany({
+      data: [
+        { name: "General Discussion", description: "Open conversation about anything GHELP-related", color: "#0097b2", position: 0 },
+        { name: "Ethics & Values", description: "Discuss ethical dilemmas and values in global health", color: "#ebb92b", position: 1 },
+        { name: "Case Studies", description: "Share and analyze real-world case studies", color: "#10b981", position: 2 },
+        { name: "Introductions", description: "Introduce yourself to the GHELP community", color: "#8b5cf6", position: 3 },
+        { name: "Course Help", description: "Ask questions about course material", color: "#f59e0b", position: 4 },
+        { name: "Career & Mentorship", description: "Career guidance and mentorship connections", color: "#ec4899", position: 5 },
+      ],
+      skipDuplicates: true,
+    });
+
+    console.log("Seeded forum categories successfully.");
   } catch (error) {
-    console.log("Error seeding the database categories", error);
+    console.log("Error seeding the database", error);
     process.exit(1);
   } finally {
     await database.$disconnect();

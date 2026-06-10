@@ -34,6 +34,12 @@ model User {
   enrollments   Enrollment[]
   quizAttempts  QuizAttempt[]
 
+  // Forum relations
+  forumPosts    ForumPost[]
+  forumComments ForumComment[]
+  postLikes     PostLike[]
+  commentLikes  CommentLike[]
+
   // Faculty relation
   assignedModules Module[] @relation("ModuleFaculty")
 
@@ -59,6 +65,7 @@ model Course {
   purchases   Purchase[]
   enrollments Enrollment[]
   quizzes     Quiz[]
+  forumPosts  ForumPost[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -303,4 +310,100 @@ model QuizAnswer {
 
   @@index([attemptId])
   @@index([questionId])
+}
+
+// ─── Forum / Community ───
+
+model ForumCategory {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  description String? @db.Text
+  color       String  @default("#0097b2")
+  position    Int     @default(0)
+
+  posts ForumPost[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ForumPost {
+  id       String  @id @default(uuid())
+  title    String
+  content  String  @db.Text
+  isPinned Boolean @default(false)
+  isLocked Boolean @default(false)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  categoryId String
+  category   ForumCategory @relation(fields: [categoryId], references: [id])
+
+  courseId String?
+  course  Course? @relation(fields: [courseId], references: [id])
+
+  comments ForumComment[]
+  likes    PostLike[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([courseId])
+  @@index([userId])
+}
+
+model ForumComment {
+  id      String @id @default(uuid())
+  content String @db.Text
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  postId String
+  post   ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  parentId String?
+  parent   ForumComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies  ForumComment[] @relation("CommentReplies")
+
+  likes CommentLike[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([postId])
+  @@index([parentId])
+  @@index([userId])
+}
+
+model PostLike {
+  id String @id @default(uuid())
+
+  userId String
+  user   User @relation(fields: [userId], references: [id])
+
+  postId String
+  post   ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, postId])
+  @@index([postId])
+}
+
+model CommentLike {
+  id String @id @default(uuid())
+
+  userId String
+  user   User @relation(fields: [userId], references: [id])
+
+  commentId String
+  comment   ForumComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, commentId])
+  @@index([commentId])
 }
