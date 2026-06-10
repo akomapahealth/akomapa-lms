@@ -34,15 +34,18 @@ export const CourseProgressButton = ({
                 isCompleted: !isCompleted
             });
 
+            // Trigger confetti when completing the last topic (no next topic)
             if (!isCompleted && !nextTopicId) {
                 confetti.onOpen();
+                toast.success("Course completed! Congratulations!");
+            } else if (!isCompleted) {
+                toast.success("Topic completed!");
             }
 
             if (!isCompleted && nextTopicId) {
                 router.push(`/courses/${courseId}/chapters/${nextTopicId}`);
             }
 
-            toast.success("Progress updated");
             router.refresh();
         } catch {
             toast.error("Something went wrong");

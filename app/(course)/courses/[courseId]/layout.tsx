@@ -57,24 +57,33 @@ const CourseLayout = async ({
         return redirect("/");
     }
 
-    // Flatten topics from all modules for sidebar display
-    const topics = course.modules.flatMap((mod) => mod.topics);
+    const purchase = await db.purchase.findUnique({
+        where: {
+            userId_courseId: {
+                userId,
+                courseId: course.id,
+            }
+        }
+    });
 
     const progressCount = await getProgress(userId, course.id);
+
     return (
         <div className="h-full">
             <div className="h-[80px] md:pl-80 fixed inset-y-0 w-full z-50">
                 <CourseNavbar
                     course={course}
-                    topics={topics}
+                    modules={course.modules}
                     progressCount={progressCount}
+                    isPurchased={!!purchase}
                 />
             </div>
             <div className="hidden md:flex h-full w-80 flex-col fixed inset-y-0 z-50">
                 <CourseSidebar
                     course={course}
-                    topics={topics}
+                    modules={course.modules}
                     progressCount={progressCount}
+                    isPurchased={!!purchase}
                 />
             </div>
             <main className="md:pl-80 pt-[80px] h-full">

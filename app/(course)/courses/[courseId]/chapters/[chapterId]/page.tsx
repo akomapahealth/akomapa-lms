@@ -1,11 +1,13 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { File } from "lucide-react";
+import { File, ChevronLeft, ChevronRight } from "lucide-react";
+import Link from "next/link";
 
 import { getTopic } from "@/actions/get-topic";
 import { Banner } from "@/components/banner";
 import { Separator } from "@/components/ui/separator";
 import { Preview } from "@/components/preview";
+import { Breadcrumb } from "@/components/breadcrumb";
 
 import { VideoPlayer } from "./_components/video-player";
 import { CourseEnrollButton } from "./_components/course-enroll-button";
@@ -30,6 +32,7 @@ const ChapterIdPage = async ({
         muxData,
         attachments,
         nextTopic,
+        previousTopic,
         userProgress,
         purchase,
     } = await getTopic({
@@ -44,6 +47,7 @@ const ChapterIdPage = async ({
 
     const isLocked = !topic.isFree && !purchase;
     const completeOnEnd = !!purchase && !userProgress?.isCompleted;
+
     return (
         <div>
             {userProgress?.isCompleted && (
@@ -60,6 +64,15 @@ const ChapterIdPage = async ({
             )}
 
             <div className="flex flex-col max-w-4xl mx-auto pb-20">
+                <div className="px-4 pt-4">
+                    <Breadcrumb
+                        items={[
+                            { label: "Courses", href: "/courses" },
+                            { label: topic.module.title },
+                            { label: topic.title },
+                        ]}
+                    />
+                </div>
                 <div className="p-4">
                     <VideoPlayer
                         topicId={chapterId}
@@ -73,9 +86,14 @@ const ChapterIdPage = async ({
                 </div>
                 <div>
                     <div className="p-4 flex flex-col md:flex-row items-center justify-between">
-                        <h2 className="text-2xl font-semibold mb-2">
-                            {topic.title}
-                        </h2>
+                        <div>
+                            <p className="text-xs text-akomapa-teal font-medium">
+                                {topic.module.title}
+                            </p>
+                            <h2 className="text-2xl font-semibold mb-2">
+                                {topic.title}
+                            </h2>
+                        </div>
                         {purchase ? (
                             <CourseProgressButton
                                 topicId={chapterId}
@@ -114,6 +132,43 @@ const ChapterIdPage = async ({
                             </div>
                         </>
                     )}
+
+                    {/* Previous/Next Navigation */}
+                    <Separator />
+                    <div className="p-4 flex items-center justify-between">
+                        {previousTopic ? (
+                            <Link
+                                href={`/courses/${courseId}/chapters/${previousTopic.id}`}
+                                className="flex items-center gap-1 text-sm text-slate-600 hover:text-akomapa-teal transition"
+                            >
+                                <ChevronLeft className="h-4 w-4" />
+                                <span className="truncate max-w-[200px]">
+                                    {previousTopic.title}
+                                </span>
+                            </Link>
+                        ) : (
+                            <div />
+                        )}
+                        <Link
+                            href={`/courses/${courseId}`}
+                            className="text-sm text-slate-500 hover:text-akomapa-teal transition"
+                        >
+                            Back to Course
+                        </Link>
+                        {nextTopic ? (
+                            <Link
+                                href={`/courses/${courseId}/chapters/${nextTopic.id}`}
+                                className="flex items-center gap-1 text-sm text-slate-600 hover:text-akomapa-teal transition"
+                            >
+                                <span className="truncate max-w-[200px]">
+                                    {nextTopic.title}
+                                </span>
+                                <ChevronRight className="h-4 w-4" />
+                            </Link>
+                        ) : (
+                            <div />
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
