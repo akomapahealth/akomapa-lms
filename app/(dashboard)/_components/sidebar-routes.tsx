@@ -1,53 +1,115 @@
 "use client";
 
-import { BarChart, Compass, Layout, List } from "lucide-react";
+import {
+  BarChart,
+  BookOpen,
+  Compass,
+  FileQuestion,
+  GraduationCap,
+  LayoutDashboard,
+  Settings,
+  Users,
+} from "lucide-react";
 import { usePathname } from "next/navigation";
 
 import { SidebarItem } from "./sidebar-item";
 
-const guestRoutes = [
-    {
-        icon: Layout,
-        label: "Dashboard",
-        href: "/",
-    },
-    {
-        icon: Compass,
-        label: "Browse",
-        href: "/search",
-    }
+const studentRoutes = [
+  {
+    icon: LayoutDashboard,
+    label: "Dashboard",
+    href: "/",
+  },
+  {
+    icon: BookOpen,
+    label: "Courses",
+    href: "/courses",
+  },
+  {
+    icon: GraduationCap,
+    label: "Grades",
+    href: "/grades",
+  },
+  {
+    icon: Compass,
+    label: "Browse",
+    href: "/search",
+  },
+  {
+    icon: Users,
+    label: "Community",
+    href: "/community",
+  },
 ];
 
-const teacherRoutes = [
-    {
-        icon: List,
-        label: "Courses",
-        href: "/teacher/courses",
-    },
-    {
-        icon: BarChart,
-        label: "Analytics",
-        href: "/teacher/analytics",
-    }
+const adminRoutes = [
+  {
+    icon: LayoutDashboard,
+    label: "Dashboard",
+    href: "/admin",
+  },
+  {
+    icon: BookOpen,
+    label: "Courses",
+    href: "/admin/courses",
+  },
+  {
+    icon: Users,
+    label: "Students",
+    href: "/admin/students",
+  },
+  {
+    icon: FileQuestion,
+    label: "Quizzes",
+    href: "/admin/quizzes",
+  },
+  {
+    icon: BarChart,
+    label: "Analytics",
+    href: "/admin/analytics",
+  },
 ];
 
+const bottomRoutes = [
+  {
+    icon: Settings,
+    label: "Settings",
+    href: "/settings",
+  },
+];
 
 export const SidebarRoutes = () => {
-    const pathname = usePathname();
+  const pathname = usePathname();
 
-    const isTeacherPage = pathname?.includes("/teacher");
+  const isAdminPage = pathname?.startsWith("/admin");
 
-    const routes = isTeacherPage ? teacherRoutes : guestRoutes;
-    return (
-        <div className="flex flex-col w-full">
-            {routes.map((route) => (
-                <SidebarItem 
-                    key={route.href}
-                    icon={route.icon}
-                    label={route.label}
-                    href={route.href}
-                />
-            ))}
-        </div>
-    )
-}
+  const routes = isAdminPage ? adminRoutes : studentRoutes;
+
+  return (
+    <div className="flex flex-col w-full">
+      {routes.map((route) => (
+        <SidebarItem
+          key={route.href}
+          icon={route.icon}
+          label={route.label}
+          href={route.href}
+        />
+      ))}
+    </div>
+  );
+};
+
+export const SidebarBottomRoutes = () => {
+  return (
+    <div className="flex flex-col w-full">
+      {bottomRoutes.map((route) => (
+        <SidebarItem
+          key={route.href}
+          icon={route.icon}
+          label={route.label}
+          href={route.href}
+        />
+      ))}
+    </div>
+  );
+};
