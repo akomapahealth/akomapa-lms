@@ -43,6 +43,14 @@ model User {
   // Faculty relation
   assignedModules Module[] @relation("ModuleFaculty")
 
+  // Phase 5: Gamification, Journals, Certificates
+  badges            UserBadge[]
+  learningStreak    LearningStreak?
+  journalEntries    JournalEntry[]
+  caseStudyAttempts CaseStudyAttempt[]
+  certificates      Certificate[]
+  settings          UserSettings?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -63,9 +71,11 @@ model Course {
   modules     Module[]
   attachments Attachment[]
   purchases   Purchase[]
-  enrollments Enrollment[]
-  quizzes     Quiz[]
-  forumPosts  ForumPost[]
+  enrollments    Enrollment[]
+  quizzes        Quiz[]
+  forumPosts     ForumPost[]
+  journalEntries JournalEntry[]
+  certificates   Certificate[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -93,8 +103,11 @@ model Module {
   facultyId String?
   faculty   User?   @relation("ModuleFaculty", fields: [facultyId], references: [id])
 
+  reflectionPrompt String? @db.Text
+
   topics  Topic[]
   quizzes Quiz[]
+  journalEntries JournalEntry[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -127,7 +140,8 @@ model Topic {
   isPublished Boolean @default(false)
   isFree      Boolean @default(false)
 
-  muxData MuxData?
+  muxData   MuxData?
+  caseStudy CaseStudy?
 
   moduleId String
   module   Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
@@ -406,4 +420,143 @@ model CommentLike {
 
   @@unique([userId, commentId])
   @@index([commentId])
+}
+
+// ─── Phase 5: Gamification ───
+
+model Badge {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  description String
+  imageUrl    String? @db.Text
+  type        String // COMPLETION, STREAK, COMMUNITY, QUIZ_SCORE, MILESTONE
+  criteria    Json
+
+  userBadges UserBadge[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model UserBadge {
+  id       String   @id @default(uuid())
+  earnedAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  badgeId String
+  badge   Badge  @relation(fields: [badgeId], references: [id])
+
+  @@unique([userId, badgeId])
+  @@index([userId])
+}
+
+model LearningStreak {
+  id               String    @id @default(uuid())
+  currentStreak    Int       @default(0)
+  longestStreak    Int       @default(0)
+  lastActivityDate DateTime?
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  updatedAt DateTime @updatedAt
+}
+
+// ─── Phase 5: Reflection Journal ───
+
+model JournalEntry {
+  id        String  @id @default(uuid())
+  title     String
+  content   String  @db.Text
+  isPrivate Boolean @default(true)
+
+  prompt String? @db.Text
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  moduleId String?
+  module   Module? @relation(fields: [moduleId], references: [id])
+
+  courseId String?
+  course   Course? @relation(fields: [courseId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([moduleId])
+  @@index([courseId])
+}
+
+// ─── Phase 5: Case Study Simulator ───
+
+model CaseStudy {
+  id          String @id @default(uuid())
+  title       String
+  description String @db.Text
+  scenario    Json
+
+  topicId String @unique
+  topic   Topic  @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  attempts CaseStudyAttempt[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CaseStudyAttempt {
+  id        String  @id @default(uuid())
+  choices   Json
+  completed Boolean @default(false)
+
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  caseStudyId String
+  caseStudy   CaseStudy @relation(fields: [caseStudyId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([caseStudyId])
+}
+
+// ─── Phase 5: Certificates ───
+
+model Certificate {
+  id                String   @id @default(uuid())
+  certificateNumber String   @unique
+  issuedAt          DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  courseId String
+  course  Course @relation(fields: [courseId], references: [id])
+
+  pdfUrl String? @db.Text
+
+  @@unique([userId, courseId])
+  @@index([userId])
+}
+
+// ─── Phase 5: User Settings ───
+
+model UserSettings {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  theme                  String  @default("light")
+  defaultJournalPrivacy  Boolean @default(true)
+  showProfileInCommunity Boolean @default(true)
+  emailOnBadgeEarned     Boolean @default(true)
+  emailOnForumReply      Boolean @default(true)
+  emailOnFacultyComment  Boolean @default(true)
+
+  updatedAt DateTime @updatedAt
 }
