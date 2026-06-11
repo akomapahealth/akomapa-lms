@@ -8,6 +8,7 @@ import {
   FileQuestion,
   GraduationCap,
   LayoutDashboard,
+  Map,
   MessageSquare,
   Settings,
   Users,
@@ -46,6 +47,11 @@ const studentRoutes = [
     icon: BookHeart,
     label: "Journal",
     href: "/journal",
+  },
+  {
+    icon: Map,
+    label: "Learning Path",
+    href: "/learning-path",
   },
 ];
 
