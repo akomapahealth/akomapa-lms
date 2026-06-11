@@ -1,6 +1,10 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
+import { getUserSettings } from "@/actions/get-user-settings";
+
+import { SettingsForm } from "./_components/settings-form";
+
 const SettingsPage = async () => {
   const { userId } = await auth();
 
@@ -8,17 +12,17 @@ const SettingsPage = async () => {
     return redirect("/sign-in");
   }
 
+  const settings = await getUserSettings(userId);
+
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-6 max-w-3xl mx-auto">
+      <div className="mb-6">
         <h1 className="text-2xl font-bold text-slate-800">Settings</h1>
+        <p className="text-sm text-slate-500 mt-1">
+          Manage your preferences and notifications
+        </p>
       </div>
-      <div className="flex items-center justify-center h-[400px] border border-dashed border-slate-300 rounded-lg">
-        <div className="text-center">
-          <p className="text-slate-500 text-lg">Profile and preferences</p>
-          <p className="text-slate-400 text-sm mt-1">Coming in Phase 5</p>
-        </div>
-      </div>
+      <SettingsForm initialSettings={settings} />
     </div>
   );
 };

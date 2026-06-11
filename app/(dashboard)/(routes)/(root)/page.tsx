@@ -8,6 +8,9 @@ import { getCompletionTimeline } from "@/actions/get-completion-timeline";
 import { getUserBadges } from "@/actions/get-user-badges";
 import { getUserStreak } from "@/actions/get-user-streak";
 
+import { EmptyState } from "@/components/empty-state";
+import { BookOpen } from "lucide-react";
+
 import { WelcomeBanner } from "./_components/welcome-banner";
 import { CourseSelector } from "./_components/course-selector";
 import { ProgressDonutChart } from "./_components/progress-donut-chart";
@@ -82,12 +85,13 @@ export default async function Dashboard({
       />
 
       {enrolledCourses.length === 0 ? (
-        <div className="text-center py-10 text-slate-500">
-          <p className="text-lg font-medium">No courses yet</p>
-          <p className="text-sm mt-1">
-            Browse available courses to get started
-          </p>
-        </div>
+        <EmptyState
+          icon={BookOpen}
+          title="No courses yet"
+          description="Browse available courses and enroll to start your learning journey."
+          actionLabel="Browse Courses"
+          actionHref="/search"
+        />
       ) : (
         <>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
