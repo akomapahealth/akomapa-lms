@@ -12,6 +12,9 @@ import { Breadcrumb } from "@/components/breadcrumb";
 import { VideoPlayer } from "./_components/video-player";
 import { CourseEnrollButton } from "./_components/course-enroll-button";
 import { CourseProgressButton } from "./_components/course-progress-button";
+import { CaseStudyPlayer } from "./_components/case-study-player";
+import { type CaseStudyScenario } from "@/lib/case-study-types";
+import { db } from "@/lib/db";
 
 const ChapterIdPage = async ({
     params
@@ -48,6 +51,14 @@ const ChapterIdPage = async ({
     const isLocked = !topic.isFree && !purchase;
     const completeOnEnd = !!purchase && !userProgress?.isCompleted;
 
+    // Check for case study content
+    let caseStudy = null;
+    if (topic.contentType === "INTERACTIVE") {
+        caseStudy = await db.caseStudy.findUnique({
+            where: { topicId: chapterId },
+        });
+    }
+
     return (
         <div>
             {userProgress?.isCompleted && (
@@ -74,15 +85,24 @@ const ChapterIdPage = async ({
                     />
                 </div>
                 <div className="p-4">
-                    <VideoPlayer
-                        topicId={chapterId}
-                        title={topic.title}
-                        courseId={courseId}
-                        nextTopicId={nextTopic?.id}
-                        playbackId={muxData?.playbackId!}
-                        isLocked={isLocked}
-                        completeOnEnd={completeOnEnd}
-                    />
+                    {caseStudy ? (
+                        <CaseStudyPlayer
+                            caseStudyId={caseStudy.id}
+                            title={caseStudy.title}
+                            scenario={caseStudy.scenario as unknown as CaseStudyScenario}
+                            courseId={courseId}
+                        />
+                    ) : (
+                        <VideoPlayer
+                            topicId={chapterId}
+                            title={topic.title}
+                            courseId={courseId}
+                            nextTopicId={nextTopic?.id}
+                            playbackId={muxData?.playbackId!}
+                            isLocked={isLocked}
+                            completeOnEnd={completeOnEnd}
+                        />
+                    )}
                 </div>
                 <div>
                     <div className="p-4 flex flex-col md:flex-row items-center justify-between">
