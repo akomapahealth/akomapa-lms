@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { evaluateBadges, type BadgeEvent } from "@/lib/badge-service";
 import { updateStreak } from "@/lib/streak-service";
+import { generateCertificate } from "@/lib/certificate-service";
 
 export async function PUT(
     req: Request,
@@ -118,6 +119,13 @@ export async function PUT(
                         where: { userId, courseId: routeParams.courseId },
                         data: { status: "COMPLETED" },
                     });
+
+                    // Auto-generate certificate on course completion
+                    try {
+                        await generateCertificate(userId, routeParams.courseId);
+                    } catch (err) {
+                        console.log("[CERTIFICATE_AUTO_GENERATE]", err);
+                    }
                 }
             }
 

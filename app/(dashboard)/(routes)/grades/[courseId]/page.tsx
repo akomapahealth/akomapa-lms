@@ -4,9 +4,12 @@ import Link from "next/link";
 import { ArrowLeft, CheckCircle2, Circle, Clock } from "lucide-react";
 
 import { getGradesDetail } from "@/actions/get-grades-detail";
+import { getCertificate } from "@/actions/get-certificate";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+import { CertificateSection } from "./_components/certificate-section";
 import {
   Table,
   TableBody,
@@ -30,11 +33,18 @@ const GradesDetailPage = async ({
     return redirect("/sign-in");
   }
 
-  const detail = await getGradesDetail(userId, courseId);
+  const [detail, certificate] = await Promise.all([
+    getGradesDetail(userId, courseId),
+    getCertificate(userId, courseId),
+  ]);
 
   if (!detail) {
     return redirect("/grades");
   }
+
+  const isCourseCompleted = detail.modules.every(
+    (mod) => mod.status === "COMPLETED"
+  );
 
   const typeLabels: Record<string, string> = {
     PRE_TEST: "Pre-Test",
@@ -56,6 +66,17 @@ const GradesDetailPage = async ({
       </h1>
 
       <div className="space-y-6">
+        {/* Certificate */}
+        <CertificateSection
+          courseId={courseId}
+          isCompleted={isCourseCompleted}
+          existingCertificate={certificate ? {
+            certificateNumber: certificate.certificateNumber,
+            pdfUrl: certificate.pdfUrl,
+            issuedAt: certificate.issuedAt,
+          } : null}
+        />
+
         {/* Score Comparison */}
         <ScoreComparison
           preTestScore={detail.preTestScore}
