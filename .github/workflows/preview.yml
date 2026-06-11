@@ -3,6 +3,8 @@ name: Preview Deployment
 on:
   push:
     branches: [dev]
+  pull_request:
+    branches: [dev, main]
 
 concurrency:
   group: preview-${{ github.ref }}
@@ -36,6 +38,7 @@ jobs:
     name: Deploy to Preview
     runs-on: ubuntu-latest
     needs: quality-gate
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
     environment:
       name: preview
       url: ${{ steps.deploy.outputs.url }}
@@ -50,7 +53,7 @@ jobs:
       - run: npm ci
 
       - name: Install Vercel CLI
-        run: npm install -g vercel
+        run: npm install -g vercel@latest
 
       - name: Pull Vercel Environment
         run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
@@ -73,5 +76,5 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `Preview deployed: ${{ steps.deploy.outputs.url }}`
+              body: `🔗 Preview deployed: ${{ steps.deploy.outputs.url }}`
             })
