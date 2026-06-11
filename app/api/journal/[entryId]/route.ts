@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
+import { logError } from "@/lib/logger";
 
 export async function PATCH(
   req: Request,
@@ -42,7 +43,7 @@ export async function PATCH(
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.log("[JOURNAL_PATCH]", error);
+    logError("JOURNAL_PATCH", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
@@ -72,7 +73,7 @@ export async function DELETE(
 
     return new NextResponse(null, { status: 204 });
   } catch (error) {
-    console.log("[JOURNAL_DELETE]", error);
+    logError("JOURNAL_DELETE", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }

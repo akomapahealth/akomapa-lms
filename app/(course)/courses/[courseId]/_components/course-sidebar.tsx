@@ -61,10 +61,10 @@ export const CourseSidebar = ({
   const moduleQuizzes = quizzes.filter((q) => q.type === "MODULE_QUIZ");
 
   return (
-    <div className="h-full border-r flex flex-col overflow-hidden shadow-sm">
+    <div className="h-full border-r flex flex-col overflow-hidden shadow-sm bg-card">
       <div className="p-6 border-b">
-        <h1 className="font-semibold text-slate-800">{course.title}</h1>
-        <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
+        <h1 className="font-semibold text-foreground">{course.title}</h1>
+        <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
           <span>{modules.length} Modules</span>
           <span>
             {completedTopics}/{totalTopics} Done

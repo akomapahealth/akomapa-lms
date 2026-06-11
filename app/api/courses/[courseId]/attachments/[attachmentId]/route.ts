@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { logError } from "@/lib/logger";
 
 export async function DELETE(
     req: Request,
@@ -35,7 +36,7 @@ export async function DELETE(
 
         return NextResponse.json(attachment);
     } catch (error) {
-        console.log("ATTACHMENT_ID", error);
+        logError("ATTACHMENT_ID", error);
         return new NextResponse("Internal Error", { status: 500 });
     }
 }

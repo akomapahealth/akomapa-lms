@@ -44,7 +44,7 @@ const SearchPage = async ({
                     <SearchInput />
                 </Suspense>
             </div>
-            <div className="p-6 space-y-4">
+            <div className="px-4 py-6 sm:p-6 space-y-4">
                 <Suspense fallback={null}>
                     <Categories 
                         items={categories}

@@ -3,8 +3,8 @@ import { db } from "@/lib/db";
 export type UserRole = "STUDENT" | "FACULTY" | "ADMIN";
 
 export async function getUserRole(userId: string): Promise<UserRole> {
-  // Fallback: check legacy env var for backward compatibility
-  if (userId === process.env.NEXT_PUBLIC_TEACHER_ID) {
+  // Fallback: check server-only env var for backward compatibility
+  if (userId === process.env.TEACHER_ID) {
     return "ADMIN";
   }
 

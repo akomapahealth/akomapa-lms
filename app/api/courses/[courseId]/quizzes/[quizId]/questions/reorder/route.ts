@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { isFaculty } from "@/lib/roles";
+import { logError } from "@/lib/logger";
 
 export async function PUT(
   req: Request,
@@ -35,7 +36,7 @@ export async function PUT(
 
     return new NextResponse("Success", { status: 200 });
   } catch (error) {
-    console.log("[QUESTIONS_REORDER]", error);
+    logError("QUESTIONS_REORDER", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }

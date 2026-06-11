@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { isAdmin } from "@/lib/roles";
 import { caseStudyScenarioSchema } from "@/lib/case-study-types";
+import { logError } from "@/lib/logger";
 
 export async function PATCH(
   req: Request,
@@ -40,7 +41,7 @@ export async function PATCH(
 
     return NextResponse.json(caseStudy);
   } catch (error) {
-    console.log("[CASE_STUDY_PATCH]", error);
+    logError("CASE_STUDY_PATCH", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
@@ -61,7 +62,7 @@ export async function DELETE(
 
     return new NextResponse(null, { status: 204 });
   } catch (error) {
-    console.log("[CASE_STUDY_DELETE]", error);
+    logError("CASE_STUDY_DELETE", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }

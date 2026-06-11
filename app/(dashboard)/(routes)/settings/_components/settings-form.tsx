@@ -49,15 +49,15 @@ export const SettingsForm = ({ initialSettings }: SettingsFormProps) => {
   return (
     <div className="space-y-6">
       {/* Appearance */}
-      <Card className="border-slate-200">
+      <Card className="border-border">
         <CardHeader>
           <CardTitle className="text-lg">Appearance</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <Label>Theme</Label>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-muted-foreground">
                 Choose your preferred color scheme
               </p>
             </div>
@@ -79,15 +79,15 @@ export const SettingsForm = ({ initialSettings }: SettingsFormProps) => {
       </Card>
 
       {/* Privacy */}
-      <Card className="border-slate-200">
+      <Card className="border-border">
         <CardHeader>
           <CardTitle className="text-lg">Privacy</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <Label>Default Journal Privacy</Label>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-muted-foreground">
                 New journal entries are private by default
               </p>
             </div>
@@ -99,10 +99,10 @@ export const SettingsForm = ({ initialSettings }: SettingsFormProps) => {
             />
           </div>
           <Separator />
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <Label>Show Profile in Community</Label>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-muted-foreground">
                 Allow other students to see your profile
               </p>
             </div>
@@ -117,15 +117,15 @@ export const SettingsForm = ({ initialSettings }: SettingsFormProps) => {
       </Card>
 
       {/* Notifications */}
-      <Card className="border-slate-200">
+      <Card className="border-border">
         <CardHeader>
           <CardTitle className="text-lg">Email Notifications</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <Label>Badge Earned</Label>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-muted-foreground">
                 Get notified when you earn a new badge
               </p>
             </div>
@@ -137,10 +137,10 @@ export const SettingsForm = ({ initialSettings }: SettingsFormProps) => {
             />
           </div>
           <Separator />
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <Label>Forum Replies</Label>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-muted-foreground">
                 Get notified when someone replies to your post
               </p>
             </div>
@@ -152,10 +152,10 @@ export const SettingsForm = ({ initialSettings }: SettingsFormProps) => {
             />
           </div>
           <Separator />
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <Label>Faculty Comments</Label>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-muted-foreground">
                 Get notified when faculty comments on your work
               </p>
             </div>
@@ -170,12 +170,12 @@ export const SettingsForm = ({ initialSettings }: SettingsFormProps) => {
       </Card>
 
       {/* Profile */}
-      <Card className="border-slate-200">
+      <Card className="border-border">
         <CardHeader>
           <CardTitle className="text-lg">Profile</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-muted-foreground">
             Your profile information is managed through your account provider.
           </p>
           <Button variant="outline" size="sm" className="mt-3" asChild>

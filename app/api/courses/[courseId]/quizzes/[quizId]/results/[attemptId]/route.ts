@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
+import { logError } from "@/lib/logger";
 
 export async function GET(
   req: Request,
@@ -64,7 +65,7 @@ export async function GET(
 
     return NextResponse.json(attempt);
   } catch (error) {
-    console.log("[QUIZ_RESULTS]", error);
+    logError("QUIZ_RESULTS", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }

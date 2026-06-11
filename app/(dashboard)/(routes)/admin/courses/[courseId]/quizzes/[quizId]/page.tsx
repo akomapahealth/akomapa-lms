@@ -60,8 +60,8 @@ const QuizEditorPage = async ({
       {!quiz.isPublished && (
         <Banner label="This quiz is not published. It will not be visible to students." />
       )}
-      <div className="p-6">
-        <div className="flex items-center justify-between">
+      <div className="px-4 py-6 sm:p-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="w-full">
             <Link
               href={`/admin/courses/${courseId}/quizzes`}
@@ -72,7 +72,7 @@ const QuizEditorPage = async ({
             </Link>
             <div className="flex items-center justify-between w-full">
               <div className="flex flex-col gap-y-2">
-                <h1 className="text-2xl font-medium">Quiz Setup</h1>
+                <h1 className="text-xl sm:text-2xl font-medium">Quiz Setup</h1>
                 <span className="text-sm text-slate-700">
                   Complete all fields {completionText}
                 </span>

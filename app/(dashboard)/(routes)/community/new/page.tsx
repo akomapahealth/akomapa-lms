@@ -23,16 +23,16 @@ const NewPostPage = async () => {
   const courses = enrolledCourses.map((p) => p.course);
 
   return (
-    <div className="p-6 max-w-3xl mx-auto space-y-6">
+    <div className="px-4 py-6 sm:p-6 max-w-3xl mx-auto space-y-6">
       <Link
         href="/community"
-        className="flex items-center gap-2 text-sm text-slate-500 hover:text-akomapa-teal transition"
+        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-akomapa-teal transition"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to Community
       </Link>
 
-      <h1 className="text-2xl font-bold text-slate-800">Create a New Post</h1>
+      <h1 className="text-xl sm:text-2xl font-bold text-foreground">Create a New Post</h1>
 
       <CreatePostForm categories={categories} courses={courses} />
     </div>

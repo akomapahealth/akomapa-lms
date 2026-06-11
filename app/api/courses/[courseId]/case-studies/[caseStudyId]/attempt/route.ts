@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
+import { logError } from "@/lib/logger";
 
 export async function POST(
   req: Request,
@@ -27,7 +28,7 @@ export async function POST(
 
     return NextResponse.json(attempt);
   } catch (error) {
-    console.log("[CASE_STUDY_ATTEMPT]", error);
+    logError("CASE_STUDY_ATTEMPT", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }

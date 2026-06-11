@@ -20,10 +20,10 @@ const LearningPathPage = async () => {
   const totalCount = courses.length;
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
+    <div className="px-4 py-6 sm:p-6 max-w-3xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-800">Learning Path</h1>
-        <p className="text-sm text-slate-500 mt-1">
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground">Learning Path</h1>
+        <p className="text-sm text-muted-foreground mt-1">
           Your GHELP ethical training roadmap
           {totalCount > 0 && (
             <span className="ml-2 text-akomapa-teal font-medium">

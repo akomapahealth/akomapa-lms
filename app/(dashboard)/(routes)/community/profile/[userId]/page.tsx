@@ -76,36 +76,36 @@ const CommunityProfilePage = async ({
   }));
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
+    <div className="px-4 py-6 sm:p-6 max-w-4xl mx-auto space-y-6">
       <Link
         href="/community"
-        className="flex items-center gap-2 text-sm text-slate-500 hover:text-akomapa-teal transition"
+        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-akomapa-teal transition"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to Community
       </Link>
 
       {/* Profile card */}
-      <div className="border border-slate-200 rounded-lg p-6 bg-white">
+      <div className="border border-border rounded-lg p-6 bg-card">
         <div className="flex items-center gap-4">
           <Avatar className="h-16 w-16">
             <AvatarImage src={user.imageUrl ?? undefined} />
             <AvatarFallback className="text-xl">{initials}</AvatarFallback>
           </Avatar>
           <div>
-            <h1 className="text-xl font-bold text-slate-800">{authorName}</h1>
+            <h1 className="text-xl font-bold text-foreground">{authorName}</h1>
             <div className="flex items-center gap-2 mt-1">
               {user.role !== "STUDENT" && (
                 <span className="text-xs font-medium px-2 py-0.5 rounded bg-akomapa-ice text-akomapa-teal">
                   {user.role === "ADMIN" ? "Admin" : "Faculty"}
                 </span>
               )}
-              <span className="flex items-center gap-1 text-xs text-slate-400">
+              <span className="flex items-center gap-1 text-xs text-muted-foreground">
                 <Calendar className="h-3 w-3" />
                 Joined {joinDate}
               </span>
             </div>
-            <div className="flex items-center gap-4 mt-2 text-sm text-slate-500">
+            <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
               <span>{postCount} posts</span>
               <span>{commentCount} comments</span>
             </div>
@@ -115,11 +115,11 @@ const CommunityProfilePage = async ({
 
       {/* Posts */}
       <div>
-        <h2 className="text-lg font-semibold text-slate-800 mb-3">
+        <h2 className="text-lg font-semibold text-foreground mb-3">
           Posts ({postCount})
         </h2>
         {postPreviews.length === 0 ? (
-          <p className="text-sm text-slate-400">No posts yet</p>
+          <p className="text-sm text-muted-foreground">No posts yet</p>
         ) : (
           <div className="space-y-3">
             {postPreviews.map((post) => (

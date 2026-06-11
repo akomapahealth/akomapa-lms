@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { evaluateBadges } from "@/lib/badge-service";
+import { logError } from "@/lib/logger";
 
 export async function POST(
   req: Request,
@@ -88,7 +89,7 @@ export async function POST(
       })),
     });
   } catch (error) {
-    console.log("[COMMUNITY_COMMENT_POST]", error);
+    logError("COMMUNITY_COMMENT_POST", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }

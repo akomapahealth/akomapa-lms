@@ -18,24 +18,24 @@ export const SidebarUserInfo = () => {
           alt={user.firstName || "User"}
           width={32}
           height={32}
-          className="rounded-full object-cover"
+          className="rounded-full object-cover ring-2 ring-sidebar-border"
         />
       ) : (
-        <div className="h-8 w-8 rounded-full bg-akomapa-teal/20 flex items-center justify-center text-sm font-medium text-akomapa-teal">
+        <div className="h-8 w-8 rounded-full bg-sidebar-hover flex items-center justify-center text-sm font-medium text-sidebar-accent">
           {user.firstName?.[0] || "U"}
         </div>
       )}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-slate-700 truncate">
+        <p className="text-sm font-medium text-sidebar-foreground truncate">
           {user.firstName} {user.lastName}
         </p>
-        <p className="text-xs text-slate-500 truncate">
+        <p className="text-xs text-sidebar-muted truncate">
           {user.primaryEmailAddress?.emailAddress}
         </p>
       </div>
       <button
         onClick={() => signOut({ redirectUrl: "/sign-in" })}
-        className="text-slate-400 hover:text-red-500 transition p-1 rounded-md hover:bg-red-50"
+        className="text-sidebar-muted hover:text-red-400 transition p-1 rounded-md hover:bg-sidebar-hover"
         aria-label="Sign out"
       >
         <LogOut size={16} />

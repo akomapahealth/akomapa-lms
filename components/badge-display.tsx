@@ -42,14 +42,14 @@ export const BadgeDisplay = ({
             className={cn(
               "flex flex-col items-center gap-1.5 p-3 rounded-lg border transition-all",
               earned
-                ? "bg-white border-akomapa-gold/30 shadow-sm"
-                : "bg-slate-50 border-slate-200 opacity-50 grayscale"
+                ? "bg-card border-akomapa-gold/30 shadow-sm"
+                : "bg-muted border-border opacity-50 grayscale"
             )}
           >
             <div
               className={cn(
                 "w-10 h-10 rounded-full flex items-center justify-center text-lg",
-                earned ? "bg-akomapa-gold/10" : "bg-slate-100"
+                earned ? "bg-akomapa-gold/10" : "bg-muted"
               )}
             >
               {earned ? (
@@ -60,7 +60,7 @@ export const BadgeDisplay = ({
                   <span>{badgeEmojis[type] ?? "🎯"}</span>
                 )
               ) : (
-                <Lock className="w-4 h-4 text-slate-400" />
+                <Lock className="w-4 h-4 text-muted-foreground" />
               )}
             </div>
             <span className="text-xs font-medium text-center line-clamp-1">
@@ -81,7 +81,7 @@ export const BadgeDisplay = ({
               </p>
             )}
             {!earned && (
-              <p className="text-xs text-slate-400">Not yet earned</p>
+              <p className="text-xs text-muted-foreground">Not yet earned</p>
             )}
           </div>
         </TooltipContent>

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { isFaculty } from "@/lib/roles";
+import { logError } from "@/lib/logger";
 
 export async function POST(
   req: Request,
@@ -39,7 +40,7 @@ export async function POST(
 
     return NextResponse.json(quiz);
   } catch (error) {
-    console.log("[QUIZZES]", error);
+    logError("QUIZZES", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }

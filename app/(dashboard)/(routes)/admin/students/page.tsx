@@ -52,9 +52,9 @@ const AdminStudentsPage = async () => {
   });
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-800">
+    <div className="px-4 py-6 sm:p-6 space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground">
           Students ({students.length})
         </h1>
       </div>

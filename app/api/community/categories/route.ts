@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { isAdmin } from "@/lib/roles";
+import { logError } from "@/lib/logger";
 
 export async function GET() {
   try {
@@ -12,7 +13,7 @@ export async function GET() {
 
     return NextResponse.json(categories);
   } catch (error) {
-    console.log("[COMMUNITY_CATEGORIES_GET]", error);
+    logError("COMMUNITY_CATEGORIES_GET", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
@@ -35,7 +36,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json(category);
   } catch (error) {
-    console.log("[COMMUNITY_CATEGORIES_POST]", error);
+    logError("COMMUNITY_CATEGORIES_POST", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }

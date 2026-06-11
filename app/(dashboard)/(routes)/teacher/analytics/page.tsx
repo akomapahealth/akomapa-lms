@@ -18,7 +18,7 @@ const AnalyticsPage = async () => {
         totalSales,
     } = await getAnalytics(userId);
     return ( 
-        <div className="p-6">
+        <div className="px-4 py-6 sm:p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <DataCard 
                     label="Total Revenue"

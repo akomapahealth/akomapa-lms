@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { isAdmin } from "@/lib/roles";
+import { logError } from "@/lib/logger";
 
 export async function PATCH(
   req: Request,
@@ -37,7 +38,7 @@ export async function PATCH(
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.log("[COMMUNITY_POST_LOCK]", error);
+    logError("COMMUNITY_POST_LOCK", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }

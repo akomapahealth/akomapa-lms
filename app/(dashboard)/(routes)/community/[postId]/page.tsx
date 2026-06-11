@@ -91,10 +91,10 @@ const PostDetailPage = async ({
       .join("") || "?";
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
+    <div className="px-4 py-6 sm:p-6 max-w-4xl mx-auto space-y-6">
       <Link
         href="/community"
-        className="flex items-center gap-2 text-sm text-slate-500 hover:text-akomapa-teal transition"
+        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-akomapa-teal transition"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to Community
@@ -110,7 +110,7 @@ const PostDetailPage = async ({
       {/* Post header */}
       <div>
         <div className="flex items-start justify-between gap-4">
-          <h1 className="text-2xl font-bold text-slate-800">{post.title}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">{post.title}</h1>
           <PostActions
             postId={post.id}
             isAuthor={isAuthor}
@@ -148,7 +148,7 @@ const PostDetailPage = async ({
           <div>
             <Link
               href={`/community/profile/${post.user.id}`}
-              className="text-sm font-medium text-slate-800 hover:text-akomapa-teal transition"
+              className="text-sm font-medium text-foreground hover:text-akomapa-teal transition"
             >
               {authorName}
             </Link>
@@ -157,7 +157,7 @@ const PostDetailPage = async ({
                 {post.user.role === "ADMIN" ? "Admin" : "Faculty"}
               </span>
             )}
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-muted-foreground">
               {timeAgo(post.createdAt)}
             </p>
           </div>
@@ -165,7 +165,7 @@ const PostDetailPage = async ({
       </div>
 
       {/* Post content */}
-      <div className="border border-slate-200 rounded-lg p-6 bg-white">
+      <div className="border border-border rounded-lg p-6 bg-card">
         <Preview value={post.content} />
       </div>
 
@@ -179,10 +179,10 @@ const PostDetailPage = async ({
       </div>
 
       {/* Comments section */}
-      <div className="border-t border-slate-200 pt-6">
+      <div className="border-t border-border pt-6">
         <div className="flex items-center gap-2 mb-4">
-          <MessageSquare className="h-5 w-5 text-slate-600" />
-          <h2 className="text-lg font-semibold text-slate-800">
+          <MessageSquare className="h-5 w-5 text-muted-foreground" />
+          <h2 className="text-lg font-semibold text-foreground">
             {post._count.comments} {post._count.comments === 1 ? "Comment" : "Comments"}
           </h2>
         </div>
@@ -200,7 +200,7 @@ const PostDetailPage = async ({
         )}
 
         {post.isLocked && (
-          <div className="mt-6 flex items-center gap-2 text-sm text-slate-400">
+          <div className="mt-6 flex items-center gap-2 text-sm text-muted-foreground">
             <Lock className="h-4 w-4" />
             Comments are locked on this post
           </div>

@@ -36,9 +36,9 @@ export default async function JournalPage({
   });
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-800">My Reflections</h1>
+    <div className="px-4 py-6 sm:p-6 space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground">My Reflections</h1>
         <Link
           href="/journal/new"
           className="inline-flex items-center px-4 py-2 bg-akomapa-teal text-white text-sm font-medium rounded-md hover:bg-akomapa-teal-dark transition"

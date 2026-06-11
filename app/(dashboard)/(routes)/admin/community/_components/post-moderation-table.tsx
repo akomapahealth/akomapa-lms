@@ -58,7 +58,8 @@ export const PostModerationTable = ({ posts }: PostModerationTableProps) => {
   };
 
   return (
-    <Table>
+    <div className="overflow-x-auto">
+    <Table className="min-w-[600px]">
       <TableHeader>
         <TableRow>
           <TableHead>Title</TableHead>
@@ -151,5 +152,6 @@ export const PostModerationTable = ({ posts }: PostModerationTableProps) => {
         )}
       </TableBody>
     </Table>
+    </div>
   );
 };

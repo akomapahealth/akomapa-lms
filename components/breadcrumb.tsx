@@ -16,7 +16,7 @@ export const Breadcrumb = ({ items }: BreadcrumbProps) => {
       {items.map((item, index) => (
         <div key={index} className="flex items-center gap-1">
           {index > 0 && (
-            <ChevronRight className="h-4 w-4 text-slate-400" />
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
           )}
           {item.href ? (
             <Link
@@ -26,7 +26,7 @@ export const Breadcrumb = ({ items }: BreadcrumbProps) => {
               {item.label}
             </Link>
           ) : (
-            <span className="text-slate-500 truncate max-w-[200px]">
+            <span className="text-muted-foreground truncate max-w-[200px]">
               {item.label}
             </span>
           )}

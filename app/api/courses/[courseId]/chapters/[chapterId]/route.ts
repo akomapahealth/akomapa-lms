@@ -3,6 +3,8 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
+import { topicUpdateSchema } from "@/lib/validations/topic";
+import { logError } from "@/lib/logger";
 
 const mux  = new Mux({
     tokenId: process.env.MUX_TOKEN_ID!,
@@ -88,7 +90,7 @@ export async function DELETE(
 
         return NextResponse.json(deletedTopic);
     } catch (error) {
-        console.log("[CHAPTER_ID_DELETE]", error);
+        logError("CHAPTER_ID_DELETE", error);
 
         return new NextResponse("Internal Error", { status: 500 });
     }
@@ -103,10 +105,15 @@ export async function PATCH(
     try {
         const { userId } = await auth();
 
-        const { isPublished, ...values } = await req.json();
+        const body = await req.json();
 
         if (!userId) {
             return new NextResponse("Unauthorized", { status: 401 });
+        }
+
+        const parsed = topicUpdateSchema.safeParse(body);
+        if (!parsed.success) {
+            return new NextResponse("Invalid data", { status: 400 });
         }
 
         const ownCourse = await db.course.findUnique({
@@ -124,12 +131,10 @@ export async function PATCH(
             where: {
                 id: routeParams.chapterId,
             },
-            data: {
-                ...values,
-            }
+            data: parsed.data,
         });
 
-        if (values.videoUrl) {
+        if (parsed.data.videoUrl) {
             const existingMuxData = await db.muxData.findFirst({
                 where: {
                     topicId: routeParams.chapterId,
@@ -146,7 +151,7 @@ export async function PATCH(
             }
 
             const asset = await Video.assets.create({
-                input: values.videoUrl,
+                input: [{ url: parsed.data.videoUrl! }],
                 playback_policy: ['public'],
                 test: false,
             });
@@ -163,7 +168,7 @@ export async function PATCH(
         return NextResponse.json(updatedTopic);
 
     } catch (error) {
-        console.log("[COURSES_CHAPTER_ID]", error);
+        logError("COURSES_CHAPTER_ID", error);
 
         return new NextResponse("Internal Error", { status: 500 });
     }

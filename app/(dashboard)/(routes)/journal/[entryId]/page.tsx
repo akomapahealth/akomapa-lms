@@ -47,7 +47,7 @@ export default async function EditJournalEntryPage({
   });
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="px-4 py-6 sm:p-6 max-w-4xl mx-auto">
       <JournalEditor
         courses={courses}
         existingEntry={entry}

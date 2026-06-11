@@ -33,7 +33,7 @@ const CourseDetailPage = async ({
         : "NOT_STARTED";
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
+    <div className="px-4 py-6 sm:p-6 max-w-4xl mx-auto space-y-6">
       <Breadcrumb
         items={[
           { label: "Dashboard", href: "/" },
@@ -66,7 +66,7 @@ const CourseDetailPage = async ({
                   {course.categoryName}
                 </p>
               )}
-              <h1 className="text-2xl font-bold text-slate-800">
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground">
                 {course.title}
               </h1>
             </div>
@@ -108,7 +108,7 @@ const CourseDetailPage = async ({
 
       {/* Modules */}
       <div>
-        <h2 className="text-lg font-semibold text-slate-800 mb-3">
+        <h2 className="text-lg font-semibold text-foreground mb-3">
           Modules ({course.totalModules})
         </h2>
         <div className="border rounded-lg">

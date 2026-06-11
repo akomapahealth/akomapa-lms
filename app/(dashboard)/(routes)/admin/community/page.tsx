@@ -36,8 +36,8 @@ const AdminCommunityPage = async () => {
   }));
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold text-slate-800">Community Management</h1>
+    <div className="px-4 py-6 sm:p-6 space-y-6">
+      <h1 className="text-xl sm:text-2xl font-bold text-foreground">Community Management</h1>
 
       <Tabs defaultValue="posts">
         <TabsList>

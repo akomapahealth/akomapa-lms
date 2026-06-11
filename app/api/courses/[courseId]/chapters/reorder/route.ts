@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { logError } from "@/lib/logger";
 
 export async function PUT(
     req: Request,
@@ -38,7 +39,7 @@ export async function PUT(
         return new NextResponse("Success", { status: 200 });
 
     } catch (error) {
-        console.log("[REORDER]", error);
+        logError("REORDER", error);
         return new NextResponse("Internal Error", { status: 500 });
     }
 }

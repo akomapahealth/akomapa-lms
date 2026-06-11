@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
+import { logError } from "@/lib/logger";
 export async function POST(
     req: Request,
     { params }: { params: Promise<{ courseId: string }> }
@@ -64,7 +65,7 @@ export async function POST(
         return NextResponse.json(topic);
 
     } catch (error) {
-        console.log("[CHAPTERS]", error);
+        logError("CHAPTERS", error);
         return new NextResponse("Internal Server Error", { status: 500 })
     }
 }

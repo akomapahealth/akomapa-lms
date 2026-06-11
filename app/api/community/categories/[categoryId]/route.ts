@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { isAdmin } from "@/lib/roles";
+import { logError } from "@/lib/logger";
 
 export async function PATCH(
   req: Request,
@@ -29,7 +30,7 @@ export async function PATCH(
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.log("[COMMUNITY_CATEGORY_PATCH]", error);
+    logError("COMMUNITY_CATEGORY_PATCH", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
@@ -63,7 +64,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.log("[COMMUNITY_CATEGORY_DELETE]", error);
+    logError("COMMUNITY_CATEGORY_DELETE", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }

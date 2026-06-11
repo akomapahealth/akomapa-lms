@@ -63,8 +63,8 @@ export const StudentTable = ({ students }: StudentTableProps) => {
         />
       </div>
 
-      <div className="border rounded-md">
-        <Table>
+      <div className="border rounded-md overflow-x-auto">
+        <Table className="min-w-[600px]">
           <TableHeader>
             <TableRow>
               <TableHead>Student</TableHead>

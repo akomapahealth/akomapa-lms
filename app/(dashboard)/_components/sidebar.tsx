@@ -4,14 +4,14 @@ import { SidebarUserInfo } from "./sidebar-user-info";
 
 export const Sidebar = () => {
   return (
-    <div className="h-full border-r border-akomapa-light-blue/30 flex flex-col overflow-y-auto bg-gradient-to-b from-white to-akomapa-ice/20 shadow-sm">
-      <div className="p-6 border-b border-akomapa-ice">
+    <div className="h-full border-r border-sidebar-border flex flex-col overflow-y-auto bg-sidebar text-sidebar-foreground shadow-lg">
+      <div className="p-6 border-b border-sidebar-border">
         <Logo />
       </div>
       <div className="flex flex-col w-full flex-1">
         <SidebarRoutes />
       </div>
-      <div className="border-t border-akomapa-ice">
+      <div className="border-t border-sidebar-border">
         <SidebarBottomRoutes />
         <SidebarUserInfo />
       </div>

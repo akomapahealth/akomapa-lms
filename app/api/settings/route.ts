@@ -2,6 +2,8 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
+import { settingsUpdateSchema } from "@/lib/validations/settings";
+import { logError } from "@/lib/logger";
 
 export async function GET() {
   try {
@@ -23,7 +25,7 @@ export async function GET() {
 
     return NextResponse.json(settings);
   } catch (error) {
-    console.log("[SETTINGS_GET]", error);
+    logError("SETTINGS_GET", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
@@ -35,20 +37,25 @@ export async function PATCH(req: Request) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const values = await req.json();
+    const body = await req.json();
+
+    const parsed = settingsUpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return new NextResponse("Invalid data", { status: 400 });
+    }
 
     const settings = await db.userSettings.upsert({
       where: { userId },
       create: {
         userId,
-        ...values,
+        ...parsed.data,
       },
-      update: values,
+      update: parsed.data,
     });
 
     return NextResponse.json(settings);
   } catch (error) {
-    console.log("[SETTINGS_PATCH]", error);
+    logError("SETTINGS_PATCH", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }

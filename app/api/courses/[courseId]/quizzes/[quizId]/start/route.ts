@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { isPostTestUnlocked } from "@/actions/check-post-test-lock";
+import { logError } from "@/lib/logger";
 
 export async function POST(
   req: Request,
@@ -93,7 +94,7 @@ export async function POST(
       questions: quiz.questions,
     });
   } catch (error) {
-    console.log("[QUIZ_START]", error);
+    logError("QUIZ_START", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }

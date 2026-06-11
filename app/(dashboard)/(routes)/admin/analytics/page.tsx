@@ -26,11 +26,11 @@ const AdminAnalyticsPage = async () => {
   ]);
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold text-slate-800">Analytics</h1>
+    <div className="px-4 py-6 sm:p-6 space-y-6">
+      <h1 className="text-xl sm:text-2xl font-bold text-foreground">Analytics</h1>
 
       {/* Revenue cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <DataCard label="Total Revenue" value={totalRevenue} shouldFormat />
         <DataCard label="Total Sales" value={totalSales} />
       </div>

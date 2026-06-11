@@ -53,7 +53,7 @@ const GradesDetailPage = async ({
   };
 
   return (
-    <div className="p-6">
+    <div className="px-4 py-6 sm:p-6">
       <Breadcrumb
         items={[
           { label: "Grades", href: "/grades" },
@@ -61,7 +61,7 @@ const GradesDetailPage = async ({
         ]}
       />
 
-      <h1 className="text-2xl font-bold text-slate-800 mt-4 mb-6">
+      <h1 className="text-xl sm:text-2xl font-bold text-foreground mt-4 mb-6">
         {detail.courseTitle}
       </h1>
 
@@ -84,12 +84,13 @@ const GradesDetailPage = async ({
         />
 
         {/* Module Progress */}
-        <Card className="border-slate-200">
+        <Card className="border-border">
           <CardHeader>
             <CardTitle className="text-lg">Module Progress</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
+            <div className="overflow-x-auto">
+            <Table className="min-w-[600px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Module</TableHead>
@@ -127,7 +128,7 @@ const GradesDetailPage = async ({
                           </span>
                         </div>
                       ) : (
-                        <div className="flex items-center gap-1 text-slate-400">
+                        <div className="flex items-center gap-1 text-muted-foreground">
                           <Circle className="h-4 w-4" />
                           <span className="text-sm">Not started</span>
                         </div>
@@ -137,21 +138,23 @@ const GradesDetailPage = async ({
                 ))}
               </TableBody>
             </Table>
+            </div>
           </CardContent>
         </Card>
 
         {/* Quiz Attempt History */}
-        <Card className="border-slate-200">
+        <Card className="border-border">
           <CardHeader>
             <CardTitle className="text-lg">Quiz Attempt History</CardTitle>
           </CardHeader>
           <CardContent>
             {detail.attempts.length === 0 ? (
-              <p className="text-sm text-slate-400 text-center py-4">
+              <p className="text-sm text-muted-foreground text-center py-4">
                 No quiz attempts yet
               </p>
             ) : (
-              <Table>
+              <div className="overflow-x-auto">
+              <Table className="min-w-[600px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Quiz</TableHead>
@@ -175,13 +178,13 @@ const GradesDetailPage = async ({
                           </Badge>
                         </div>
                       </TableCell>
-                      <TableCell className="text-sm text-slate-500">
+                      <TableCell className="text-sm text-muted-foreground">
                         {new Date(attempt.date).toLocaleDateString()}
                       </TableCell>
                       <TableCell className="text-center">
                         {attempt.percentage}%
                       </TableCell>
-                      <TableCell className="text-center text-sm text-slate-500">
+                      <TableCell className="text-center text-sm text-muted-foreground">
                         {attempt.timeTaken}
                       </TableCell>
                       <TableCell>
@@ -199,6 +202,7 @@ const GradesDetailPage = async ({
                   ))}
                 </TableBody>
               </Table>
+              </div>
             )}
           </CardContent>
         </Card>

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { isFaculty } from "@/lib/roles";
+import { logError } from "@/lib/logger";
 
 export async function PATCH(
   req: Request,
@@ -32,7 +33,7 @@ export async function PATCH(
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.log("[QUIZ_UNPUBLISH]", error);
+    logError("QUIZ_UNPUBLISH", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }

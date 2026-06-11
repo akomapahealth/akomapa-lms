@@ -38,24 +38,24 @@ const AdminQuizzesPage = async () => {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-slate-800">All Quizzes</h1>
+    <div className="px-4 py-6 sm:p-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground">All Quizzes</h1>
       </div>
 
       {quizzes.length === 0 ? (
-        <div className="flex items-center justify-center h-[400px] border border-dashed border-slate-300 rounded-lg">
+        <div className="flex items-center justify-center h-[400px] border border-dashed border-border rounded-lg">
           <div className="text-center">
-            <FileQuestion className="h-10 w-10 text-slate-400 mx-auto mb-2" />
-            <p className="text-slate-500 text-lg">No quizzes yet</p>
-            <p className="text-slate-400 text-sm mt-1">
+            <FileQuestion className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
+            <p className="text-muted-foreground text-lg">No quizzes yet</p>
+            <p className="text-muted-foreground text-sm mt-1">
               Create quizzes from within a course
             </p>
           </div>
         </div>
       ) : (
-        <div className="border rounded-md">
-          <Table>
+        <div className="border rounded-md overflow-x-auto">
+          <Table className="min-w-[600px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Title</TableHead>
@@ -77,10 +77,10 @@ const AdminQuizzesPage = async () => {
                       {quiz.title}
                     </Link>
                   </TableCell>
-                  <TableCell className="text-sm text-slate-500">
+                  <TableCell className="text-sm text-muted-foreground">
                     {quiz.course?.title ?? "—"}
                     {quiz.module && (
-                      <span className="text-xs text-slate-400 block">
+                      <span className="text-xs text-muted-foreground block">
                         {quiz.module.title}
                       </span>
                     )}

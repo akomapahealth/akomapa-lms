@@ -152,7 +152,7 @@ const QuizTakePage = () => {
 
   return (
     <div className="flex flex-col max-w-3xl mx-auto pb-20">
-      <div className="p-4">
+      <div className="px-4 py-4 sm:p-4">
         <Card className="border-slate-200">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">

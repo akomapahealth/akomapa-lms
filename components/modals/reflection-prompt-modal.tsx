@@ -52,7 +52,7 @@ export const ReflectionPromptModal = ({
             <span className="block">
               Take a moment to reflect on what you learned.
             </span>
-            <span className="block bg-slate-50 border rounded-md p-3 text-sm italic text-slate-700">
+            <span className="block bg-muted border rounded-md p-3 text-sm italic text-foreground">
               {prompt}
             </span>
           </AlertDialogDescription>

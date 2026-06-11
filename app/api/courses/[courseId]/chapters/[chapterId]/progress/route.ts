@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { evaluateBadges, type BadgeEvent } from "@/lib/badge-service";
 import { updateStreak } from "@/lib/streak-service";
 import { generateCertificate } from "@/lib/certificate-service";
+import { logError } from "@/lib/logger";
 
 export async function PUT(
     req: Request,
@@ -124,7 +125,7 @@ export async function PUT(
                     try {
                         await generateCertificate(userId, routeParams.courseId);
                     } catch (err) {
-                        console.log("[CERTIFICATE_AUTO_GENERATE]", err);
+                        logError("CERTIFICATE_AUTO_GENERATE", err);
                     }
                 }
             }
@@ -157,7 +158,7 @@ export async function PUT(
         });
 
     } catch (error) {
-        console.log("[CHAPTER_ID_PROGRESS]", error);
+        logError("CHAPTER_ID_PROGRESS", error);
         return new NextResponse("Internal Error", { status: 500 });
     }
 }

@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { isAdmin } from "@/lib/roles";
 import { caseStudyScenarioSchema } from "@/lib/case-study-types";
+import { logError } from "@/lib/logger";
 
 export async function POST(
   req: Request,
@@ -56,7 +57,7 @@ export async function POST(
 
     return NextResponse.json(caseStudy);
   } catch (error) {
-    console.log("[CASE_STUDY_CREATE]", error);
+    logError("CASE_STUDY_CREATE", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }

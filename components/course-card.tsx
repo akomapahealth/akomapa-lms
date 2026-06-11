@@ -43,7 +43,7 @@ export const CourseCard = ({
                         {category}
                     </p>
                     <div className="my-3 flex items-center gap-x-2 text-sm md:text-xs">
-                        <div className="flex items-center gap-x-1 text-slate-500">
+                        <div className="flex items-center gap-x-1 text-muted-foreground">
                             <IconBadge size="sm" icon={BookOpen} />
                             <span>
                                 {topicsLength} {topicsLength === 1 ? "Topic" : "Topics"}
@@ -57,7 +57,7 @@ export const CourseCard = ({
                             variant={progress === 100 ? "success" : "default"}
                         />
                     ) : (
-                        <p className="text-md md:text-sm font-medium text-slate-500">
+                        <p className="text-md md:text-sm font-medium text-muted-foreground">
                             {formatPrice(price)}
                         </p>
                     )}

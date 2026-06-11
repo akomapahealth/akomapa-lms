@@ -19,7 +19,7 @@ export const ScoreComparison = ({
       : null;
 
   return (
-    <Card className="border-slate-200">
+    <Card className="border-border">
       <CardHeader className="pb-3">
         <CardTitle className="text-lg">Your Growth</CardTitle>
       </CardHeader>
@@ -27,12 +27,12 @@ export const ScoreComparison = ({
         <div className="grid grid-cols-3 gap-4 text-center">
           {/* Pre-Test */}
           <div className="space-y-2">
-            <p className="text-sm text-slate-500">Pre-Test</p>
-            <p className="text-3xl font-bold text-slate-800">
+            <p className="text-sm text-muted-foreground">Pre-Test</p>
+            <p className="text-3xl font-bold text-foreground">
               {preTestScore !== null ? `${Math.round(preTestScore)}%` : "—"}
             </p>
             {preTestScore !== null && (
-              <div className="w-full bg-slate-200 rounded-full h-2">
+              <div className="w-full bg-muted rounded-full h-2">
                 <div
                   className="bg-akomapa-teal/60 h-2 rounded-full transition-all"
                   style={{ width: `${preTestScore}%` }}
@@ -43,17 +43,17 @@ export const ScoreComparison = ({
 
           {/* Arrow */}
           <div className="flex items-center justify-center">
-            <div className="text-2xl text-slate-300">→</div>
+            <div className="text-2xl text-muted-foreground">→</div>
           </div>
 
           {/* Post-Test */}
           <div className="space-y-2">
-            <p className="text-sm text-slate-500">Post-Test</p>
-            <p className="text-3xl font-bold text-slate-800">
+            <p className="text-sm text-muted-foreground">Post-Test</p>
+            <p className="text-3xl font-bold text-foreground">
               {postTestScore !== null ? `${Math.round(postTestScore)}%` : "—"}
             </p>
             {postTestScore !== null && (
-              <div className="w-full bg-slate-200 rounded-full h-2">
+              <div className="w-full bg-muted rounded-full h-2">
                 <div
                   className="bg-akomapa-teal h-2 rounded-full transition-all"
                   style={{ width: `${postTestScore}%` }}
@@ -99,7 +99,7 @@ export const ScoreComparison = ({
         )}
 
         {preTestScore === null && postTestScore === null && (
-          <p className="text-center text-sm text-slate-400 mt-4">
+          <p className="text-center text-sm text-muted-foreground mt-4">
             Complete the pre-test and post-test to see your growth.
           </p>
         )}

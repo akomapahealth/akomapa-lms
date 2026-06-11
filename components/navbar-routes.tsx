@@ -1,18 +1,20 @@
 "use client";
 
 import { Suspense } from "react";
-import { UserButton, useAuth } from "@clerk/nextjs";
+import { UserButton, useAuth, useUser } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
 import { LogOut } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { isAdminClient } from "@/lib/roles-client";
 
 import { SearchInput } from "./search-input";
 
 export const NavbarRoutes = () => {
   const { userId } = useAuth();
+  const { user } = useUser();
   const pathname = usePathname();
 
   const isAdminPage = pathname?.startsWith("/admin");
@@ -36,7 +38,7 @@ export const NavbarRoutes = () => {
               Exit
             </Button>
           </Link>
-        ) : isAdminClient(userId) ? (
+        ) : isAdminClient(user?.publicMetadata) ? (
           <Link href="/admin/courses">
             <Button size="sm" variant="ghost">
               Admin
@@ -49,6 +51,7 @@ export const NavbarRoutes = () => {
             </Button>
           </Link>
         ) : null}
+        <ThemeToggle />
         <UserButton />
       </div>
     </>

@@ -49,8 +49,8 @@ const CourseQuizzesPage = async ({
   };
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="px-4 py-6 sm:p-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
           <p className="text-sm text-slate-500">
             <Link href="/admin/courses" className="hover:text-akomapa-teal">
@@ -58,7 +58,7 @@ const CourseQuizzesPage = async ({
             </Link>{" "}
             / {course?.title}
           </p>
-          <h1 className="text-2xl font-bold text-slate-800">Quizzes</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Quizzes</h1>
         </div>
         <CreateQuizButton courseId={courseId} />
       </div>
@@ -74,8 +74,8 @@ const CourseQuizzesPage = async ({
           </div>
         </div>
       ) : (
-        <div className="border rounded-md">
-          <Table>
+        <div className="border rounded-md overflow-x-auto">
+          <Table className="min-w-[600px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Title</TableHead>

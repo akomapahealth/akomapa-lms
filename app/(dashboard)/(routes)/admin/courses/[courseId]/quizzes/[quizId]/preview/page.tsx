@@ -38,7 +38,7 @@ const QuizPreviewPage = async ({
   }
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
+    <div className="px-4 py-6 sm:p-6 max-w-3xl mx-auto">
       <Link
         href={`/admin/courses/${courseId}/quizzes/${quizId}`}
         className="flex items-center text-sm hover:opacity-75 transition mb-6"
@@ -56,7 +56,7 @@ const QuizPreviewPage = async ({
         </Badge>
       </div>
 
-      <h1 className="text-2xl font-bold mb-6">{quiz.title}</h1>
+      <h1 className="text-xl sm:text-2xl font-bold mb-6">{quiz.title}</h1>
 
       <div className="space-y-6">
         {quiz.questions.map((question, qIdx) => (

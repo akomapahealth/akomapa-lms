@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { generateCertificate } from "@/lib/certificate-service";
+import { logError } from "@/lib/logger";
 
 export const maxDuration = 30;
 
@@ -41,7 +42,7 @@ export async function POST(
 
     return NextResponse.json(result);
   } catch (error) {
-    console.log("[CERTIFICATE_POST]", error);
+    logError("CERTIFICATE_POST", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
@@ -72,7 +73,7 @@ export async function GET(
       issuedAt: certificate.issuedAt,
     });
   } catch (error) {
-    console.log("[CERTIFICATE_GET]", error);
+    logError("CERTIFICATE_GET", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }

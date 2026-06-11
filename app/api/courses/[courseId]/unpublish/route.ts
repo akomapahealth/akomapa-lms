@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { logError } from "@/lib/logger";
 
 export async function PATCH(
     req: Request,
@@ -37,7 +38,7 @@ export async function PATCH(
 
         return NextResponse.json(unpublishedCourse);
     } catch (error) {
-        console.log("[COURSE_ID_UNPUBLISH]", error);
+        logError("COURSE_ID_UNPUBLISH", error);
         return new NextResponse("Internal Error", { status: 500 });
     }
 }

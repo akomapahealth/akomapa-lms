@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { isFaculty } from "@/lib/roles";
+import { quizUpdateSchema } from "@/lib/validations/quiz";
+import { logError } from "@/lib/logger";
 
 export async function PATCH(
   req: Request,
@@ -22,19 +24,24 @@ export async function PATCH(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const values = await req.json();
+    const body = await req.json();
+
+    const parsed = quizUpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return new NextResponse("Invalid data", { status: 400 });
+    }
 
     const quiz = await db.quiz.update({
       where: {
         id: routeParams.quizId,
         courseId: routeParams.courseId,
       },
-      data: values,
+      data: parsed.data,
     });
 
     return NextResponse.json(quiz);
   } catch (error) {
-    console.log("[QUIZ_ID]", error);
+    logError("QUIZ_ID", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
@@ -66,7 +73,7 @@ export async function DELETE(
 
     return NextResponse.json(quiz);
   } catch (error) {
-    console.log("[QUIZ_ID_DELETE]", error);
+    logError("QUIZ_ID_DELETE", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }

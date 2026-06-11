@@ -83,7 +83,7 @@ body,
 @layer base {
   :root {
     /* Akomapa LMS Color Scheme */
-    --background: 180 20% 99%; /* Brilliance #fdfefe */
+    --background: 185 18% 97%; /* Warm teal-tinted off-white #f3f8f9 */
     --foreground: 215 28% 17%; /* Dark Slate #1e293b */
 
     --card: 0 0% 100%;
@@ -107,7 +107,7 @@ body,
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 189 47% 78%; /* Light Blue #aadce5 */
+    --border: 189 30% 85%; /* Softer border */
     --input: 189 47% 89%; /* Ice Cold #d5edf1 */
     --ring: 189 100% 35%; /* Munsell Blue #0097b2 */
 
@@ -121,6 +121,15 @@ body,
     --akomapa-ice: 189 47% 89%;
     --akomapa-light-blue: 189 47% 78%;
     --akomapa-cream: 180 20% 99%;
+
+    /* Sidebar */
+    --sidebar-bg: 187 80% 14%; /* Deep teal #06373f */
+    --sidebar-fg: 189 47% 95%; /* Light text */
+    --sidebar-muted: 189 30% 60%; /* Muted sidebar text */
+    --sidebar-accent: 44 83% 55%; /* Gold accent */
+    --sidebar-border: 187 50% 20%; /* Subtle dark border */
+    --sidebar-hover: 187 60% 18%; /* Hover state */
+    --sidebar-active: 187 60% 22%; /* Active item bg */
   }
 
   .dark {
@@ -151,6 +160,14 @@ body,
     --border: 215 28% 25%;
     --input: 215 28% 25%;
     --ring: 189 100% 40%;
+
+    /* Sidebar stays deep in dark mode too */
+    --sidebar-bg: 215 28% 8%;
+    --sidebar-fg: 189 47% 90%;
+    --sidebar-muted: 189 30% 50%;
+    --sidebar-border: 215 28% 15%;
+    --sidebar-hover: 215 28% 14%;
+    --sidebar-active: 215 28% 18%;
   }
 }
 

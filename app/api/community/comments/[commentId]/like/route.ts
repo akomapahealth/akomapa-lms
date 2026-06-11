@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
+import { logError } from "@/lib/logger";
 
 export async function POST(
   req: Request,
@@ -36,7 +37,7 @@ export async function POST(
       count,
     });
   } catch (error) {
-    console.log("[COMMUNITY_COMMENT_LIKE]", error);
+    logError("COMMUNITY_COMMENT_LIKE", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }

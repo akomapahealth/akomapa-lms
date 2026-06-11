@@ -66,6 +66,15 @@ const config = withUt({
   				ice: '#d5edf1',
   				'light-blue': '#aadce5',
   				cream: '#fdfefe'
+  			},
+  			sidebar: {
+  				DEFAULT: 'hsl(var(--sidebar-bg))',
+  				foreground: 'hsl(var(--sidebar-fg))',
+  				muted: 'hsl(var(--sidebar-muted))',
+  				accent: 'hsl(var(--sidebar-accent))',
+  				border: 'hsl(var(--sidebar-border))',
+  				hover: 'hsl(var(--sidebar-hover))',
+  				active: 'hsl(var(--sidebar-active))'
   			}
   		},
   		borderRadius: {

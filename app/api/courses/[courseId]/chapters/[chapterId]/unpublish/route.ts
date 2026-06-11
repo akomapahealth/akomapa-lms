@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { logError } from "@/lib/logger";
 
 export async function PATCH(
     req: Request,
@@ -55,7 +56,7 @@ export async function PATCH(
 
         return NextResponse.json(unpublishedTopic);
     } catch (error) {
-        console.log("[CHAPTER_UNPUBLISH]", error);
+        logError("CHAPTER_UNPUBLISH", error);
         return new NextResponse("Internal Error", { status: 500 });
     }
 }

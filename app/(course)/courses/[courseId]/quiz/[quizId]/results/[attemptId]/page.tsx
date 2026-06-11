@@ -110,7 +110,7 @@ const QuizResultsPage = async ({
           />
         </div>
 
-        <div className="p-4 space-y-4">
+        <div className="px-4 py-4 sm:p-4 space-y-4">
           {/* Score Card */}
           <Card className="border-slate-200">
             <CardHeader className="pb-4">
@@ -213,7 +213,7 @@ const QuizResultsPage = async ({
           </Card>
 
           {/* Actions */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <Link href={`/courses/${courseId}`}>
               <Button variant="outline" className="gap-1">
                 <ArrowLeft className="h-4 w-4" />

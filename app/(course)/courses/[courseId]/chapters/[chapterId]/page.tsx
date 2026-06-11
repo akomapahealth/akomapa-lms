@@ -105,12 +105,12 @@ const ChapterIdPage = async ({
                     )}
                 </div>
                 <div>
-                    <div className="p-4 flex flex-col md:flex-row items-center justify-between">
+                    <div className="px-4 py-4 flex flex-col md:flex-row items-center justify-between gap-3">
                         <div>
                             <p className="text-xs text-akomapa-teal font-medium">
                                 {topic.module.title}
                             </p>
-                            <h2 className="text-2xl font-semibold mb-2">
+                            <h2 className="text-xl sm:text-2xl font-semibold mb-2">
                                 {topic.title}
                             </h2>
                         </div>

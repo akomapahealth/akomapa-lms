@@ -107,7 +107,7 @@ const CourseLayout = async ({
 
     return (
         <div className="h-full">
-            <div className="h-[80px] md:pl-80 fixed inset-y-0 w-full z-50">
+            <div className="h-[80px] fixed top-0 left-0 right-0 md:left-80 z-50">
                 <CourseNavbar
                     course={course}
                     modules={course.modules}

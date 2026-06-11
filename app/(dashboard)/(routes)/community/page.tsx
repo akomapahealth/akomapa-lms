@@ -39,9 +39,9 @@ const CommunityPage = async ({
   ]);
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-800">Community</h1>
+    <div className="px-4 py-6 sm:p-6 space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground">Community</h1>
         <Button asChild>
           <Link href="/community/new">
             <Plus className="h-4 w-4 mr-2" />
@@ -54,10 +54,10 @@ const CommunityPage = async ({
       <PostSearch />
 
       {posts.length === 0 ? (
-        <div className="flex items-center justify-center h-[300px] border border-dashed border-slate-300 rounded-lg">
+        <div className="flex items-center justify-center h-[300px] border border-dashed border-border rounded-lg">
           <div className="text-center">
-            <p className="text-slate-500 text-lg">No posts yet</p>
-            <p className="text-slate-400 text-sm mt-1">
+            <p className="text-muted-foreground text-lg">No posts yet</p>
+            <p className="text-muted-foreground text-sm mt-1">
               Be the first to start a discussion!
             </p>
           </div>

@@ -4,6 +4,8 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { isFaculty } from "@/lib/roles";
+import { courseUpdateSchema } from "@/lib/validations/course";
+import { logError } from "@/lib/logger";
 
 const mux = new Mux({
     tokenId: process.env.MUX_TOKEN_ID,
@@ -63,7 +65,7 @@ export async function DELETE(
 
         return NextResponse.json(deletedCourse);
     } catch (error) {
-        console.log("[COURSE_ID_DELETE]", error);
+        logError("COURSE_ID_DELETE", error);
         return new NextResponse("Internal Error", { status: 500 });
     }
 }
@@ -75,10 +77,15 @@ export async function PATCH(
     try {
         const { userId } = await auth();
         const { courseId } = await params;
-        const values = await req.json();
+        const body = await req.json();
 
         if (!userId || !(await isFaculty(userId))) {
             return new NextResponse("Unauthorized", { status: 401 });
+        }
+
+        const parsed = courseUpdateSchema.safeParse(body);
+        if (!parsed.success) {
+            return new NextResponse("Invalid data", { status: 400 });
         }
 
         const course = await db.course.update({
@@ -86,14 +93,12 @@ export async function PATCH(
                 id: courseId,
                 userId
             },
-            data: {
-                ...values,
-            }
+            data: parsed.data,
         });
 
         return NextResponse.json(course);
     } catch (error) {
-        console.log("[COURSE_ID]", error);
+        logError("COURSE_ID", error);
         return new NextResponse("Internal Error", { status: 500 });
     }
 }

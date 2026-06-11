@@ -31,7 +31,7 @@ const AuthLayout = ({
                         </div>
                         
                         <div className="relative mb-8">
-                            <h2 className="text-4xl font-bold mb-4 hover-lift inline-block">Welcome to Akomapa LMS</h2>
+                            <h2 className="text-4xl font-bold mb-4 hover-lift inline-block">Welcome to Akomapa Academy</h2>
                             <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-20 h-1 bg-akomapa-gold rounded-full hover-scale"></div>
                         </div>
                         <p className="text-lg opacity-90 mb-4">
@@ -118,7 +118,7 @@ const AuthLayout = ({
                             />
                             {/* <div className="text-center">
                                 <h1 className="text-3xl font-bold text-akomapa-teal">Akomapa LMS</h1>
-                                <p className="text-sm text-gray-600">Training Health Leaders</p>
+                                <p className="text-sm text-muted-foreground">Training Health Leaders</p>
                             </div> */}
                         </div>
                         <div className="flex space-x-4 mt-4">
@@ -138,21 +138,21 @@ const AuthLayout = ({
                         <div className="flex justify-center space-x-8 mb-4">
                             <div className="text-center hover-lift">
                                 <p className="text-2xl font-bold text-akomapa-teal">4</p>
-                                <p className="text-sm text-gray-600">Countries</p>
+                                <p className="text-sm text-muted-foreground">Countries</p>
                             </div>
                             <div className="text-center hover-lift">
                                 <p className="text-2xl font-bold text-akomapa-teal">5+</p>
-                                <p className="text-sm text-gray-600">Programs</p>
+                                <p className="text-sm text-muted-foreground">Programs</p>
                             </div>
                             <div className="text-center hover-lift">
                                 <p className="text-2xl font-bold text-akomapa-teal">501(c)(3)</p>
-                                <p className="text-sm text-gray-600">Nonprofit</p>
+                                <p className="text-sm text-muted-foreground">Nonprofit</p>
                             </div>
                         </div>
                     </div>
 
                     {/* Footer */}
-                    <div className="mt-8 text-center text-sm text-gray-600 animate-fade-in">
+                    <div className="mt-8 text-center text-sm text-muted-foreground animate-fade-in">
                         <p>© {currentYear} Akomapa Academy. All rights reserved.</p>
                         <div className="flex justify-center space-x-4 mt-2">
                             <a href="https://www.akomapa.org" target="_blank" rel="noopener noreferrer" className="hover:text-akomapa-teal transition-colors duration-300 hover-lift">Visit Website</a>
