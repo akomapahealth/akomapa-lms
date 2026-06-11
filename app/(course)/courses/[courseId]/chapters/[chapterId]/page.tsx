@@ -100,6 +100,8 @@ const ChapterIdPage = async ({
                                 courseId={courseId}
                                 nextTopicId={nextTopic?.id}
                                 isCompleted={!!userProgress?.isCompleted}
+                                moduleId={topic.moduleId}
+                                reflectionPrompt={topic.module.reflectionPrompt}
                             />
                         ): (
                             <CourseEnrollButton

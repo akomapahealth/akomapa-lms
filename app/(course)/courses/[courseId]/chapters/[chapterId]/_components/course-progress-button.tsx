@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useConfettiStore } from "@/hooks/use-confetti-store";
+import { ReflectionPromptModal } from "@/components/modals/reflection-prompt-modal";
 import axios from "axios";
 
 import { CheckCircle, XCircle } from "lucide-react";
@@ -12,8 +13,10 @@ import toast from "react-hot-toast";
 interface CourseProgressButtonProps {
     topicId: string;
     courseId: string;
-    isCompleted?: boolean
+    isCompleted?: boolean;
     nextTopicId?: string;
+    moduleId?: string;
+    reflectionPrompt?: string | null;
 }
 
 export const CourseProgressButton = ({
@@ -21,10 +24,14 @@ export const CourseProgressButton = ({
     courseId,
     isCompleted,
     nextTopicId,
+    moduleId,
+    reflectionPrompt,
 }: CourseProgressButtonProps) => {
     const router = useRouter();
     const confetti = useConfettiStore();
     const [isLoading, setIsLoading] = useState(false);
+    const [showReflectionModal, setShowReflectionModal] = useState(false);
+    const [completedModuleName, setCompletedModuleName] = useState("");
 
     const onClick = async () => {
         try {
@@ -48,6 +55,12 @@ export const CourseProgressButton = ({
                 // Last topic in the current module
                 confetti.onOpen();
                 toast.success(`Module "${response.data.moduleName}" completed!`);
+
+                // Show reflection prompt if module has one
+                if (reflectionPrompt && moduleId) {
+                    setCompletedModuleName(response.data.moduleName);
+                    setShowReflectionModal(true);
+                }
             } else if (!isCompleted) {
                 toast.success("Topic completed!");
             }
@@ -74,15 +87,27 @@ export const CourseProgressButton = ({
 
     const Icon = isCompleted ? XCircle : CheckCircle;
     return (
-        <Button
-            onClick={onClick}
-            disabled={isLoading}
-            type="button"
-            variant={isCompleted ? "outline" : "success"}
-            className="w-full md:w-auto"
-        >
-            {isCompleted ? "Not completed" : "Mark as complete"}
-            <Icon className="h-4 w-4 ml-2"/>
-        </Button>
+        <>
+            <Button
+                onClick={onClick}
+                disabled={isLoading}
+                type="button"
+                variant={isCompleted ? "outline" : "success"}
+                className="w-full md:w-auto"
+            >
+                {isCompleted ? "Not completed" : "Mark as complete"}
+                <Icon className="h-4 w-4 ml-2"/>
+            </Button>
+            {reflectionPrompt && moduleId && (
+                <ReflectionPromptModal
+                    isOpen={showReflectionModal}
+                    onClose={() => setShowReflectionModal(false)}
+                    moduleName={completedModuleName}
+                    prompt={reflectionPrompt}
+                    courseId={courseId}
+                    moduleId={moduleId}
+                />
+            )}
+        </>
     )
 }

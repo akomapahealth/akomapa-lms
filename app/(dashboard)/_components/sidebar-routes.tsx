@@ -2,6 +2,7 @@
 
 import {
   BarChart,
+  BookHeart,
   BookOpen,
   Compass,
   FileQuestion,
@@ -40,6 +41,11 @@ const studentRoutes = [
     icon: Users,
     label: "Community",
     href: "/community",
+  },
+  {
+    icon: BookHeart,
+    label: "Journal",
+    href: "/journal",
   },
 ];
 
