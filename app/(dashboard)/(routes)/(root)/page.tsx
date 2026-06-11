@@ -5,6 +5,8 @@ import { getEnrolledCourses } from "@/actions/get-enrolled-courses";
 import { getCourseProgressBreakdown } from "@/actions/get-course-progress-breakdown";
 import { getQuizProgress } from "@/actions/get-quiz-progress";
 import { getCompletionTimeline } from "@/actions/get-completion-timeline";
+import { getUserBadges } from "@/actions/get-user-badges";
+import { getUserStreak } from "@/actions/get-user-streak";
 
 import { WelcomeBanner } from "./_components/welcome-banner";
 import { CourseSelector } from "./_components/course-selector";
@@ -12,6 +14,8 @@ import { ProgressDonutChart } from "./_components/progress-donut-chart";
 import { TopicProgressSection } from "./_components/topic-progress-section";
 import { QuizProgressSection } from "./_components/quiz-progress-section";
 import { TimeProgressChart } from "./_components/time-progress-chart";
+import { BadgeGrid } from "./_components/badge-grid";
+import { StreakCounter } from "./_components/streak-counter";
 
 export default async function Dashboard({
   searchParams,
@@ -27,8 +31,12 @@ export default async function Dashboard({
     | "weekly"
     | "monthly";
 
-  // Fetch enrolled courses
-  const enrolledCourses = await getEnrolledCourses(userId);
+  // Fetch enrolled courses and gamification data
+  const [enrolledCourses, badges, streak] = await Promise.all([
+    getEnrolledCourses(userId),
+    getUserBadges(userId),
+    getUserStreak(userId),
+  ]);
 
   const inProgressCount = enrolledCourses.filter(
     (c) => c.status === "IN_PROGRESS"
@@ -55,10 +63,18 @@ export default async function Dashboard({
 
   return (
     <div className="p-6 space-y-6">
-      <WelcomeBanner
-        inProgressCount={inProgressCount}
-        completedCount={completedCount}
-      />
+      <div className="flex items-start justify-between gap-4">
+        <WelcomeBanner
+          inProgressCount={inProgressCount}
+          completedCount={completedCount}
+        />
+      </div>
+
+      <div className="flex items-center gap-3">
+        <StreakCounter currentStreak={streak.currentStreak} />
+      </div>
+
+      <BadgeGrid badges={badges} />
 
       <CourseSelector
         courses={courseOptions}

@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
+import { evaluateBadges } from "@/lib/badge-service";
 
 export async function POST(
   req: Request,
@@ -110,6 +111,41 @@ export async function POST(
 
     const percentage = totalPoints > 0 ? Math.round((totalScore / totalPoints) * 100) : 0;
 
+    // Gamification: evaluate badges on quiz completion
+    let preTestScore: number | undefined;
+
+    // If this is a post-test, find the pre-test score for growth comparison
+    const quiz = await db.quiz.findUnique({
+      where: { id: routeParams.quizId },
+      select: { type: true, courseId: true },
+    });
+
+    if (quiz?.type === "POST_TEST" && quiz.courseId) {
+      const preTest = await db.quiz.findFirst({
+        where: { courseId: quiz.courseId, type: "PRE_TEST" },
+        select: { id: true },
+      });
+      if (preTest) {
+        const bestPreAttempt = await db.quizAttempt.findFirst({
+          where: { userId, quizId: preTest.id, completedAt: { not: null } },
+          orderBy: { score: "desc" },
+          select: { score: true, totalPoints: true },
+        });
+        if (bestPreAttempt && bestPreAttempt.totalPoints) {
+          preTestScore = Math.round(
+            (bestPreAttempt.score! / bestPreAttempt.totalPoints) * 100
+          );
+        }
+      }
+    }
+
+    const awardedBadges = await evaluateBadges(userId, {
+      type: "quiz_completed",
+      quizId: routeParams.quizId,
+      score: percentage,
+      preTestScore,
+    });
+
     return NextResponse.json({
       attemptId,
       score: totalScore,
@@ -117,6 +153,12 @@ export async function POST(
       percentage,
       passed: percentage >= attempt.quiz.passingScore,
       results,
+      awardedBadges: awardedBadges.map((b) => ({
+        id: b.id,
+        name: b.name,
+        description: b.description,
+        type: b.type,
+      })),
     });
   } catch (error) {
     console.log("[QUIZ_SUBMIT]", error);

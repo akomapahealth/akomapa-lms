@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
+import { evaluateBadges } from "@/lib/badge-service";
 
 export async function POST(
   req: Request,
@@ -72,7 +73,20 @@ export async function POST(
       },
     });
 
-    return NextResponse.json(comment);
+    const awardedBadges = await evaluateBadges(userId, {
+      type: "comment_created",
+      commentId: comment.id,
+    });
+
+    return NextResponse.json({
+      ...comment,
+      awardedBadges: awardedBadges.map((b) => ({
+        id: b.id,
+        name: b.name,
+        description: b.description,
+        type: b.type,
+      })),
+    });
   } catch (error) {
     console.log("[COMMUNITY_COMMENT_POST]", error);
     return new NextResponse("Internal Error", { status: 500 });

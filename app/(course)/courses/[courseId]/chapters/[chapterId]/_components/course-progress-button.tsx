@@ -34,6 +34,12 @@ export const CourseProgressButton = ({
                 isCompleted: !isCompleted
             });
 
+            // Show badge notifications
+            const awardedBadges = response.data.awardedBadges ?? [];
+            const hasMilestoneBadge = awardedBadges.some(
+                (b: { type: string }) => b.type === "MILESTONE"
+            );
+
             if (!isCompleted && !nextTopicId) {
                 // Last topic in the entire course
                 confetti.onOpen();
@@ -44,6 +50,14 @@ export const CourseProgressButton = ({
                 toast.success(`Module "${response.data.moduleName}" completed!`);
             } else if (!isCompleted) {
                 toast.success("Topic completed!");
+            }
+
+            // Show badge toasts
+            for (const badge of awardedBadges) {
+                if (hasMilestoneBadge) confetti.onOpen();
+                toast.success(`Badge earned: ${badge.name}!`, {
+                    duration: 5000,
+                });
             }
 
             if (!isCompleted && nextTopicId) {
