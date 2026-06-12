@@ -158,6 +158,20 @@
   }
 }
 
+/*
+ * App shell sidebar — deliberately plain CSS, outside all Tailwind layers.
+ * The persistent desktop sidebar is core navigation; this guarantees it
+ * renders at >=768px no matter what happens to utility class generation.
+ */
+.app-shell-sidebar {
+  display: none;
+}
+@media (min-width: 768px) {
+  .app-shell-sidebar {
+    display: flex !important;
+  }
+}
+
 .ql-container {
   font-size: 16px !important;
 }

@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { BrandLogo } from "@/components/brand/logo";
+
 const currentYear = new Date().getFullYear();
 
 const stats = [
@@ -22,7 +24,7 @@ const AuthLayout = ({ children }: { children: React.ReactNode }) => {
           sizes="(max-width: 767px) 0px, 50vw"
           className="object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[hsl(187_80%_8%)]/90 via-[hsl(187_80%_12%)]/60 to-[hsl(187_80%_10%)]/40" />
+        <div className="absolute inset-0 bg-[hsl(187_80%_10%)]/70" />
         <div className="relative z-10 flex h-full flex-col justify-end p-10 lg:p-14">
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-akomapa-gold">
             Nya Akomapa — Have a good heart
@@ -54,13 +56,7 @@ const AuthLayout = ({ children }: { children: React.ReactNode }) => {
         <div className="w-full max-w-md">
           <div className="mb-8 flex flex-col items-center animate-scale-in">
             <Link href="/" aria-label="Back to Akomapa Academy home">
-              <Image
-                height={120}
-                width={120}
-                alt="Akomapa Academy"
-                src="/akomapa-logo.png"
-                className="object-contain"
-              />
+              <BrandLogo size={44} wordmarkClassName="text-xl" />
             </Link>
           </div>
 

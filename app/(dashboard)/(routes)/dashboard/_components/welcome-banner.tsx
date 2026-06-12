@@ -17,7 +17,7 @@ export const WelcomeBanner = async ({
   const firstName = user?.firstName || "Student";
 
   return (
-    <div className="rounded-2xl bg-gradient-to-r from-[hsl(var(--sidebar-bg))] to-akomapa-teal p-6 text-white shadow-soft md:p-8">
+    <div className="rounded-2xl bg-surface-deep p-6 text-surface-deep-foreground shadow-soft md:p-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-akomapa-gold">
@@ -26,7 +26,7 @@ export const WelcomeBanner = async ({
           <h1 className="font-display mt-2 text-2xl font-semibold md:text-3xl">
             Welcome back, {firstName}
           </h1>
-          <p className="mt-1 text-sm text-white/75 md:text-base">
+          <p className="mt-1 text-sm text-surface-deep-foreground/75 md:text-base">
             Continue your GHELP journey
           </p>
         </div>

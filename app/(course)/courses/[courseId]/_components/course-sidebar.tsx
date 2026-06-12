@@ -61,7 +61,7 @@ export const CourseSidebar = ({
   const moduleQuizzes = quizzes.filter((q) => q.type === "MODULE_QUIZ");
 
   return (
-    <div className="h-full flex flex-col overflow-hidden bg-card">
+    <div className="h-full flex flex-col overflow-hidden border-r border-border/60 bg-card">
       <div className="p-6 border-b">
         <h1 className="font-semibold text-foreground">{course.title}</h1>
         <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">

@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 
+import { BrandMark } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -35,13 +35,7 @@ export const MarketingNav = () => {
     >
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-2.5">
-          <Image
-            src="/akomapa-logo.png"
-            alt="Akomapa Academy"
-            width={36}
-            height={36}
-            className="rounded-full"
-          />
+          <BrandMark size={34} />
           <span className="font-display text-lg font-semibold tracking-tight">
             Akomapa Academy
           </span>

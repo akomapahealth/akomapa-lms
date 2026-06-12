@@ -1,14 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import {
-  animate,
-  useInView,
-  useMotionValue,
-  useReducedMotion,
-  useTransform,
-} from "framer-motion";
-import { motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { animate, useInView, useReducedMotion } from "framer-motion";
 
 interface CountUpProps {
   to: number;
@@ -16,23 +9,29 @@ interface CountUpProps {
   className?: string;
 }
 
+/**
+ * Server-renders the final value (stable hydration regardless of the
+ * visitor's motion preference), then counts up from 0 once in view.
+ */
 export const CountUp = ({ to, suffix = "", className }: CountUpProps) => {
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true, margin: "-40px" });
   const reduceMotion = useReducedMotion();
-  const value = useMotionValue(reduceMotion ? to : 0);
-  const rounded = useTransform(value, (v) => `${Math.round(v)}${suffix}`);
+  const [display, setDisplay] = useState(`${to}${suffix}`);
 
   useEffect(() => {
-    if (inView && !reduceMotion) {
-      const controls = animate(value, to, { duration: 1.6, ease: "circOut" });
-      return controls.stop;
-    }
-  }, [inView, reduceMotion, to, value]);
+    if (!inView || reduceMotion) return;
+    const controls = animate(0, to, {
+      duration: 1.6,
+      ease: "circOut",
+      onUpdate: (v) => setDisplay(`${Math.round(v)}${suffix}`),
+    });
+    return () => controls.stop();
+  }, [inView, reduceMotion, to, suffix]);
 
   return (
-    <motion.span ref={ref} className={className}>
-      {rounded}
-    </motion.span>
+    <span ref={ref} className={className}>
+      {display}
+    </span>
   );
 };

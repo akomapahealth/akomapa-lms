@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 
 const courses = [
   { title: "Welcome to GHELP", blurb: "Orientation, values, and the Akomapa way." },
@@ -17,8 +17,6 @@ const courses = [
 ];
 
 export const JourneySection = () => {
-  const reduceMotion = useReducedMotion();
-
   return (
     <section id="journey" className="bg-akomapa-ice/30 py-24 sm:py-32 dark:bg-card/40">
       <div className="mx-auto grid max-w-7xl gap-14 px-4 sm:px-6 lg:grid-cols-[5fr_7fr] lg:gap-20 lg:px-8">
@@ -48,7 +46,7 @@ export const JourneySection = () => {
           {courses.map((course, i) => (
             <motion.li
               key={course.title}
-              initial={reduceMotion ? false : { opacity: 0, x: 24 }}
+              initial={{ opacity: 0, x: 24 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, margin: "-60px" }}
               transition={{ duration: 0.55, delay: (i % 5) * 0.05 }}

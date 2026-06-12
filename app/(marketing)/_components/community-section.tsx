@@ -25,11 +25,17 @@ export const CommunitySection = () => {
           <h2 className="font-display mt-6 text-pretty text-3xl font-semibold leading-tight text-foreground sm:text-4xl lg:text-5xl">
             Nobody leads alone.
           </h2>
-          <figure className="mt-10 border-l-2 border-akomapa-gold pl-6">
-            <blockquote className="font-display text-xl font-medium leading-relaxed text-foreground sm:text-2xl">
-              &ldquo;GHELP didn&apos;t just teach me global health — it gave me
-              a community that expects me to lead, and mentors who make sure I
-              can.&rdquo;
+          <figure className="mt-10">
+            <span
+              aria-hidden="true"
+              className="font-display block text-6xl font-semibold leading-none text-akomapa-gold"
+            >
+              &ldquo;
+            </span>
+            <blockquote className="font-display -mt-3 text-xl font-medium leading-relaxed text-foreground sm:text-2xl">
+              GHELP didn&apos;t just teach me global health — it gave me a
+              community that expects me to lead, and mentors who make sure I
+              can.
             </blockquote>
             <figcaption className="mt-4 text-sm text-muted-foreground">
               Student leader, GHELP cohort

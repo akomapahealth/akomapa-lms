@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 
 import { CountUp } from "./count-up";
 
@@ -10,8 +10,6 @@ const bars = [
 ];
 
 export const OutcomesSection = () => {
-  const reduceMotion = useReducedMotion();
-
   return (
     <section
       id="outcomes"
@@ -53,7 +51,7 @@ export const OutcomesSection = () => {
               </div>
               <div className="h-3 overflow-hidden rounded-full bg-surface-deep-foreground/10">
                 <motion.div
-                  initial={reduceMotion ? false : { width: 0 }}
+                  initial={{ width: 0 }}
                   whileInView={{ width: `${bar.value}%` }}
                   viewport={{ once: true, margin: "-40px" }}
                   transition={{ duration: 1.2, ease: [0.21, 0.47, 0.32, 0.98] }}

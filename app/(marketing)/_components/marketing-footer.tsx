@@ -1,5 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
+
+import { BrandMark } from "@/components/brand/logo";
 
 export const MarketingFooter = () => {
   return (
@@ -8,13 +9,7 @@ export const MarketingFooter = () => {
         <div className="flex flex-col gap-10 md:flex-row md:items-start md:justify-between">
           <div className="max-w-sm">
             <div className="flex items-center gap-2.5">
-              <Image
-                src="/akomapa-logo.png"
-                alt="Akomapa Academy"
-                width={40}
-                height={40}
-                className="rounded-full"
-              />
+              <BrandMark size={38} />
               <span className="font-display text-xl font-semibold">
                 Akomapa Academy
               </span>

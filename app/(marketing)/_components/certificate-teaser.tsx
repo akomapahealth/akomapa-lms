@@ -1,14 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { ArrowRight, Award } from "lucide-react";
 
 import { SectionReveal } from "./section-reveal";
 
 export const CertificateTeaser = () => {
-  const reduceMotion = useReducedMotion();
-
   return (
     <section className="bg-akomapa-ice/30 py-24 sm:py-32 dark:bg-card/40">
       <div className="mx-auto grid max-w-7xl items-center gap-14 px-4 sm:px-6 lg:grid-cols-2 lg:gap-20 lg:px-8">
@@ -34,7 +32,7 @@ export const CertificateTeaser = () => {
         </SectionReveal>
         <SectionReveal delay={0.15}>
           <motion.div
-            whileHover={reduceMotion ? undefined : { rotateX: 4, rotateY: -6, y: -6 }}
+            whileHover={{ rotateX: 4, rotateY: -6, y: -6 }}
             transition={{ type: "spring", stiffness: 200, damping: 18 }}
             style={{ transformPerspective: 1000 }}
             className="mx-auto w-full max-w-md rounded-xl border border-akomapa-gold/40 bg-card p-8 shadow-lift sm:p-10"

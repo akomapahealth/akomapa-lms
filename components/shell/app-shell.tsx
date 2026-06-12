@@ -13,6 +13,10 @@ interface AppShellProps {
 /**
  * Shared application shell. The sidebar and header are in normal flow
  * (no fixed positioning), so they can never overlap; only <main> scrolls.
+ *
+ * Desktop sidebar visibility is enforced by the `.app-shell-sidebar` rule
+ * in globals.css (plain CSS, not utility classes) so it cannot be lost to
+ * class purging or specificity conflicts.
  */
 export const AppShell = ({
   sidebar,
@@ -25,8 +29,8 @@ export const AppShell = ({
       {/* Sidebar surface (bg/text) is owned by the sidebar component itself */}
       <aside
         className={cn(
-          "hidden shrink-0 flex-col border-r border-border/60 md:flex",
-          sidebarWidth === "wide" ? "w-80" : "w-60"
+          "app-shell-sidebar shrink-0 flex-col",
+          sidebarWidth === "wide" ? "w-80" : "w-64"
         )}
       >
         {sidebar}

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 
+import { BrandMark } from "@/components/brand/logo";
 import { VerifyForm } from "./_components/verify-form";
 
 export const metadata: Metadata = {
@@ -15,13 +15,7 @@ const VerifyIndexPage = () => {
     <div className="flex min-h-dvh flex-col items-center justify-center bg-muted/50 p-4">
       <div className="w-full max-w-lg rounded-2xl border border-akomapa-gold/30 bg-card p-8 text-center shadow-soft">
         <Link href="/" className="inline-block" aria-label="Akomapa Academy home">
-          <Image
-            src="/akomapa-logo.png"
-            alt="Akomapa Academy"
-            width={64}
-            height={64}
-            className="mx-auto rounded-full"
-          />
+          <BrandMark size={56} className="mx-auto" />
         </Link>
         <h1 className="font-display mt-4 text-2xl font-semibold text-foreground">
           Verify a certificate

@@ -40,7 +40,7 @@ export const EnrolledModuleCard = ({
               src={imageUrl}
             />
           ) : (
-            <div className="h-full w-full bg-gradient-to-br from-akomapa-ice to-akomapa-light-blue flex items-center justify-center">
+            <div className="h-full w-full bg-akomapa-ice flex items-center justify-center">
               <Layers className="h-10 w-10 text-akomapa-teal/50" />
             </div>
           )}

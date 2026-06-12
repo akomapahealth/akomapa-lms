@@ -21,7 +21,7 @@ export const CtaSection = () => {
         <Link href="/sign-up" className="mt-10">
           <Button
             size="lg"
-            className="h-13 bg-akomapa-gold px-10 text-base font-semibold text-[hsl(187_80%_10%)] hover:bg-akomapa-gold/90"
+            className="h-12 bg-akomapa-gold px-10 text-base font-semibold text-[hsl(187_80%_10%)] hover:bg-akomapa-gold/90"
           >
             Start the GHELP journey
           </Button>
