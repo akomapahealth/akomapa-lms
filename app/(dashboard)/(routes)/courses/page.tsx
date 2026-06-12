@@ -6,6 +6,7 @@ import { getEnrolledModules } from "@/actions/get-enrolled-modules";
 import { CourseFilter } from "./_components/course-filter";
 import { EnrolledCourseCard } from "./_components/enrolled-course-card";
 import { EnrolledModuleCard } from "./_components/enrolled-module-card";
+import { PageContainer } from "@/components/shell/page-container";
 
 const CoursesPage = async ({
   searchParams,
@@ -29,7 +30,7 @@ const CoursesPage = async ({
   const label = isModulesView ? "Modules" : "Courses";
 
   return (
-    <div className="px-4 py-6 sm:p-6 space-y-6">
+    <PageContainer width="wide" className="space-y-6">
       <h1 className="text-xl sm:text-2xl font-bold text-foreground">
         {label} ({items.length})
       </h1>
@@ -80,7 +81,7 @@ const CoursesPage = async ({
           ))}
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 };
 

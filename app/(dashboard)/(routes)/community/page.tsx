@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { CategoryTabs } from "./_components/category-tabs";
 import { PostSearch } from "./_components/post-search";
 import { PostCard } from "./_components/post-card";
+import { PageContainer } from "@/components/shell/page-container";
 
 const CommunityPage = async ({
   searchParams,
@@ -39,7 +40,7 @@ const CommunityPage = async ({
   ]);
 
   return (
-    <div className="px-4 py-6 sm:p-6 space-y-6">
+    <PageContainer className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl sm:text-2xl font-bold text-foreground">Community</h1>
         <Button asChild>
@@ -86,7 +87,7 @@ const CommunityPage = async ({
           </Button>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 };
 

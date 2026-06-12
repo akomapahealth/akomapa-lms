@@ -9,6 +9,7 @@ import { getUserBadges } from "@/actions/get-user-badges";
 import { getUserStreak } from "@/actions/get-user-streak";
 
 import { EmptyState } from "@/components/empty-state";
+import { PageContainer } from "@/components/shell/page-container";
 import { BookOpen } from "lucide-react";
 
 import { WelcomeBanner } from "./_components/welcome-banner";
@@ -18,7 +19,6 @@ import { TopicProgressSection } from "./_components/topic-progress-section";
 import { QuizProgressSection } from "./_components/quiz-progress-section";
 import { TimeProgressChart } from "./_components/time-progress-chart";
 import { BadgeGrid } from "./_components/badge-grid";
-import { StreakCounter } from "./_components/streak-counter";
 
 export default async function Dashboard({
   searchParams,
@@ -65,17 +65,12 @@ export default async function Dashboard({
   }));
 
   return (
-    <div className="px-4 py-6 sm:p-6 space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <WelcomeBanner
-          inProgressCount={inProgressCount}
-          completedCount={completedCount}
-        />
-      </div>
-
-      <div className="flex items-center gap-3">
-        <StreakCounter currentStreak={streak.currentStreak} />
-      </div>
+    <PageContainer width="wide" className="space-y-6">
+      <WelcomeBanner
+        inProgressCount={inProgressCount}
+        completedCount={completedCount}
+        currentStreak={streak.currentStreak}
+      />
 
       <BadgeGrid badges={badges} />
 
@@ -94,7 +89,7 @@ export default async function Dashboard({
         />
       ) : (
         <>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-3 [&>*]:min-w-0">
             <ProgressDonutChart
               completed={progressBreakdown?.summary.completed ?? 0}
               inProgress={progressBreakdown?.summary.inProgress ?? 0}
@@ -117,6 +112,6 @@ export default async function Dashboard({
           />
         </>
       )}
-    </div>
+    </PageContainer>
   );
 }

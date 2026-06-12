@@ -27,7 +27,7 @@ export const BadgeGrid = ({ badges }: BadgeGridProps) => {
           {earnedCount}/{badges.length} earned
         </span>
       </div>
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-2">
+      <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 [&>*]:shrink-0 [&>*]:snap-start sm:grid sm:grid-cols-4 sm:overflow-visible sm:pb-0 md:grid-cols-5 lg:grid-cols-7">
         {badges.map((badge) => (
           <BadgeDisplay
             key={badge.id}

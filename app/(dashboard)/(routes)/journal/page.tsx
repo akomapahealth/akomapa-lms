@@ -6,6 +6,7 @@ import { getJournalEntries } from "@/actions/get-journal-entries";
 import { db } from "@/lib/db";
 import { JournalList } from "./_components/journal-list";
 import { JournalFilters } from "./_components/journal-filters";
+import { PageContainer } from "@/components/shell/page-container";
 
 export default async function JournalPage({
   searchParams,
@@ -36,7 +37,7 @@ export default async function JournalPage({
   });
 
   return (
-    <div className="px-4 py-6 sm:p-6 space-y-6">
+    <PageContainer className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl sm:text-2xl font-bold text-foreground">My Reflections</h1>
         <Link
@@ -50,6 +51,6 @@ export default async function JournalPage({
       <JournalFilters courses={courses} />
 
       <JournalList entries={entries} />
-    </div>
+    </PageContainer>
   );
 }

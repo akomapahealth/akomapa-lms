@@ -26,7 +26,7 @@ export const CourseCard = ({
 }: CourseCardProps) => {
     return (
         <Link href={`/courses/${id}`}>
-            <div className="group hover:shadow-md transition overflow-hidden border border-akomapa-light-blue/30 rounded-lg p-3 h-full hover:border-akomapa-teal/30">
+            <div className="group h-full overflow-hidden rounded-xl border border-border/70 bg-card p-3 shadow-soft transition duration-300 hover:-translate-y-0.5 hover:border-akomapa-teal/40 hover:shadow-lift">
                 <div className="relative w-full aspect-video rounded-md overflow-hidden">
                     <Image 
                         fill

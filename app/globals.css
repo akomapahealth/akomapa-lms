@@ -161,3 +161,22 @@
 .ql-container {
   font-size: 16px !important;
 }
+
+/* Quill editor dark-mode support */
+.dark .ql-toolbar,
+.dark .ql-container {
+  border-color: hsl(var(--border)) !important;
+}
+.dark .ql-toolbar .ql-stroke {
+  stroke: hsl(var(--muted-foreground));
+}
+.dark .ql-toolbar .ql-fill {
+  fill: hsl(var(--muted-foreground));
+}
+.dark .ql-toolbar .ql-picker,
+.dark .ql-editor.ql-blank::before {
+  color: hsl(var(--muted-foreground));
+}
+.dark .ql-editor {
+  color: hsl(var(--foreground));
+}

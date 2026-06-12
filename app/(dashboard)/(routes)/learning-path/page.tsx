@@ -6,6 +6,7 @@ import { getLearningPath } from "@/actions/get-learning-path";
 import { EmptyState } from "@/components/empty-state";
 
 import { LearningPathMap } from "./_components/learning-path-map";
+import { PageContainer } from "@/components/shell/page-container";
 
 const LearningPathPage = async () => {
   const { userId } = await auth();
@@ -20,7 +21,7 @@ const LearningPathPage = async () => {
   const totalCount = courses.length;
 
   return (
-    <div className="px-4 py-6 sm:p-6 max-w-3xl mx-auto">
+    <PageContainer width="narrow">
       <div className="mb-6">
         <h1 className="text-xl sm:text-2xl font-bold text-foreground">Learning Path</h1>
         <p className="text-sm text-muted-foreground mt-1">
@@ -42,7 +43,7 @@ const LearningPathPage = async () => {
       ) : (
         <LearningPathMap courses={courses} />
       )}
-    </div>
+    </PageContainer>
   );
 };
 

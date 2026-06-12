@@ -4,7 +4,8 @@ import Link from "next/link";
 import { ArrowUp, ArrowDown, GraduationCap } from "lucide-react";
 
 import { getGradesOverview } from "@/actions/get-grades-overview";
-import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/empty-state";
+import { PageContainer } from "@/components/shell/page-container";
 import { Progress } from "@/components/ui/progress";
 import {
   Table,
@@ -40,9 +41,9 @@ const GradesPage = async () => {
       : null;
 
   return (
-    <div className="px-4 py-6 sm:p-6">
+    <PageContainer>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold text-foreground">Grades</h1>
+        <h1 className="font-display text-2xl font-semibold text-foreground sm:text-3xl">Grades</h1>
         {overallAverage !== null && (
           <div className="text-right">
             <p className="text-sm text-muted-foreground">Overall Average</p>
@@ -54,17 +55,70 @@ const GradesPage = async () => {
       </div>
 
       {grades.length === 0 ? (
-        <div className="flex items-center justify-center h-[400px] border border-dashed border-border rounded-lg">
-          <div className="text-center">
-            <GraduationCap className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
-            <p className="text-muted-foreground text-lg">No grades yet</p>
-            <p className="text-muted-foreground text-sm mt-1">
-              Enroll in courses and take quizzes to see your grades
-            </p>
-          </div>
-        </div>
+        <EmptyState
+          icon={GraduationCap}
+          title="No grades yet"
+          description="Enroll in courses and take quizzes to see your grades."
+          actionLabel="Browse Courses"
+          actionHref="/search"
+        />
       ) : (
-        <div className="border rounded-md overflow-x-auto">
+        <>
+        {/* Mobile: stacked cards */}
+        <div className="flex flex-col gap-3 sm:hidden">
+          {grades.map((grade) => (
+            <Link
+              key={grade.courseId}
+              href={`/grades/${grade.courseId}`}
+              className="rounded-xl border border-border/70 bg-card p-4 shadow-soft transition hover:border-akomapa-teal/40"
+            >
+              <p className="font-medium text-foreground">{grade.courseTitle}</p>
+              <div className="mt-3 grid grid-cols-3 gap-2 text-center text-sm">
+                <div>
+                  <p className="text-xs text-muted-foreground">Pre-Test</p>
+                  <p className="mt-0.5 font-medium">
+                    {grade.preTestScore !== null
+                      ? `${Math.round(grade.preTestScore)}%`
+                      : "—"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Post-Test</p>
+                  <p className="mt-0.5 font-medium">
+                    {grade.postTestScore !== null
+                      ? `${Math.round(grade.postTestScore)}%`
+                      : "—"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Growth</p>
+                  <p
+                    className={cn(
+                      "mt-0.5 font-medium",
+                      grade.growth !== null && grade.growth > 0
+                        ? "text-success"
+                        : grade.growth !== null && grade.growth < 0
+                          ? "text-destructive"
+                          : "text-muted-foreground"
+                    )}
+                  >
+                    {grade.growth !== null
+                      ? `${grade.growth > 0 ? "+" : ""}${grade.growth}%`
+                      : "—"}
+                  </p>
+                </div>
+              </div>
+              <div className="mt-3 flex items-center gap-2">
+                <Progress value={grade.progressPercent} className="h-2 flex-1" />
+                <span className="text-xs text-muted-foreground">
+                  {grade.progressPercent}%
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
+        {/* Desktop: table */}
+        <div className="hidden overflow-x-auto rounded-xl border sm:block">
           <Table className="min-w-[600px]">
             <TableHeader>
               <TableRow>
@@ -104,7 +158,7 @@ const GradesPage = async () => {
                           grade.growth > 0
                             ? "text-success"
                             : grade.growth < 0
-                              ? "text-red-600"
+                              ? "text-destructive"
                               : "text-muted-foreground"
                         )}
                       >
@@ -136,8 +190,9 @@ const GradesPage = async () => {
             </TableBody>
           </Table>
         </div>
+        </>
       )}
-    </div>
+    </PageContainer>
   );
 };
 
