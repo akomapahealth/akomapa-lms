@@ -87,9 +87,9 @@ export const ChaptersForm = ({
     }
 
     return (
-        <div className="relative mt-6 border bg-slate-100 rounded-md p-4">
+        <div className="relative mt-6 border bg-muted rounded-md p-4">
             {isUpdating && (
-                <div className="absolute h-full w-full bg-slate-500/20 top-0 right-0 rounded-md flex items-center justify-center">
+                <div className="absolute h-full w-full bg-foreground/10 top-0 right-0 rounded-md flex items-center justify-center">
                     <Loader2 className="animate-spin h-6 w-6 text-sky-700" />
                 </div>
             )}
@@ -141,7 +141,7 @@ export const ChaptersForm = ({
             {!isCreating && (
                 <div className={cn(
                     "text-sm mt-2",
-                    !initialData.chapters.length && "text-slate-500 italic"
+                    !initialData.chapters.length && "text-muted-foreground italic"
                 )}>
                     {!initialData.chapters.length && "No chapters"}
                     <ChaptersList 

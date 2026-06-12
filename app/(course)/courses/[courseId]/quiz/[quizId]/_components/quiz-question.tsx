@@ -18,7 +18,7 @@ export const QuizQuestion = () => {
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-lg font-medium text-slate-800">{question.text}</p>
+        <p className="text-lg font-medium text-foreground">{question.text}</p>
       </div>
 
       <div className="space-y-3">
@@ -35,7 +35,7 @@ export const QuizQuestion = () => {
                 "hover:border-akomapa-teal/50 hover:bg-akomapa-teal/5",
                 isSelected
                   ? "border-akomapa-teal bg-akomapa-teal/5"
-                  : "border-slate-200 bg-white"
+                  : "border-border bg-card"
               )}
             >
               <div className="flex items-start gap-3">
@@ -44,12 +44,12 @@ export const QuizQuestion = () => {
                     "flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-sm font-medium",
                     isSelected
                       ? "bg-akomapa-teal text-white"
-                      : "bg-slate-100 text-slate-600"
+                      : "bg-muted text-muted-foreground"
                   )}
                 >
                   {letter}
                 </span>
-                <span className="text-sm text-slate-700 pt-0.5">
+                <span className="text-sm text-foreground pt-0.5">
                   {option.text}
                 </span>
               </div>

@@ -16,7 +16,7 @@ export const QuizProgressBar = () => {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between text-sm text-slate-600">
+      <div className="flex items-center justify-between text-sm text-muted-foreground">
         <span>
           Question {currentIndex + 1} of {totalQuestions}
         </span>
@@ -39,7 +39,7 @@ export const QuizProgressBar = () => {
                 isCurrent && "ring-2 ring-akomapa-teal ring-offset-1",
                 isAnswered
                   ? "bg-akomapa-teal"
-                  : "bg-slate-200 hover:bg-slate-300"
+                  : "bg-muted hover:bg-muted"
               )}
               title={`Question ${idx + 1}${isAnswered ? " (answered)" : ""}`}
             />

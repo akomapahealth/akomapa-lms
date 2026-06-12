@@ -22,56 +22,56 @@ const VerifyCertificatePage = async ({
   });
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-lg border-slate-200">
+    <div className="min-h-screen bg-muted/50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-lg border-border">
         <CardContent className="pt-6">
           <div className="text-center space-y-4">
-            <h1 className="text-lg font-bold text-slate-800">
+            <h1 className="text-lg font-bold text-foreground">
               Akomapa Academy
             </h1>
-            <p className="text-sm text-slate-500">Certificate Verification</p>
+            <p className="text-sm text-muted-foreground">Certificate Verification</p>
 
             {certificate ? (
               <div className="space-y-4 pt-4">
                 <div className="flex justify-center">
-                  <CheckCircle2 className="h-16 w-16 text-emerald-500" />
+                  <CheckCircle2 className="h-16 w-16 text-success" />
                 </div>
-                <h2 className="text-xl font-semibold text-emerald-700">
+                <h2 className="text-xl font-semibold text-success">
                   Valid Certificate
                 </h2>
 
-                <div className="bg-slate-50 rounded-lg p-4 text-left space-y-3 border">
+                <div className="bg-muted/50 rounded-lg p-4 text-left space-y-3 border">
                   <div>
-                    <p className="text-xs text-slate-400 uppercase tracking-wide">
+                    <p className="text-xs text-muted-foreground/70 uppercase tracking-wide">
                       Certificate Number
                     </p>
-                    <p className="font-mono text-sm text-slate-700">
+                    <p className="font-mono text-sm text-foreground">
                       {certificate.certificateNumber}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-400 uppercase tracking-wide">
+                    <p className="text-xs text-muted-foreground/70 uppercase tracking-wide">
                       Recipient
                     </p>
-                    <p className="text-sm font-medium text-slate-700">
+                    <p className="text-sm font-medium text-foreground">
                       {[certificate.user.firstName, certificate.user.lastName]
                         .filter(Boolean)
                         .join(" ") || "Student"}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-400 uppercase tracking-wide">
+                    <p className="text-xs text-muted-foreground/70 uppercase tracking-wide">
                       Course
                     </p>
-                    <p className="text-sm font-medium text-slate-700">
+                    <p className="text-sm font-medium text-foreground">
                       {certificate.course.title}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-400 uppercase tracking-wide">
+                    <p className="text-xs text-muted-foreground/70 uppercase tracking-wide">
                       Date Issued
                     </p>
-                    <p className="text-sm text-slate-700">
+                    <p className="text-sm text-foreground">
                       {certificate.issuedAt.toLocaleDateString("en-GB", {
                         day: "numeric",
                         month: "long",
@@ -89,7 +89,7 @@ const VerifyCertificatePage = async ({
                 <h2 className="text-xl font-semibold text-red-600">
                   Certificate Not Found
                 </h2>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-muted-foreground">
                   No certificate matching &ldquo;
                   {decodeURIComponent(certificateNumber)}&rdquo; was found.
                   Please check the certificate number and try again.

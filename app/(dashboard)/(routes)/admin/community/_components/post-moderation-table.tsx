@@ -75,7 +75,7 @@ export const PostModerationTable = ({ posts }: PostModerationTableProps) => {
       <TableBody>
         {posts.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={8} className="text-center text-slate-400 py-8">
+            <TableCell colSpan={8} className="text-center text-muted-foreground/70 py-8">
               No posts yet
             </TableCell>
           </TableRow>
@@ -85,7 +85,7 @@ export const PostModerationTable = ({ posts }: PostModerationTableProps) => {
               <TableCell className="font-medium max-w-[200px] truncate">
                 {post.title}
               </TableCell>
-              <TableCell className="text-sm text-slate-500">
+              <TableCell className="text-sm text-muted-foreground">
                 {post.author}
               </TableCell>
               <TableCell>
@@ -112,7 +112,7 @@ export const PostModerationTable = ({ posts }: PostModerationTableProps) => {
                   )}
                 </div>
               </TableCell>
-              <TableCell className="text-sm text-slate-500">
+              <TableCell className="text-sm text-muted-foreground">
                 {timeAgo(post.createdAt)}
               </TableCell>
               <TableCell className="text-right">

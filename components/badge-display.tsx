@@ -76,7 +76,7 @@ export const BadgeDisplay = ({
             </p>
             <p className="text-xs text-muted-foreground">{description}</p>
             {earned && earnedAt && (
-              <p className="text-xs text-emerald-600">
+              <p className="text-xs text-success">
                 Earned {new Date(earnedAt).toLocaleDateString()}
               </p>
             )}

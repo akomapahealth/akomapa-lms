@@ -52,10 +52,10 @@ export const EnrolledModuleCard = ({
           <p className="text-xs text-akomapa-teal font-medium mb-1">
             {courseTitle}
           </p>
-          <p className="text-base font-semibold text-slate-700 group-hover:text-akomapa-teal transition line-clamp-2">
+          <p className="text-base font-semibold text-foreground group-hover:text-akomapa-teal transition line-clamp-2">
             {title}
           </p>
-          <div className="flex items-center gap-3 mt-2 text-xs text-slate-500">
+          <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
             <div className="flex items-center gap-1">
               <BookOpen className="h-3.5 w-3.5" />
               <span>

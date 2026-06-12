@@ -19,13 +19,13 @@ interface ModuleDropoffChartProps {
 
 export const ModuleDropoffChart = ({ data }: ModuleDropoffChartProps) => {
   return (
-    <Card className="border-slate-200">
+    <Card className="border-border">
       <CardHeader>
         <CardTitle className="text-base">Module Completion Rate</CardTitle>
       </CardHeader>
       <CardContent>
         {data.length === 0 ? (
-          <p className="text-sm text-slate-400 text-center py-8">
+          <p className="text-sm text-muted-foreground/70 text-center py-8">
             No module data available
           </p>
         ) : (
@@ -43,7 +43,7 @@ export const ModuleDropoffChart = ({ data }: ModuleDropoffChartProps) => {
               <Bar
                 dataKey="completionRate"
                 name="Completion %"
-                fill="#0d9488"
+                fill="hsl(var(--primary))"
                 radius={[0, 4, 4, 0]}
               />
             </BarChart>

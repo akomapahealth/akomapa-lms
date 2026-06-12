@@ -112,7 +112,7 @@ const QuizResultsPage = async ({
 
         <div className="px-4 py-4 sm:p-4 space-y-4">
           {/* Score Card */}
-          <Card className="border-slate-200">
+          <Card className="border-border">
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -129,7 +129,7 @@ const QuizResultsPage = async ({
                 <div
                   className={`text-center px-4 py-2 rounded-lg ${
                     passed
-                      ? "bg-emerald-50 text-emerald-700"
+                      ? "bg-success/10 text-success"
                       : "bg-red-50 text-red-700"
                   }`}
                 >
@@ -141,7 +141,7 @@ const QuizResultsPage = async ({
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex gap-6 text-sm text-slate-600">
+              <div className="flex gap-6 text-sm text-muted-foreground">
                 <div>
                   Score: {score}/{totalPoints}
                 </div>
@@ -161,7 +161,7 @@ const QuizResultsPage = async ({
           </Card>
 
           {/* Question Review */}
-          <Card className="border-slate-200">
+          <Card className="border-border">
             <CardHeader>
               <CardTitle className="text-lg">Question Review</CardTitle>
             </CardHeader>
@@ -179,12 +179,12 @@ const QuizResultsPage = async ({
                     <div className="space-y-2">
                       <div className="flex items-start gap-2">
                         {isCorrect ? (
-                          <CheckCircle2 className="h-5 w-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                          <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
                         ) : (
                           <XCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
                         )}
                         <div className="space-y-1 flex-1">
-                          <p className="text-sm font-medium text-slate-800">
+                          <p className="text-sm font-medium text-foreground">
                             {idx + 1}. {answer.question.text}
                           </p>
                           {!isCorrect && (
@@ -193,13 +193,13 @@ const QuizResultsPage = async ({
                                 Your answer:{" "}
                                 {answer.selectedOption?.text ?? "No answer"}
                               </p>
-                              <p className="text-sm text-emerald-600">
+                              <p className="text-sm text-success">
                                 Correct answer: {correctOption?.text}
                               </p>
                             </>
                           )}
                           {isCorrect && (
-                            <p className="text-sm text-emerald-600">
+                            <p className="text-sm text-success">
                               {answer.selectedOption?.text}
                             </p>
                           )}

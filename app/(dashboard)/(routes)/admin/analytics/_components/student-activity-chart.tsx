@@ -20,7 +20,7 @@ interface StudentActivityChartProps {
 
 export const StudentActivityChart = ({ data }: StudentActivityChartProps) => {
   return (
-    <Card className="border-slate-200">
+    <Card className="border-border">
       <CardHeader>
         <CardTitle className="text-base">Student Activity (14 days)</CardTitle>
       </CardHeader>
@@ -36,8 +36,8 @@ export const StudentActivityChart = ({ data }: StudentActivityChartProps) => {
               type="monotone"
               dataKey="topicsCompleted"
               name="Topics Completed"
-              stroke="#0d9488"
-              fill="#0d9488"
+              stroke="hsl(var(--primary))"
+              fill="hsl(var(--primary))"
               fillOpacity={0.2}
               strokeWidth={2}
             />
@@ -45,8 +45,8 @@ export const StudentActivityChart = ({ data }: StudentActivityChartProps) => {
               type="monotone"
               dataKey="quizzesTaken"
               name="Quizzes Taken"
-              stroke="#ebb92b"
-              fill="#ebb92b"
+              stroke="hsl(var(--akomapa-gold))"
+              fill="hsl(var(--akomapa-gold))"
               fillOpacity={0.2}
               strokeWidth={2}
             />

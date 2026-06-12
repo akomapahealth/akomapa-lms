@@ -17,9 +17,9 @@ interface ProgressDonutChartProps {
 }
 
 const COLORS = {
-  completed: "#059669",
-  inProgress: "#0097b2",
-  notStarted: "#e5e7eb",
+  completed: "hsl(var(--success))",
+  inProgress: "hsl(var(--primary))",
+  notStarted: "hsl(var(--muted))",
 };
 
 export const ProgressDonutChart = ({
@@ -41,7 +41,7 @@ export const ProgressDonutChart = ({
 
   return (
     <Card className="p-4">
-      <h3 className="font-semibold text-sm text-slate-700 mb-2">
+      <h3 className="font-semibold text-sm text-foreground mb-2">
         Module Progress
       </h3>
       <div className="relative h-[200px]">
@@ -70,14 +70,14 @@ export const ProgressDonutChart = ({
         </ResponsiveContainer>
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center">
-            <p className="text-2xl font-bold text-slate-800">
+            <p className="text-2xl font-bold text-foreground">
               {percentComplete}%
             </p>
-            <p className="text-xs text-slate-500">Complete</p>
+            <p className="text-xs text-muted-foreground">Complete</p>
           </div>
         </div>
       </div>
-      <div className="flex justify-center gap-4 mt-2 text-xs text-slate-600">
+      <div className="flex justify-center gap-4 mt-2 text-xs text-muted-foreground">
         <div className="flex items-center gap-1">
           <div
             className="h-2.5 w-2.5 rounded-full"

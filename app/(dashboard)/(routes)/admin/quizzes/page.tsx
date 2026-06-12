@@ -99,7 +99,7 @@ const AdminQuizzesPage = async () => {
                   <TableCell>
                     <Badge
                       className={
-                        quiz.isPublished ? "bg-akomapa-teal" : "bg-slate-500"
+                        quiz.isPublished ? "bg-akomapa-teal" : "bg-muted-foreground/60"
                       }
                     >
                       {quiz.isPublished ? "Published" : "Draft"}

@@ -76,7 +76,7 @@ function CommentItem({
       .join("") || "?";
 
   return (
-    <div className={isReply ? "ml-8 pl-4 border-l-2 border-slate-100" : ""}>
+    <div className={isReply ? "ml-8 pl-4 border-l-2 border-border/50" : ""}>
       <div className="flex gap-3">
         <Avatar className="h-8 w-8 flex-shrink-0">
           <AvatarImage src={comment.user.imageUrl ?? undefined} />
@@ -84,7 +84,7 @@ function CommentItem({
         </Avatar>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-sm font-medium text-slate-800">
+            <span className="text-sm font-medium text-foreground">
               {authorName}
             </span>
             {comment.user.role !== "STUDENT" && (
@@ -92,12 +92,12 @@ function CommentItem({
                 {comment.user.role === "ADMIN" ? "Admin" : "Faculty"}
               </span>
             )}
-            <span className="text-xs text-slate-400">
+            <span className="text-xs text-muted-foreground/70">
               {timeAgo(comment.createdAt)}
             </span>
           </div>
 
-          <p className="text-sm text-slate-700 whitespace-pre-wrap mb-2">
+          <p className="text-sm text-foreground whitespace-pre-wrap mb-2">
             {comment.content}
           </p>
 
@@ -111,7 +111,7 @@ function CommentItem({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-auto p-0 text-sm text-slate-500 hover:text-slate-700"
+                className="h-auto p-0 text-sm text-muted-foreground hover:text-foreground"
                 onClick={() => setShowReplyForm(!showReplyForm)}
               >
                 <Reply className="h-3.5 w-3.5 mr-1" />

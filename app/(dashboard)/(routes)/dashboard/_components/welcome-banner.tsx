@@ -26,7 +26,7 @@ export const WelcomeBanner = async ({
           <span>{inProgressCount} in progress</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="h-2 w-2 rounded-full bg-emerald-300" />
+          <div className="h-2 w-2 rounded-full bg-akomapa-gold" />
           <span>{completedCount} completed</span>
         </div>
       </div>

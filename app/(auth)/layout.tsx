@@ -43,7 +43,7 @@ const AuthLayout = ({
                         
                         {/* Feature Cards Grid */}
                         <div className="grid grid-cols-2 gap-4 mt-8">
-                            <div className="bg-white/10 backdrop-blur-sm p-4 rounded-lg hover-lift group border border-white/20">
+                            <div className="bg-card/10 backdrop-blur-sm p-4 rounded-lg hover-lift group border border-white/20">
                                 <div className="flex items-center mb-2">
                                     <div className="w-8 h-8 rounded-full bg-akomapa-gold/30 flex items-center justify-center mr-2 group-hover:bg-akomapa-gold/50 transition-colors">
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -54,7 +54,7 @@ const AuthLayout = ({
                                 </div>
                                 <p className="text-sm opacity-80">Access health courses from any device, anytime</p>
                             </div>
-                            <div className="bg-white/10 backdrop-blur-sm p-4 rounded-lg hover-lift group border border-white/20">
+                            <div className="bg-card/10 backdrop-blur-sm p-4 rounded-lg hover-lift group border border-white/20">
                                 <div className="flex items-center mb-2">
                                     <div className="w-8 h-8 rounded-full bg-akomapa-gold/30 flex items-center justify-center mr-2 group-hover:bg-akomapa-gold/50 transition-colors">
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -129,7 +129,7 @@ const AuthLayout = ({
                     </div>
 
                     {/* Auth Form */}
-                    <div className="bg-white rounded-lg shadow-sm p-6 hover-lift animate-fade-in border border-akomapa-light-blue/30">
+                    <div className="bg-card rounded-lg shadow-sm p-6 hover-lift animate-fade-in border border-akomapa-light-blue/30">
                         {children}
                     </div>
 

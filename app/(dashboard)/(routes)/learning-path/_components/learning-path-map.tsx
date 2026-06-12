@@ -16,7 +16,7 @@ export const LearningPathMap = ({ courses }: LearningPathMapProps) => {
   return (
     <div className="relative">
       {/* Connecting line */}
-      <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-slate-200 hidden md:block" />
+      <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-muted hidden md:block" />
 
       <div className="space-y-6">
         {courses.map((course, index) => {
@@ -49,25 +49,25 @@ export const LearningPathMap = ({ courses }: LearningPathMapProps) => {
                       className={cn(
                         "w-16 h-16 rounded-full flex items-center justify-center border-2 transition",
                         course.status === "COMPLETED"
-                          ? "bg-emerald-50 border-emerald-500"
+                          ? "bg-success/10 border-success"
                           : course.status === "IN_PROGRESS"
                             ? "bg-akomapa-teal/10 border-akomapa-teal"
                             : course.isEnrolled
-                              ? "bg-slate-50 border-slate-300"
-                              : "bg-slate-50 border-slate-200"
+                              ? "bg-muted/50 border-border"
+                              : "bg-muted/50 border-border"
                       )}
                     >
                       {course.status === "COMPLETED" ? (
-                        <CheckCircle2 className="h-7 w-7 text-emerald-500" />
+                        <CheckCircle2 className="h-7 w-7 text-success" />
                       ) : course.status === "IN_PROGRESS" ? (
                         <PlayCircle className="h-7 w-7 text-akomapa-teal" />
                       ) : course.isEnrolled ? (
-                        <Circle className="h-7 w-7 text-slate-400" />
+                        <Circle className="h-7 w-7 text-muted-foreground/70" />
                       ) : (
-                        <Lock className="h-6 w-6 text-slate-300" />
+                        <Lock className="h-6 w-6 text-muted-foreground/50" />
                       )}
                     </div>
-                    <span className="absolute -bottom-1 -right-1 bg-white text-xs font-bold text-slate-500 rounded-full w-6 h-6 flex items-center justify-center border">
+                    <span className="absolute -bottom-1 -right-1 bg-card text-xs font-bold text-muted-foreground rounded-full w-6 h-6 flex items-center justify-center border">
                       {index + 1}
                     </span>
                   </div>
@@ -77,25 +77,25 @@ export const LearningPathMap = ({ courses }: LearningPathMapProps) => {
                     className={cn(
                       "flex-1 p-4 rounded-lg border transition group-hover:shadow-md",
                       course.status === "COMPLETED"
-                        ? "border-emerald-200 bg-emerald-50/50"
+                        ? "border-success/30 bg-success/10/50"
                         : course.status === "IN_PROGRESS"
-                          ? "border-akomapa-teal/30 bg-white"
-                          : "border-slate-200 bg-white"
+                          ? "border-akomapa-teal/30 bg-card"
+                          : "border-border bg-card"
                     )}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1">
-                        <h3 className="font-semibold text-slate-800 group-hover:text-akomapa-teal transition">
+                        <h3 className="font-semibold text-foreground group-hover:text-akomapa-teal transition">
                           {course.title}
                         </h3>
                         {course.description && (
-                          <p className="text-sm text-slate-500 mt-1 line-clamp-2">
+                          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                             {course.description}
                           </p>
                         )}
                       </div>
                       {course.status === "COMPLETED" && (
-                        <span className="text-xs font-medium text-emerald-600 bg-emerald-100 px-2 py-1 rounded-full whitespace-nowrap">
+                        <span className="text-xs font-medium text-success bg-success/15 px-2 py-1 rounded-full whitespace-nowrap">
                           Completed
                         </span>
                       )}
@@ -109,14 +109,14 @@ export const LearningPathMap = ({ courses }: LearningPathMapProps) => {
                     {course.isEnrolled && course.totalTopics > 0 && (
                       <div className="mt-3 flex items-center gap-3">
                         <Progress value={progressPercent} className="h-2 flex-1" />
-                        <span className="text-xs text-slate-500 whitespace-nowrap">
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">
                           {course.completedTopics}/{course.totalTopics} topics
                         </span>
                       </div>
                     )}
 
                     {!course.isEnrolled && (
-                      <p className="mt-2 text-xs text-slate-400">
+                      <p className="mt-2 text-xs text-muted-foreground/70">
                         Not enrolled yet
                       </p>
                     )}

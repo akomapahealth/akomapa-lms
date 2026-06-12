@@ -19,7 +19,7 @@ interface EnrollmentTrendChartProps {
 
 export const EnrollmentTrendChart = ({ data }: EnrollmentTrendChartProps) => {
   return (
-    <Card className="border-slate-200">
+    <Card className="border-border">
       <CardHeader>
         <CardTitle className="text-base">Enrollment Trends</CardTitle>
       </CardHeader>
@@ -34,9 +34,9 @@ export const EnrollmentTrendChart = ({ data }: EnrollmentTrendChartProps) => {
               type="monotone"
               dataKey="count"
               name="Enrollments"
-              stroke="#0d9488"
+              stroke="hsl(var(--primary))"
               strokeWidth={2}
-              dot={{ fill: "#0d9488" }}
+              dot={{ fill: "hsl(var(--primary))" }}
             />
           </LineChart>
         </ResponsiveContainer>

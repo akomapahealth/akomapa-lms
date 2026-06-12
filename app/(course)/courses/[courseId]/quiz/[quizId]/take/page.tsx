@@ -144,7 +144,7 @@ const QuizTakePage = () => {
       <div className="flex items-center justify-center h-[60vh]">
         <div className="text-center space-y-3">
           <div className="w-8 h-8 border-2 border-akomapa-teal border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-sm text-slate-500">Loading quiz...</p>
+          <p className="text-sm text-muted-foreground">Loading quiz...</p>
         </div>
       </div>
     );
@@ -153,10 +153,10 @@ const QuizTakePage = () => {
   return (
     <div className="flex flex-col max-w-3xl mx-auto pb-20">
       <div className="px-4 py-4 sm:p-4">
-        <Card className="border-slate-200">
+        <Card className="border-border">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-slate-800">Quiz</h2>
+              <h2 className="text-lg font-semibold text-foreground">Quiz</h2>
               <QuizTimer />
             </div>
             <QuizProgressBar />

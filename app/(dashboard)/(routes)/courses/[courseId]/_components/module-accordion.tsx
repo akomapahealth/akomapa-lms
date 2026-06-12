@@ -31,13 +31,13 @@ export const ModuleAccordion = ({
                 <Layers className="h-4 w-4 text-akomapa-teal" />
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-700">
+                <p className="text-sm font-medium text-foreground">
                   {mod.title}
                 </p>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-muted-foreground">
                   {mod.completedTopics}/{mod.totalTopics} topics
                   {mod.percentage > 0 && (
-                    <span className="ml-2 text-emerald-600">
+                    <span className="ml-2 text-success">
                       {mod.percentage}%
                     </span>
                   )}
@@ -55,10 +55,10 @@ export const ModuleAccordion = ({
                     ? Lock
                     : Circle;
                 const iconColor = topic.isCompleted
-                  ? "text-emerald-600"
+                  ? "text-success"
                   : isLocked
-                    ? "text-slate-400"
-                    : "text-slate-500";
+                    ? "text-muted-foreground/70"
+                    : "text-muted-foreground";
 
                 return (
                   <Link
@@ -70,8 +70,8 @@ export const ModuleAccordion = ({
                     }
                     className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors ${
                       isLocked
-                        ? "text-slate-400 cursor-not-allowed"
-                        : "text-slate-700 hover:bg-akomapa-ice/50"
+                        ? "text-muted-foreground/70 cursor-not-allowed"
+                        : "text-foreground hover:bg-akomapa-ice/50"
                     }`}
                   >
                     <Icon className={`h-4 w-4 shrink-0 ${iconColor}`} />

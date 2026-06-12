@@ -39,7 +39,7 @@ export const CategoryTabs = ({ categories }: CategoryTabsProps) => {
             "px-4 py-1.5 rounded-full text-sm font-medium transition border",
             !currentCategory
               ? "bg-akomapa-teal text-white border-akomapa-teal"
-              : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
+              : "bg-card text-muted-foreground border-border hover:border-border"
           )}
         >
           All
@@ -52,7 +52,7 @@ export const CategoryTabs = ({ categories }: CategoryTabsProps) => {
               "px-4 py-1.5 rounded-full text-sm font-medium transition border",
               currentCategory === cat.id
                 ? "text-white border-transparent"
-                : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
+                : "bg-card text-muted-foreground border-border hover:border-border"
             )}
             style={
               currentCategory === cat.id

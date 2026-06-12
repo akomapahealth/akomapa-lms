@@ -13,7 +13,7 @@ export const CourseStats = ({
   totalQuizzes,
 }: CourseStatsProps) => {
   return (
-    <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
+    <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
       <div className="flex items-center gap-1.5">
         <IconBadge size="sm" icon={Layers} />
         <span>{totalModules} Modules</span>

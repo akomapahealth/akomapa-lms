@@ -102,10 +102,10 @@ const GradesPage = async () => {
                         className={cn(
                           "inline-flex items-center gap-1 font-medium",
                           grade.growth > 0
-                            ? "text-emerald-600"
+                            ? "text-success"
                             : grade.growth < 0
                               ? "text-red-600"
-                              : "text-slate-500"
+                              : "text-muted-foreground"
                         )}
                       >
                         {grade.growth > 0 ? (

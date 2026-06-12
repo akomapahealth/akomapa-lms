@@ -56,7 +56,7 @@ export const LikeButton = ({
         "flex items-center gap-1 text-sm transition",
         liked
           ? "text-rose-500"
-          : "text-slate-500 hover:text-rose-500"
+          : "text-muted-foreground hover:text-rose-500"
       )}
     >
       <Heart

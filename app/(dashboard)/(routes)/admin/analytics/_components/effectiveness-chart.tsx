@@ -20,13 +20,13 @@ interface EffectivenessChartProps {
 
 export const EffectivenessChart = ({ data }: EffectivenessChartProps) => {
   return (
-    <Card className="border-slate-200">
+    <Card className="border-border">
       <CardHeader>
         <CardTitle className="text-base">Program Effectiveness</CardTitle>
       </CardHeader>
       <CardContent>
         {data.length === 0 ? (
-          <p className="text-sm text-slate-400 text-center py-8">
+          <p className="text-sm text-muted-foreground/70 text-center py-8">
             No test data available yet
           </p>
         ) : (
@@ -37,8 +37,8 @@ export const EffectivenessChart = ({ data }: EffectivenessChartProps) => {
               <YAxis domain={[0, 100]} />
               <Tooltip />
               <Legend />
-              <Bar dataKey="preTestAvg" name="Pre-Test Avg" fill="#94a3b8" />
-              <Bar dataKey="postTestAvg" name="Post-Test Avg" fill="#0d9488" />
+              <Bar dataKey="preTestAvg" name="Pre-Test Avg" fill="hsl(var(--muted-foreground))" />
+              <Bar dataKey="postTestAvg" name="Post-Test Avg" fill="hsl(var(--primary))" />
             </BarChart>
           </ResponsiveContainer>
         )}

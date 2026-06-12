@@ -113,7 +113,7 @@ const GradesDetailPage = async ({
                     </TableCell>
                     <TableCell>
                       {mod.status === "COMPLETED" ? (
-                        <div className="flex items-center gap-1 text-emerald-600">
+                        <div className="flex items-center gap-1 text-success">
                           <CheckCircle2 className="h-4 w-4" />
                           <span className="text-sm">Done</span>
                         </div>
@@ -191,7 +191,7 @@ const GradesDetailPage = async ({
                         <Badge
                           className={cn(
                             attempt.passed
-                              ? "bg-emerald-500"
+                              ? "bg-success"
                               : "bg-red-500"
                           )}
                         >

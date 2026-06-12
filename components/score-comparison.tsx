@@ -69,10 +69,10 @@ export const ScoreComparison = ({
             className={cn(
               "mt-4 p-3 rounded-lg text-center",
               growth > 0
-                ? "bg-emerald-50 text-emerald-700"
+                ? "bg-success/10 text-success"
                 : growth < 0
                   ? "bg-red-50 text-red-700"
-                  : "bg-slate-50 text-slate-600"
+                  : "bg-muted/50 text-muted-foreground"
             )}
           >
             <div className="flex items-center justify-center gap-2">

@@ -38,7 +38,7 @@ export const QuizTimer = () => {
     <div
       className={cn(
         "flex items-center gap-2 font-mono text-sm font-medium",
-        isWarning && "text-amber-600",
+        isWarning && "text-warning",
         isCritical && "text-red-600 animate-pulse"
       )}
     >

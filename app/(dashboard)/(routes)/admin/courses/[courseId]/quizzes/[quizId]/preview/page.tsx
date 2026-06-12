@@ -60,12 +60,12 @@ const QuizPreviewPage = async ({
 
       <div className="space-y-6">
         {quiz.questions.map((question, qIdx) => (
-          <Card key={question.id} className="border-slate-200">
+          <Card key={question.id} className="border-border">
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-medium">
                 {qIdx + 1}. {question.text}
               </CardTitle>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-muted-foreground">
                 {question.points} point{question.points !== 1 ? "s" : ""}
               </p>
             </CardHeader>
@@ -78,8 +78,8 @@ const QuizPreviewPage = async ({
                     className={cn(
                       "p-3 rounded-lg border-2 text-sm",
                       option.isCorrect
-                        ? "border-emerald-300 bg-emerald-50"
-                        : "border-slate-200"
+                        ? "border-success/40 bg-success/10"
+                        : "border-border"
                     )}
                   >
                     <div className="flex items-start gap-2">
@@ -87,15 +87,15 @@ const QuizPreviewPage = async ({
                         className={cn(
                           "flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium",
                           option.isCorrect
-                            ? "bg-emerald-500 text-white"
-                            : "bg-slate-100 text-slate-600"
+                            ? "bg-success text-white"
+                            : "bg-muted text-muted-foreground"
                         )}
                       >
                         {letter}
                       </span>
                       <span className="pt-0.5">{option.text}</span>
                       {option.isCorrect && (
-                        <Badge className="ml-auto bg-emerald-500 text-xs">
+                        <Badge className="ml-auto bg-success text-xs">
                           Correct
                         </Badge>
                       )}

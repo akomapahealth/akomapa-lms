@@ -54,7 +54,7 @@ export const StudentTable = ({ students }: StudentTableProps) => {
   return (
     <div className="space-y-4">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/70" />
         <Input
           placeholder="Search by name or email..."
           value={search}
@@ -78,7 +78,7 @@ export const StudentTable = ({ students }: StudentTableProps) => {
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-slate-400 py-8">
+                <TableCell colSpan={6} className="text-center text-muted-foreground/70 py-8">
                   {search ? "No students match your search" : "No students yet"}
                 </TableCell>
               </TableRow>
@@ -102,7 +102,7 @@ export const StudentTable = ({ students }: StudentTableProps) => {
                       </span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-sm text-slate-500">
+                  <TableCell className="text-sm text-muted-foreground">
                     {student.email ?? "-"}
                   </TableCell>
                   <TableCell className="text-center text-sm">
@@ -116,7 +116,7 @@ export const StudentTable = ({ students }: StudentTableProps) => {
                       {student.role}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-sm text-slate-500">
+                  <TableCell className="text-sm text-muted-foreground">
                     {timeAgo(student.createdAt)}
                   </TableCell>
                 </TableRow>

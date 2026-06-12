@@ -90,9 +90,9 @@ export const QuestionsList = ({
                         onClose={() => setEditingId(null)}
                       />
                     ) : (
-                      <div className="flex items-center gap-x-2 bg-slate-200 border-slate-200 border text-slate-700 rounded-md mb-4 text-sm">
+                      <div className="flex items-center gap-x-2 bg-muted border-border border text-foreground rounded-md mb-4 text-sm">
                         <div
-                          className="px-2 py-3 border-r border-r-slate-200 hover:bg-slate-300 rounded-l-md transition"
+                          className="px-2 py-3 border-r border-r-slate-200 hover:bg-muted rounded-l-md transition"
                           {...provided.dragHandleProps}
                         >
                           <Grip className="h-5 w-5" />
@@ -108,8 +108,8 @@ export const QuestionsList = ({
                             className={cn(
                               "text-xs",
                               question.options.some((o) => o.isCorrect)
-                                ? "bg-emerald-500"
-                                : "bg-amber-500"
+                                ? "bg-success"
+                                : "bg-warning"
                             )}
                           >
                             {question.options.some((o) => o.isCorrect)

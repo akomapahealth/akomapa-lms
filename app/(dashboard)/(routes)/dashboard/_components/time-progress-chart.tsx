@@ -43,20 +43,20 @@ export const TimeProgressChart = ({
     <Card className="p-4">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="font-semibold text-sm text-slate-700">
+          <h3 className="font-semibold text-sm text-foreground">
             Progress Timeline
           </h3>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-muted-foreground">
             Completion over time
           </p>
         </div>
-        <div className="flex rounded-md border border-slate-200 overflow-hidden text-xs">
+        <div className="flex rounded-md border border-border overflow-hidden text-xs">
           <button
             onClick={() => togglePeriod("weekly")}
             className={`px-3 py-1.5 transition-colors ${
               period === "weekly"
                 ? "bg-akomapa-teal text-white"
-                : "bg-white text-slate-600 hover:bg-slate-50"
+                : "bg-card text-muted-foreground hover:bg-muted/50"
             }`}
           >
             Weekly
@@ -66,7 +66,7 @@ export const TimeProgressChart = ({
             className={`px-3 py-1.5 transition-colors ${
               period === "monthly"
                 ? "bg-akomapa-teal text-white"
-                : "bg-white text-slate-600 hover:bg-slate-50"
+                : "bg-card text-muted-foreground hover:bg-muted/50"
             }`}
           >
             Monthly
@@ -75,23 +75,23 @@ export const TimeProgressChart = ({
       </div>
 
       {dataPoints.length === 0 ? (
-        <div className="flex items-center justify-center h-[200px] text-sm text-slate-400">
+        <div className="flex items-center justify-center h-[200px] text-sm text-muted-foreground/70">
           No progress data yet
         </div>
       ) : (
         <div className="h-[200px]">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={dataPoints}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis
                 dataKey="label"
                 tick={{ fontSize: 11 }}
-                stroke="#94a3b8"
+                stroke="hsl(var(--muted-foreground))"
               />
               <YAxis
                 domain={[0, 100]}
                 tick={{ fontSize: 11 }}
-                stroke="#94a3b8"
+                stroke="hsl(var(--muted-foreground))"
                 tickFormatter={(v) => `${v}%`}
               />
               <Tooltip
@@ -100,9 +100,9 @@ export const TimeProgressChart = ({
               <Line
                 type="monotone"
                 dataKey="completionPercent"
-                stroke="#0097b2"
+                stroke="hsl(var(--primary))"
                 strokeWidth={2}
-                dot={{ fill: "#0097b2", r: 3 }}
+                dot={{ fill: "hsl(var(--primary))", r: 3 }}
                 activeDot={{ r: 5 }}
               />
             </LineChart>
@@ -110,22 +110,22 @@ export const TimeProgressChart = ({
         </div>
       )}
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4 pt-3 border-t border-slate-100">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4 pt-3 border-t border-border/50">
         <div>
-          <p className="text-xs text-slate-500">Current</p>
-          <p className="text-sm font-semibold text-slate-700">
+          <p className="text-xs text-muted-foreground">Current</p>
+          <p className="text-sm font-semibold text-foreground">
             {currentProgress}%
           </p>
         </div>
         <div>
-          <p className="text-xs text-slate-500">Change</p>
+          <p className="text-xs text-muted-foreground">Change</p>
           <p
             className={`text-sm font-semibold ${
               progressChange > 0
-                ? "text-emerald-600"
+                ? "text-success"
                 : progressChange < 0
                   ? "text-red-500"
-                  : "text-slate-700"
+                  : "text-foreground"
             }`}
           >
             {progressChange > 0 ? "+" : ""}
@@ -133,14 +133,14 @@ export const TimeProgressChart = ({
           </p>
         </div>
         <div>
-          <p className="text-xs text-slate-500">Average</p>
-          <p className="text-sm font-semibold text-slate-700">
+          <p className="text-xs text-muted-foreground">Average</p>
+          <p className="text-sm font-semibold text-foreground">
             {averageProgress}%
           </p>
         </div>
         <div>
-          <p className="text-xs text-slate-500">Peak</p>
-          <p className="text-sm font-semibold text-slate-700">
+          <p className="text-xs text-muted-foreground">Peak</p>
+          <p className="text-sm font-semibold text-foreground">
             {peakProgress}%
           </p>
         </div>

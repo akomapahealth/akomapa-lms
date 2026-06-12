@@ -20,10 +20,10 @@ export const BadgeGrid = ({ badges }: BadgeGridProps) => {
   const earnedCount = badges.filter((b) => b.earned).length;
 
   return (
-    <div className="rounded-lg border bg-white p-4">
+    <div className="rounded-lg border bg-card p-4">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-slate-800">Badges</h3>
-        <span className="text-xs text-slate-500">
+        <h3 className="font-semibold text-foreground">Badges</h3>
+        <span className="text-xs text-muted-foreground">
           {earnedCount}/{badges.length} earned
         </span>
       </div>

@@ -6,7 +6,7 @@ type Status = "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED";
 const statusConfig: Record<Status, { label: string; className: string }> = {
   NOT_STARTED: {
     label: "Not Started",
-    className: "bg-slate-100 text-slate-600 hover:bg-slate-100",
+    className: "bg-muted text-muted-foreground hover:bg-muted",
   },
   IN_PROGRESS: {
     label: "In Progress",
@@ -14,7 +14,7 @@ const statusConfig: Record<Status, { label: string; className: string }> = {
   },
   COMPLETED: {
     label: "Completed",
-    className: "bg-emerald-100 text-emerald-700 hover:bg-emerald-100",
+    className: "bg-success/15 text-success hover:bg-success/15",
   },
 };
 

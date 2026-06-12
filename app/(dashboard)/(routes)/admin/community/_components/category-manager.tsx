@@ -163,7 +163,7 @@ export const CategoryManager = ({ categories }: CategoryManagerProps) => {
         {categories.map((cat) => (
           <div
             key={cat.id}
-            className="flex items-center justify-between p-3 border border-slate-200 rounded-lg"
+            className="flex items-center justify-between p-3 border border-border rounded-lg"
           >
             <div className="flex items-center gap-3">
               <div
@@ -173,7 +173,7 @@ export const CategoryManager = ({ categories }: CategoryManagerProps) => {
               <div>
                 <p className="font-medium text-sm">{cat.name}</p>
                 {cat.description && (
-                  <p className="text-xs text-slate-400">{cat.description}</p>
+                  <p className="text-xs text-muted-foreground/70">{cat.description}</p>
                 )}
               </div>
             </div>

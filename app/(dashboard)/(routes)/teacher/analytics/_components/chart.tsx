@@ -26,13 +26,13 @@ export const Chart = ({
                 <BarChart data={data}>
                     <XAxis 
                         dataKey="name"
-                        stroke="#888888"
+                        stroke="hsl(var(--muted-foreground))"
                         fontSize={12}
                         tickLine={false}
                         axisLine={false}
                     />
                     <YAxis 
-                        stroke="#888888"
+                        stroke="hsl(var(--muted-foreground))"
                         fontSize={12}
                         tickLine={false}
                         axisLine={false}
@@ -40,7 +40,7 @@ export const Chart = ({
                     />
                     <Bar 
                         dataKey="total"
-                        fill="#0369a1"
+                        fill="hsl(var(--primary))"
                         radius={[4, 4, 0, 0]}
                     />
                 </BarChart>

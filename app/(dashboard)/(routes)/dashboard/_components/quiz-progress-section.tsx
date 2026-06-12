@@ -21,11 +21,11 @@ export const QuizProgressSection = ({
 }: QuizProgressSectionProps) => {
   return (
     <Card className="p-4">
-      <h3 className="font-semibold text-sm text-slate-700 mb-3">
+      <h3 className="font-semibold text-sm text-foreground mb-3">
         Quiz Progress ({quizzes.length})
       </h3>
       {quizzes.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-8 text-slate-400">
+        <div className="flex flex-col items-center justify-center py-8 text-muted-foreground/70">
           <FileQuestion className="h-8 w-8 mb-2" />
           <p className="text-sm">No quizzes available</p>
         </div>
@@ -34,21 +34,21 @@ export const QuizProgressSection = ({
           {quizzes.map((quiz, index) => {
             const content = (
               <div
-                className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0 hover:bg-slate-50/50 transition rounded -mx-1 px-1"
+                className="flex items-center justify-between py-2 border-b border-border/50 last:border-0 hover:bg-muted/50/50 transition rounded -mx-1 px-1"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-slate-700 truncate">
+                  <p className="text-sm font-medium text-foreground truncate">
                     {index + 1}. {quiz.title}
                   </p>
                   {quiz.moduleName && (
-                    <p className="text-xs text-slate-400 truncate">
+                    <p className="text-xs text-muted-foreground/70 truncate">
                       {quiz.moduleName}
                     </p>
                   )}
                 </div>
                 <div className="flex items-center gap-2 shrink-0 ml-2">
                   {quiz.bestScore !== null && (
-                    <span className="text-sm font-medium text-slate-600">
+                    <span className="text-sm font-medium text-muted-foreground">
                       {Math.round(quiz.bestScore)}%
                     </span>
                   )}
@@ -72,7 +72,7 @@ export const QuizProgressSection = ({
       )}
       <Link
         href="/grades"
-        className="block text-center text-xs text-akomapa-teal hover:underline mt-3 pt-2 border-t border-slate-100"
+        className="block text-center text-xs text-akomapa-teal hover:underline mt-3 pt-2 border-t border-border/50"
       >
         View All Grades →
       </Link>

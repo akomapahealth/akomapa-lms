@@ -123,7 +123,7 @@ export const QuestionForm = ({
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-md p-4 mb-4 space-y-4">
+    <div className="bg-card border border-border rounded-md p-4 mb-4 space-y-4">
       <div className="flex items-center justify-between">
         <Label className="text-sm font-medium">Edit Question</Label>
         <div className="flex items-center gap-1">
@@ -143,7 +143,7 @@ export const QuestionForm = ({
       </div>
 
       <div className="space-y-2">
-        <Label className="text-xs text-slate-500">Question Text</Label>
+        <Label className="text-xs text-muted-foreground">Question Text</Label>
         <Textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -153,7 +153,7 @@ export const QuestionForm = ({
       </div>
 
       <div className="space-y-2">
-        <Label className="text-xs text-slate-500">Points</Label>
+        <Label className="text-xs text-muted-foreground">Points</Label>
         <Input
           type="number"
           value={points}
@@ -165,7 +165,7 @@ export const QuestionForm = ({
       </div>
 
       <div className="space-y-2">
-        <Label className="text-xs text-slate-500">Options</Label>
+        <Label className="text-xs text-muted-foreground">Options</Label>
         {options.map((option, idx) => (
           <div key={idx} className="flex items-center gap-2">
             <button
@@ -174,12 +174,12 @@ export const QuestionForm = ({
               className={cn(
                 "w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition",
                 option.isCorrect
-                  ? "border-emerald-500 bg-emerald-500"
-                  : "border-slate-300 hover:border-slate-400"
+                  ? "border-success bg-success"
+                  : "border-border hover:border-muted-foreground/50"
               )}
             >
               {option.isCorrect && (
-                <div className="w-2 h-2 rounded-full bg-white" />
+                <div className="w-2 h-2 rounded-full bg-card" />
               )}
             </button>
             <Input
@@ -194,7 +194,7 @@ export const QuestionForm = ({
               size="sm"
               onClick={() => removeOption(idx)}
               disabled={isLoading || options.length <= 2}
-              className="text-slate-400 hover:text-red-500"
+              className="text-muted-foreground/70 hover:text-red-500"
             >
               <Trash2 className="h-3 w-3" />
             </Button>

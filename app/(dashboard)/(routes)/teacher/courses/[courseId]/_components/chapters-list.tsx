@@ -79,7 +79,7 @@ export const ChaptersList = ({
                                 {(provided) => (
                                     <div
                                         className={cn(
-                                            "flex items-center gap-x-2 bg-slate-200 border-slate-200 border text-slate-700 rounded-md mb-4 text-sm",
+                                            "flex items-center gap-x-2 bg-muted border-border border text-foreground rounded-md mb-4 text-sm",
                                             chapter.isPublished && "bg-sky-100 border-sky-200 text-sky-700"
                                         )}
                                         ref={provided.innerRef}
@@ -87,7 +87,7 @@ export const ChaptersList = ({
                                     >
                                         <div
                                             className={cn(
-                                                "px-2 py-3 border-r border-r-slate-200 hover:bg-slate-300 rounded-l-md transition",
+                                                "px-2 py-3 border-r border-r-slate-200 hover:bg-muted rounded-l-md transition",
                                                 chapter.isPublished && "border-r-sky-200 hover:bg-sky-200"
                                             )}
                                             {...provided.dragHandleProps}
@@ -107,7 +107,7 @@ export const ChaptersList = ({
                                             )}
                                             <Badge
                                                 className={cn(
-                                                    "bg-slate-500",
+                                                    "bg-muted-foreground/60",
                                                     chapter.isPublished && "bg-sky-700"
                                                 )}
                                             >

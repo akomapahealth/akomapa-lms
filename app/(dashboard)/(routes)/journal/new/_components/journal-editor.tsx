@@ -124,14 +124,14 @@ export const JournalEditor = ({
       <div className="flex items-center justify-between">
         <Link
           href="/journal"
-          className="flex items-center gap-2 text-sm text-slate-600 hover:text-slate-800 transition"
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Journal
         </Link>
         <div className="flex items-center gap-3">
           {lastSaved && (
-            <span className="text-xs text-slate-400">
+            <span className="text-xs text-muted-foreground/70">
               Saved {lastSaved.toLocaleTimeString()}
             </span>
           )}
@@ -160,7 +160,7 @@ export const JournalEditor = ({
           <p className="text-sm font-medium text-akomapa-teal-dark">
             Guided Reflection Prompt
           </p>
-          <p className="text-sm text-slate-600 mt-1">{guidedPrompt}</p>
+          <p className="text-sm text-muted-foreground mt-1">{guidedPrompt}</p>
         </div>
       )}
 
@@ -169,7 +169,7 @@ export const JournalEditor = ({
         placeholder="Entry title..."
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        className="w-full text-2xl font-bold text-slate-800 placeholder:text-slate-300 border-none outline-none focus:ring-0 p-0"
+        className="w-full text-2xl font-bold text-foreground placeholder:text-muted-foreground/50 border-none outline-none focus:ring-0 p-0"
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -179,7 +179,7 @@ export const JournalEditor = ({
             setCourseId(e.target.value);
             setModuleId("");
           }}
-          className="px-3 py-2 text-sm border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-akomapa-teal/20"
+          className="px-3 py-2 text-sm border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-akomapa-teal/20"
         >
           <option value="">No course (general reflection)</option>
           {courses.map((c) => (
@@ -193,7 +193,7 @@ export const JournalEditor = ({
           value={moduleId}
           onChange={(e) => setModuleId(e.target.value)}
           disabled={!courseId}
-          className="px-3 py-2 text-sm border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-akomapa-teal/20 disabled:opacity-50"
+          className="px-3 py-2 text-sm border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-akomapa-teal/20 disabled:opacity-50"
         >
           <option value="">No specific module</option>
           {modules.map((m) => (
@@ -212,11 +212,11 @@ export const JournalEditor = ({
             checked={!isPrivate}
             onCheckedChange={(checked) => setIsPrivate(!checked)}
           />
-          <span className="text-sm text-slate-600">
+          <span className="text-sm text-muted-foreground">
             {isPrivate ? "Private" : "Shared with faculty"}
           </span>
         </div>
-        <span className="text-xs text-slate-400">{wordCount} words</span>
+        <span className="text-xs text-muted-foreground/70">{wordCount} words</span>
       </div>
     </div>
   );

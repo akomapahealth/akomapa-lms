@@ -20,7 +20,7 @@ export const PostCard = ({ post }: PostCardProps) => {
 
   return (
     <Link href={`/community/${post.id}`}>
-      <div className="group border border-slate-200 rounded-lg p-4 hover:shadow-md transition bg-white">
+      <div className="group border border-border rounded-lg p-4 hover:shadow-md transition bg-card">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
@@ -28,9 +28,9 @@ export const PostCard = ({ post }: PostCardProps) => {
                 <Pin className="h-3.5 w-3.5 text-akomapa-teal flex-shrink-0" />
               )}
               {post.isLocked && (
-                <Lock className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
+                <Lock className="h-3.5 w-3.5 text-muted-foreground/70 flex-shrink-0" />
               )}
-              <h3 className="font-semibold text-slate-800 group-hover:text-akomapa-teal transition truncate">
+              <h3 className="font-semibold text-foreground group-hover:text-akomapa-teal transition truncate">
                 {post.title}
               </h3>
             </div>
@@ -42,21 +42,21 @@ export const PostCard = ({ post }: PostCardProps) => {
                   {initials}
                 </AvatarFallback>
               </Avatar>
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-muted-foreground">
                 {authorName} · {timeAgo(post.createdAt)}
               </span>
             </div>
 
-            <p className="text-sm text-slate-600 line-clamp-2 mb-3">
+            <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
               {post.excerpt}
             </p>
 
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1 text-sm text-slate-500">
+              <div className="flex items-center gap-1 text-sm text-muted-foreground">
                 <Heart className="h-3.5 w-3.5" />
                 <span>{post.likeCount}</span>
               </div>
-              <div className="flex items-center gap-1 text-sm text-slate-500">
+              <div className="flex items-center gap-1 text-sm text-muted-foreground">
                 <MessageSquare className="h-3.5 w-3.5" />
                 <span>{post.commentCount}</span>
               </div>

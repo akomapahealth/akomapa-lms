@@ -78,7 +78,7 @@ const QuizEntryPage = async ({
       </div>
 
       <div className="p-4 mt-4">
-        <Card className="border-slate-200">
+        <Card className="border-border">
           <CardHeader className="pb-4">
             <div className="flex items-center gap-2 mb-2">
               <Badge
@@ -94,7 +94,7 @@ const QuizEntryPage = async ({
             <CardTitle className="text-2xl">{quiz.title}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="flex flex-wrap gap-6 text-sm text-slate-600">
+            <div className="flex flex-wrap gap-6 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <FileQuestion className="h-4 w-4" />
                 <span>{quiz._count.questions} Questions</span>
@@ -112,33 +112,33 @@ const QuizEntryPage = async ({
             </div>
 
             {quiz.type === "PRE_TEST" && (
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-muted-foreground">
                 This pre-test assesses your current understanding before
                 beginning the course modules.
               </p>
             )}
             {quiz.type === "POST_TEST" && !isLocked && (
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-muted-foreground">
                 This post-test evaluates what you&apos;ve learned after
                 completing all course modules.
               </p>
             )}
             {quiz.type === "MODULE_QUIZ" && (
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-muted-foreground">
                 This quiz tests your understanding of the module content.
               </p>
             )}
 
             {isLocked && lockStatus ? (
-              <div className="bg-slate-50 border border-slate-200 rounded-lg p-6 text-center space-y-3">
-                <Lock className="h-10 w-10 text-slate-400 mx-auto" />
-                <h3 className="font-semibold text-slate-700">
+              <div className="bg-muted/50 border border-border rounded-lg p-6 text-center space-y-3">
+                <Lock className="h-10 w-10 text-muted-foreground/70 mx-auto" />
+                <h3 className="font-semibold text-foreground">
                   Post-Test Locked
                 </h3>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-muted-foreground">
                   Complete all modules to unlock this assessment.
                 </p>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-muted-foreground">
                   Progress: {lockStatus.completedModules}/{lockStatus.totalModules} modules completed
                 </p>
               </div>
@@ -148,8 +148,8 @@ const QuizEntryPage = async ({
                   <div
                     className={`p-4 rounded-lg border ${
                       bestPercentage >= quiz.passingScore
-                        ? "bg-emerald-50 border-emerald-200"
-                        : "bg-amber-50 border-amber-200"
+                        ? "bg-success/10 border-success/30"
+                        : "bg-warning/10 border-warning/30"
                     }`}
                   >
                     <p className="text-sm font-medium">
@@ -177,7 +177,7 @@ const QuizEntryPage = async ({
 
             <Link
               href={`/courses/${courseId}`}
-              className="flex items-center gap-1 text-sm text-slate-500 hover:text-akomapa-teal transition"
+              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-akomapa-teal transition"
             >
               <ArrowLeft className="h-4 w-4" />
               Back to Course

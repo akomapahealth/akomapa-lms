@@ -21,13 +21,13 @@ export const BadgeDistributionChart = ({
   data,
 }: BadgeDistributionChartProps) => {
   return (
-    <Card className="border-slate-200">
+    <Card className="border-border">
       <CardHeader>
         <CardTitle className="text-base">Badge Distribution</CardTitle>
       </CardHeader>
       <CardContent>
         {data.length === 0 ? (
-          <p className="text-sm text-slate-400 text-center py-8">
+          <p className="text-sm text-muted-foreground/70 text-center py-8">
             No badges earned yet
           </p>
         ) : (
@@ -40,7 +40,7 @@ export const BadgeDistributionChart = ({
               <Bar
                 dataKey="count"
                 name="Earned"
-                fill="#ebb92b"
+                fill="hsl(var(--akomapa-gold))"
                 radius={[4, 4, 0, 0]}
               />
             </BarChart>

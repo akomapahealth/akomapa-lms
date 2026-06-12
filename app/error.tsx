@@ -15,12 +15,12 @@ export default function GlobalError({
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="text-center space-y-4">
         <div className="flex justify-center">
-          <AlertTriangle className="h-12 w-12 text-amber-500" />
+          <AlertTriangle className="h-12 w-12 text-warning" />
         </div>
-        <h2 className="text-xl font-semibold text-slate-800">
+        <h2 className="text-xl font-semibold text-foreground">
           Something went wrong
         </h2>
-        <p className="text-sm text-slate-500 max-w-md">
+        <p className="text-sm text-muted-foreground max-w-md">
           An unexpected error occurred. Please try again or return to the
           dashboard.
         </p>

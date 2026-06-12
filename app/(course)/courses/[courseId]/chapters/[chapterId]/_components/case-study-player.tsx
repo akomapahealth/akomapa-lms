@@ -82,7 +82,7 @@ export const CaseStudyPlayer = ({
   if (phase === "intro") {
     return (
       <div className="max-w-3xl mx-auto p-6 space-y-6">
-        <h2 className="text-2xl font-bold text-slate-800">{title}</h2>
+        <h2 className="text-2xl font-bold text-foreground">{title}</h2>
         <div
           className="prose prose-slate max-w-none"
           dangerouslySetInnerHTML={{ __html: scenario.introduction }}
@@ -99,8 +99,8 @@ export const CaseStudyPlayer = ({
     return (
       <div className="max-w-3xl mx-auto p-6 space-y-6">
         <div className="flex items-center gap-3">
-          <CheckCircle2 className="w-8 h-8 text-emerald-500" />
-          <h2 className="text-2xl font-bold text-slate-800">
+          <CheckCircle2 className="w-8 h-8 text-success" />
+          <h2 className="text-2xl font-bold text-foreground">
             Case Study Complete
           </h2>
         </div>
@@ -108,7 +108,7 @@ export const CaseStudyPlayer = ({
           className="prose prose-slate max-w-none"
           dangerouslySetInnerHTML={{ __html: scenario.conclusion }}
         />
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-muted-foreground">
           {isSaving
             ? "Saving your responses..."
             : "Your responses have been saved."}
@@ -120,14 +120,14 @@ export const CaseStudyPlayer = ({
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-slate-800">{title}</h2>
-        <span className="text-sm text-slate-500">
+        <h2 className="text-xl font-bold text-foreground">{title}</h2>
+        <span className="text-sm text-muted-foreground">
           Step {currentStepIndex + 1} of {totalSteps}
         </span>
       </div>
 
       {/* Progress bar */}
-      <div className="w-full bg-slate-100 rounded-full h-2">
+      <div className="w-full bg-muted rounded-full h-2">
         <div
           className="bg-akomapa-teal h-2 rounded-full transition-all"
           style={{
@@ -147,12 +147,12 @@ export const CaseStudyPlayer = ({
         >
           {/* Narrative */}
           <div
-            className="prose prose-slate max-w-none bg-slate-50 rounded-lg p-4 border"
+            className="prose prose-slate max-w-none bg-muted/50 rounded-lg p-4 border"
             dangerouslySetInnerHTML={{ __html: currentStep.narrative }}
           />
 
           {/* Question */}
-          <p className="font-semibold text-slate-800">{currentStep.question}</p>
+          <p className="font-semibold text-foreground">{currentStep.question}</p>
 
           {!showFeedback ? (
             /* Choices */
@@ -161,7 +161,7 @@ export const CaseStudyPlayer = ({
                 <button
                   key={choice.id}
                   onClick={() => onSelectChoice(choice)}
-                  className="w-full text-left p-4 rounded-lg border border-slate-200 hover:border-akomapa-teal hover:bg-akomapa-teal/5 transition"
+                  className="w-full text-left p-4 rounded-lg border border-border hover:border-akomapa-teal hover:bg-akomapa-teal/5 transition"
                 >
                   <span className="font-medium text-akomapa-teal mr-2">
                     {String.fromCharCode(65 + index)}.
@@ -173,14 +173,14 @@ export const CaseStudyPlayer = ({
           ) : (
             /* Feedback */
             <div className="space-y-4">
-              <div className="p-4 rounded-lg border bg-white">
-                <p className="text-sm text-slate-500 mb-1">You chose:</p>
-                <p className="font-medium text-slate-800">
+              <div className="p-4 rounded-lg border bg-card">
+                <p className="text-sm text-muted-foreground mb-1">You chose:</p>
+                <p className="font-medium text-foreground">
                   {selectedChoice?.text}
                 </p>
               </div>
 
-              <div className="p-4 rounded-lg border bg-slate-50">
+              <div className="p-4 rounded-lg border bg-muted/50">
                 {selectedChoice && (
                   <>
                     <p
@@ -188,10 +188,10 @@ export const CaseStudyPlayer = ({
                     >
                       {getEthicalLabel(selectedChoice.ethicalScore).label}
                     </p>
-                    <p className="text-sm text-slate-600 mt-2">
+                    <p className="text-sm text-muted-foreground mt-2">
                       {selectedChoice.consequence}
                     </p>
-                    <p className="text-sm text-slate-700 mt-3 italic">
+                    <p className="text-sm text-foreground mt-3 italic">
                       {selectedChoice.feedback}
                     </p>
                   </>

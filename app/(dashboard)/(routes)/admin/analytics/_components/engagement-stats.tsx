@@ -20,32 +20,32 @@ export const EngagementStats = ({ data }: EngagementStatsProps) => {
       label: "Comments",
       value: data.totalComments,
       icon: MessagesSquare,
-      color: "text-emerald-600",
-      bg: "bg-emerald-50",
+      color: "text-success",
+      bg: "bg-success/10",
     },
     {
       label: "Active Users",
       value: data.activeUsers,
       icon: Users,
-      color: "text-amber-600",
-      bg: "bg-amber-50",
+      color: "text-warning",
+      bg: "bg-warning/10",
     },
   ];
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {stats.map((stat) => (
-        <Card key={stat.label} className="border-slate-200">
+        <Card key={stat.label} className="border-border">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
               <div className={`p-2 rounded-lg ${stat.bg}`}>
                 <stat.icon className={`h-5 w-5 ${stat.color}`} />
               </div>
               <div>
-                <p className="text-2xl font-bold text-slate-800">
+                <p className="text-2xl font-bold text-foreground">
                   {stat.value}
                 </p>
-                <p className="text-sm text-slate-500">{stat.label}</p>
+                <p className="text-sm text-muted-foreground">{stat.label}</p>
               </div>
             </div>
           </CardContent>

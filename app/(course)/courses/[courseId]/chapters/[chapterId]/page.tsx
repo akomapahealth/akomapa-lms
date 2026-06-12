@@ -161,7 +161,7 @@ const ChapterIdPage = async ({
                         {previousTopic ? (
                             <Link
                                 href={`/courses/${courseId}/chapters/${previousTopic.id}`}
-                                className="flex items-center gap-1 text-sm text-slate-600 hover:text-akomapa-teal transition"
+                                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-akomapa-teal transition"
                             >
                                 <ChevronLeft className="h-4 w-4" />
                                 <span className="truncate max-w-[200px]">
@@ -173,14 +173,14 @@ const ChapterIdPage = async ({
                         )}
                         <Link
                             href={`/courses/${courseId}`}
-                            className="text-sm text-slate-500 hover:text-akomapa-teal transition"
+                            className="text-sm text-muted-foreground hover:text-akomapa-teal transition"
                         >
                             Back to Course
                         </Link>
                         {nextTopic ? (
                             <Link
                                 href={`/courses/${courseId}/chapters/${nextTopic.id}`}
-                                className="flex items-center gap-1 text-sm text-slate-600 hover:text-akomapa-teal transition"
+                                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-akomapa-teal transition"
                             >
                                 <span className="truncate max-w-[200px]">
                                     {nextTopic.title}

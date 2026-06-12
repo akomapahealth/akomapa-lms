@@ -55,10 +55,10 @@ export const CertificateSection = ({
   };
 
   return (
-    <Card className="border-emerald-200 bg-emerald-50/50">
+    <Card className="border-success/30 bg-success/10/50">
       <CardHeader>
         <CardTitle className="text-lg flex items-center gap-2">
-          <Award className="h-5 w-5 text-emerald-600" />
+          <Award className="h-5 w-5 text-success" />
           Certificate
         </CardTitle>
       </CardHeader>
@@ -67,10 +67,10 @@ export const CertificateSection = ({
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-700">
+                <p className="text-sm font-medium text-foreground">
                   Certificate #{certificate.certificateNumber}
                 </p>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-muted-foreground">
                   Issued{" "}
                   {new Date(certificate.issuedAt).toLocaleDateString("en-GB", {
                     day: "numeric",
@@ -109,14 +109,14 @@ export const CertificateSection = ({
           </div>
         ) : (
           <div className="space-y-3">
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-muted-foreground">
               You&apos;ve completed this course! Generate your certificate of
               completion.
             </p>
             <Button
               onClick={onGenerate}
               disabled={isGenerating}
-              className="bg-emerald-600 hover:bg-emerald-700"
+              className="bg-success hover:bg-success"
             >
               {isGenerating ? (
                 <>
