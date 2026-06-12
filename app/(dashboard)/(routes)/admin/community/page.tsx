@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PostModerationTable } from "./_components/post-moderation-table";
 import { CategoryManager } from "./_components/category-manager";
+import { PageContainer } from "@/components/shell/page-container";
 
 const AdminCommunityPage = async () => {
   const { userId } = await auth();
@@ -36,7 +37,7 @@ const AdminCommunityPage = async () => {
   }));
 
   return (
-    <div className="px-4 py-6 sm:p-6 space-y-6">
+    <PageContainer width="wide" className="space-y-6">
       <h1 className="text-xl sm:text-2xl font-bold text-foreground">Community Management</h1>
 
       <Tabs defaultValue="posts">
@@ -51,7 +52,7 @@ const AdminCommunityPage = async () => {
           <CategoryManager categories={categories} />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 };
 

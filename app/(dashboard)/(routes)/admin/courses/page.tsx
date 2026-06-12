@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { columns } from "@/components/admin/columns";
 import { DataTable } from "@/components/admin/data-table";
+import { PageContainer } from "@/components/shell/page-container";
 
 const AdminCoursesPage = async () => {
   const { userId } = await auth();
@@ -21,9 +22,9 @@ const AdminCoursesPage = async () => {
   });
 
   return (
-    <div className="px-4 py-6 sm:p-6">
+    <PageContainer width="wide">
       <DataTable columns={columns} data={courses} />
-    </div>
+    </PageContainer>
   );
 };
 

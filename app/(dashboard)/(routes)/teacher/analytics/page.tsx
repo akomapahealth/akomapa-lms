@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getAnalytics } from "@/actions/get-analytics";
 import { DataCard } from "@/components/admin/data-card";
 import { Chart } from "./_components/chart";
+import { PageContainer } from "@/components/shell/page-container";
 
 const AnalyticsPage = async () => {
     const { userId } = await auth();
@@ -18,7 +19,7 @@ const AnalyticsPage = async () => {
         totalSales,
     } = await getAnalytics(userId);
     return ( 
-        <div className="px-4 py-6 sm:p-6">
+        <PageContainer width="wide">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <DataCard 
                     label="Total Revenue"
@@ -33,7 +34,7 @@ const AnalyticsPage = async () => {
             <Chart 
                 data={data}
             />
-        </div>
+        </PageContainer>
      );
 }
  

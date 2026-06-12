@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { isAdmin } from "@/lib/roles";
 import { StudentTable } from "./_components/student-table";
+import { PageContainer } from "@/components/shell/page-container";
 
 const AdminStudentsPage = async () => {
   const { userId } = await auth();
@@ -52,7 +53,7 @@ const AdminStudentsPage = async () => {
   });
 
   return (
-    <div className="px-4 py-6 sm:p-6 space-y-6">
+    <PageContainer width="wide" className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl sm:text-2xl font-bold text-foreground">
           Students ({students.length})
@@ -60,7 +61,7 @@ const AdminStudentsPage = async () => {
       </div>
 
       <StudentTable students={studentRows} />
-    </div>
+    </PageContainer>
   );
 };
 

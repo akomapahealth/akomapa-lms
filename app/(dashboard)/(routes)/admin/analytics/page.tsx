@@ -12,6 +12,7 @@ import { ModuleDropoffChart } from "./_components/module-dropoff-chart";
 import { BadgeDistributionChart } from "./_components/badge-distribution-chart";
 import { EngagementStats } from "./_components/engagement-stats";
 import { StudentActivityChart } from "./_components/student-activity-chart";
+import { PageContainer } from "@/components/shell/page-container";
 
 const AdminAnalyticsPage = async () => {
   const { userId } = await auth();
@@ -26,7 +27,7 @@ const AdminAnalyticsPage = async () => {
   ]);
 
   return (
-    <div className="px-4 py-6 sm:p-6 space-y-6">
+    <PageContainer width="wide" className="space-y-6">
       <h1 className="text-xl sm:text-2xl font-bold text-foreground">Analytics</h1>
 
       {/* Revenue cards */}
@@ -48,7 +49,7 @@ const AdminAnalyticsPage = async () => {
 
       {/* Student activity */}
       <StudentActivityChart data={analytics.studentActivity} />
-    </div>
+    </PageContainer>
   );
 };
 

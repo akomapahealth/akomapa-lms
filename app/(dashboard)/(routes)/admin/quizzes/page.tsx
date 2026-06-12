@@ -6,6 +6,7 @@ import { FileQuestion, Plus } from "lucide-react";
 import { db } from "@/lib/db";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PageContainer } from "@/components/shell/page-container";
 import {
   Table,
   TableBody,
@@ -38,7 +39,7 @@ const AdminQuizzesPage = async () => {
   };
 
   return (
-    <div className="px-4 py-6 sm:p-6">
+    <PageContainer width="wide">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
         <h1 className="text-xl sm:text-2xl font-bold text-foreground">All Quizzes</h1>
       </div>
@@ -111,7 +112,7 @@ const AdminQuizzesPage = async () => {
           </Table>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 };
 

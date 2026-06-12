@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 
 import { DataTable } from "@/components/admin/data-table";
 import { columns } from "@/components/admin/columns"; 
+import { PageContainer } from "@/components/shell/page-container";
 
 
 const CoursesPage = async () => {
@@ -23,9 +24,9 @@ const CoursesPage = async () => {
         },
     });
     return ( 
-        <div className="px-4 py-6 sm:p-6">
+        <PageContainer width="wide">
             <DataTable columns={columns} data={courses} />
-        </div>
+        </PageContainer>
      );
 }
  
