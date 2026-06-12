@@ -74,7 +74,7 @@ const ChapterIdPage = async ({
                 />
             )}
 
-            <div className="flex flex-col max-w-4xl mx-auto pb-20">
+            <div className="flex flex-col max-w-4xl mx-auto pb-6 sm:pb-12">
                 <div className="px-4 pt-4">
                     <Breadcrumb
                         items={[
@@ -110,7 +110,7 @@ const ChapterIdPage = async ({
                             <p className="text-xs text-akomapa-teal font-medium">
                                 {topic.module.title}
                             </p>
-                            <h2 className="text-xl sm:text-2xl font-semibold mb-2">
+                            <h2 className="font-display text-xl sm:text-2xl font-semibold mb-2">
                                 {topic.title}
                             </h2>
                         </div>
@@ -143,7 +143,7 @@ const ChapterIdPage = async ({
                                         href={attachment.url}
                                         target="_blank"
                                         key={attachment.id}
-                                        className="flex items-center p-3 w-full bg-sky-200 border text-sky-700 rounded-md hover:underline"
+                                        className="flex items-center gap-2 p-3 w-full bg-akomapa-teal/10 border border-akomapa-teal/20 text-akomapa-teal rounded-md hover:underline"
                                     >
                                         <File />
                                         <p className="line-clamp-1">
@@ -155,9 +155,9 @@ const ChapterIdPage = async ({
                         </>
                     )}
 
-                    {/* Previous/Next Navigation */}
+                    {/* Previous/Next Navigation — sticky on mobile so it's always reachable */}
                     <Separator />
-                    <div className="p-4 flex items-center justify-between">
+                    <div className="sticky bottom-0 z-10 flex items-center justify-between border-t border-border/60 bg-background/95 p-4 backdrop-blur-sm md:static md:border-t-0 md:bg-transparent md:backdrop-blur-none">
                         {previousTopic ? (
                             <Link
                                 href={`/courses/${courseId}/chapters/${previousTopic.id}`}

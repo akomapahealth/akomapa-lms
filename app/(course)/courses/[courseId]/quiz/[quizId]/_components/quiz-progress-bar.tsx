@@ -39,7 +39,7 @@ export const QuizProgressBar = () => {
                 isCurrent && "ring-2 ring-akomapa-teal ring-offset-1",
                 isAnswered
                   ? "bg-akomapa-teal"
-                  : "bg-muted hover:bg-muted"
+                  : "bg-muted hover:bg-muted-foreground/30"
               )}
               title={`Question ${idx + 1}${isAnswered ? " (answered)" : ""}`}
             />
