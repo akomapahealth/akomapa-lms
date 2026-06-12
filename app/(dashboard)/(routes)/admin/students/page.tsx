@@ -10,7 +10,7 @@ const AdminStudentsPage = async () => {
   if (!userId) return redirect("/sign-in");
 
   const admin = await isAdmin(userId);
-  if (!admin) return redirect("/");
+  if (!admin) return redirect("/dashboard");
 
   const students = await db.user.findMany({
     where: { role: "STUDENT" },

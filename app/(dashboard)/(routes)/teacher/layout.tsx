@@ -14,7 +14,7 @@ const TeacherLayout = async ({
     }
 
     if (!(await isFaculty(userId))) {
-        return redirect("/");
+        return redirect("/dashboard");
     }
 
     return <>{children}</>;

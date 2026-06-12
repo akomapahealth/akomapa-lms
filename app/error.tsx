@@ -29,7 +29,7 @@ export default function GlobalError({
             Try Again
           </Button>
           <Button asChild>
-            <Link href="/">Go to Dashboard</Link>
+            <Link href="/dashboard">Go to Dashboard</Link>
           </Button>
         </div>
       </div>

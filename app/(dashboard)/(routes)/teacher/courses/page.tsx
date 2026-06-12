@@ -3,15 +3,15 @@ import { redirect } from "next/navigation";
 
 import { db } from "@/lib/db";
 
-import { DataTable } from "./_components/data-table";
-import { columns } from "./_components/columns"; 
+import { DataTable } from "@/components/admin/data-table";
+import { columns } from "@/components/admin/columns"; 
 
 
 const CoursesPage = async () => {
     const { userId } = await auth();
 
     if (!userId) {
-        return redirect("/");
+        return redirect("/dashboard");
     }
 
     const courses = await db.course.findMany({

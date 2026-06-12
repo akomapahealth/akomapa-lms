@@ -17,7 +17,7 @@ const CourseLayout = async ({
     const { userId } = await auth();
 
     if (!userId) {
-        return redirect("/");
+        return redirect("/dashboard");
     }
 
     const course = await db.course.findUnique({
@@ -76,7 +76,7 @@ const CourseLayout = async ({
     })
 
     if (!course) {
-        return redirect("/");
+        return redirect("/dashboard");
     }
 
     const purchase = await db.purchase.findUnique({

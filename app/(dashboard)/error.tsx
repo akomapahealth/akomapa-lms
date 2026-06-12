@@ -28,7 +28,7 @@ export default function DashboardError({
             Try Again
           </Button>
           <Button size="sm" asChild>
-            <Link href="/">Dashboard</Link>
+            <Link href="/dashboard">Dashboard</Link>
           </Button>
         </div>
       </div>

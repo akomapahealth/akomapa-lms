@@ -21,7 +21,7 @@ const studentRoutes = [
   {
     icon: LayoutDashboard,
     label: "Dashboard",
-    href: "/",
+    href: "/dashboard",
   },
   {
     icon: BookOpen,

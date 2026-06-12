@@ -23,7 +23,7 @@ const SearchPage = async ({
     const { userId } = await auth();
 
     if (!userId) {
-        return redirect("/");
+        return redirect("/dashboard");
     }
     const categories = await db.category.findMany({
         orderBy: {

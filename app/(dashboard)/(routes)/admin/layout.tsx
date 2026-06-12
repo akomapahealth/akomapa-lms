@@ -16,7 +16,7 @@ const AdminLayout = async ({
   const hasAccess = (await isAdmin(userId)) || (await isFaculty(userId));
 
   if (!hasAccess) {
-    return redirect("/");
+    return redirect("/dashboard");
   }
 
   return <>{children}</>;

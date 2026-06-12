@@ -20,10 +20,12 @@ export const SidebarItem = ({
     const pathname = usePathname();
     const router = useRouter();
 
-    const isActive = 
-        (pathname === "/" && href === "/") ||
-        (pathname ===href) ||
-        (pathname?.startsWith(`${href}/`));
+    // Index-style routes only highlight on exact match so they don't
+    // stay active on every child page (e.g. /admin on /admin/courses).
+    const indexRoutes = ["/dashboard", "/admin"];
+    const isActive =
+        pathname === href ||
+        (!indexRoutes.includes(href) && pathname?.startsWith(`${href}/`));
 
     const onClick = () => {
         router.push(href);

@@ -1,8 +1,8 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { columns } from "@/app/(dashboard)/(routes)/teacher/courses/_components/columns";
-import { DataTable } from "@/app/(dashboard)/(routes)/teacher/courses/_components/data-table";
+import { columns } from "@/components/admin/columns";
+import { DataTable } from "@/components/admin/data-table";
 
 const AdminCoursesPage = async () => {
   const { userId } = await auth();

@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { isAdmin } from "@/lib/roles";
 import { getAdminAnalytics } from "@/actions/get-admin-analytics";
 import { getAnalytics } from "@/actions/get-analytics";
-import { DataCard } from "@/app/(dashboard)/(routes)/teacher/analytics/_components/data-card";
+import { DataCard } from "@/components/admin/data-card";
 
 import { EffectivenessChart } from "./_components/effectiveness-chart";
 import { EnrollmentTrendChart } from "./_components/enrollment-trend-chart";
@@ -17,7 +17,7 @@ const AdminAnalyticsPage = async () => {
   const { userId } = await auth();
 
   if (!userId || !(await isAdmin(userId))) {
-    return redirect("/");
+    return redirect("/dashboard");
   }
 
   const [analytics, { totalRevenue, totalSales }] = await Promise.all([
