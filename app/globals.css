@@ -31,11 +31,14 @@
   transform: rotate(12deg);
 }
 
-html,
-body,
-:root {
-  height: 100%;
-}
+/*
+ * Z-index scale:
+ *   0   page content
+ *   10  in-page sticky elements (filter bars, table headers)
+ *   30  app header
+ *   50  overlays — Sheet/Dialog/Dropdown (shadcn default)
+ *   100 toasts / confetti
+ */
 
 @layer base {
   :root {

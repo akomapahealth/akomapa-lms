@@ -4,7 +4,7 @@ import { SidebarUserInfo } from "./sidebar-user-info";
 
 export const Sidebar = () => {
   return (
-    <div className="h-full border-r border-sidebar-border flex flex-col overflow-y-auto bg-sidebar text-sidebar-foreground shadow-lg">
+    <div className="h-full flex flex-col overflow-y-auto bg-sidebar text-sidebar-foreground">
       <div className="p-6 border-b border-sidebar-border">
         <Logo />
       </div>
