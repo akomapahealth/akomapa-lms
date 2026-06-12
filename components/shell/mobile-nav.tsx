@@ -11,10 +11,7 @@ export const MobileNav = ({ children }: { children: React.ReactNode }) => {
       >
         <Menu className="h-5 w-5" />
       </SheetTrigger>
-      <SheetContent
-        side="left"
-        className="w-72 border-r-0 bg-sidebar p-0 text-sidebar-foreground"
-      >
+      <SheetContent side="left" className="w-72 border-r-0 bg-background p-0">
         {children}
       </SheetContent>
     </Sheet>

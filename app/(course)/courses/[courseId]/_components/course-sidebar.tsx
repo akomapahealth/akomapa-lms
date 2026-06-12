@@ -61,7 +61,7 @@ export const CourseSidebar = ({
   const moduleQuizzes = quizzes.filter((q) => q.type === "MODULE_QUIZ");
 
   return (
-    <div className="h-full border-r flex flex-col overflow-hidden shadow-sm bg-card">
+    <div className="h-full flex flex-col overflow-hidden bg-card">
       <div className="p-6 border-b">
         <h1 className="font-semibold text-foreground">{course.title}</h1>
         <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
@@ -83,18 +83,18 @@ export const CourseSidebar = ({
             <Link
               href={`/courses/${course.id}/quiz/${preTest.id}`}
               className={cn(
-                "flex items-center gap-2 p-2 rounded-md text-sm transition hover:bg-slate-100",
+                "flex items-center gap-2 p-2 rounded-md text-sm transition hover:bg-muted",
                 pathname?.includes(preTest.id)
                   ? "bg-akomapa-teal/10 text-akomapa-teal"
-                  : "text-slate-600"
+                  : "text-muted-foreground"
               )}
             >
               <FileQuestion className="h-4 w-4 flex-shrink-0" />
               <span className="truncate">{preTest.title}</span>
               {preTest.passed ? (
-                <CheckCircle2 className="h-3.5 w-3.5 ml-auto text-emerald-500 flex-shrink-0" />
+                <CheckCircle2 className="h-3.5 w-3.5 ml-auto text-success flex-shrink-0" />
               ) : preTest.hasAttempt ? (
-                <Circle className="h-3.5 w-3.5 ml-auto text-amber-500 flex-shrink-0" />
+                <Circle className="h-3.5 w-3.5 ml-auto text-warning flex-shrink-0" />
               ) : null}
             </Link>
           </div>
@@ -123,18 +123,18 @@ export const CourseSidebar = ({
             <Link
               href={`/courses/${course.id}/quiz/${postTest.id}`}
               className={cn(
-                "flex items-center gap-2 p-2 rounded-md text-sm transition hover:bg-slate-100",
+                "flex items-center gap-2 p-2 rounded-md text-sm transition hover:bg-muted",
                 pathname?.includes(postTest.id)
                   ? "bg-akomapa-teal/10 text-akomapa-teal"
-                  : "text-slate-600"
+                  : "text-muted-foreground"
               )}
             >
               <FileQuestion className="h-4 w-4 flex-shrink-0" />
               <span className="truncate">{postTest.title}</span>
               {postTest.passed ? (
-                <CheckCircle2 className="h-3.5 w-3.5 ml-auto text-emerald-500 flex-shrink-0" />
+                <CheckCircle2 className="h-3.5 w-3.5 ml-auto text-success flex-shrink-0" />
               ) : (
-                <Lock className="h-3.5 w-3.5 ml-auto text-slate-400 flex-shrink-0" />
+                <Lock className="h-3.5 w-3.5 ml-auto text-muted-foreground/60 flex-shrink-0" />
               )}
             </Link>
           </div>

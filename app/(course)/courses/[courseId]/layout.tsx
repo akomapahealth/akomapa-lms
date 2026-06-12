@@ -2,8 +2,8 @@ import { getProgress } from "@/actions/get-progress";
 import { db } from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { AppShell } from "@/components/shell/app-shell";
 import { CourseSidebar } from "./_components/course-sidebar";
-import { CourseNavbar } from "./_components/course-navbar";
 
 const CourseLayout = async ({
     children,
@@ -106,17 +106,9 @@ const CourseLayout = async ({
     });
 
     return (
-        <div className="h-full">
-            <div className="h-[80px] fixed top-0 left-0 right-0 md:left-80 z-50">
-                <CourseNavbar
-                    course={course}
-                    modules={course.modules}
-                    progressCount={progressCount}
-                    isPurchased={!!purchase}
-                    quizzes={sidebarQuizzes}
-                />
-            </div>
-            <div className="hidden md:flex h-full w-80 flex-col fixed inset-y-0 z-50">
+        <AppShell
+            sidebarWidth="wide"
+            sidebar={
                 <CourseSidebar
                     course={course}
                     modules={course.modules}
@@ -124,11 +116,10 @@ const CourseLayout = async ({
                     isPurchased={!!purchase}
                     quizzes={sidebarQuizzes}
                 />
-            </div>
-            <main className="md:pl-80 pt-[80px] h-full">
+            }
+        >
             {children}
-            </main>
-        </div>
+        </AppShell>
     );
 }
 

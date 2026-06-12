@@ -22,9 +22,10 @@ export const AppShell = ({
 }: AppShellProps) => {
   return (
     <div className="flex h-dvh overflow-hidden bg-background">
+      {/* Sidebar surface (bg/text) is owned by the sidebar component itself */}
       <aside
         className={cn(
-          "hidden shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex",
+          "hidden shrink-0 flex-col border-r border-border/60 md:flex",
           sidebarWidth === "wide" ? "w-80" : "w-60"
         )}
       >

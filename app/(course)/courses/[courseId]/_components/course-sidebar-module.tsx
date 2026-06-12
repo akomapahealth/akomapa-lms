@@ -32,13 +32,13 @@ export const CourseSidebarModule = ({
   ).length;
 
   return (
-    <AccordionItem value={moduleId} className="border-b border-slate-200">
-      <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-slate-50 text-sm">
+    <AccordionItem value={moduleId} className="border-b border-border">
+      <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/50 text-sm">
         <div className="flex items-center justify-between w-full mr-2">
-          <span className="font-medium text-slate-700 truncate">
+          <span className="font-medium text-foreground truncate">
             {moduleTitle}
           </span>
-          <span className="text-xs text-slate-500 shrink-0 ml-2">
+          <span className="text-xs text-muted-foreground shrink-0 ml-2">
             {completedCount}/{topics.length}
           </span>
         </div>
