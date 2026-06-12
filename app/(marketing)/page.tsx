@@ -1,34 +1,37 @@
-import Link from "next/link";
+import type { Metadata } from "next";
 
-import { Button } from "@/components/ui/button";
+import { CertificateTeaser } from "./_components/certificate-teaser";
+import { CommunitySection } from "./_components/community-section";
+import { CtaSection } from "./_components/cta-section";
+import { Hero } from "./_components/hero";
+import { JourneySection } from "./_components/journey-section";
+import { MissionSection } from "./_components/mission-section";
+import { OutcomesSection } from "./_components/outcomes-section";
+import { StatsBand } from "./_components/stats-band";
 
-// Placeholder landing page — replaced by the full marketing page in the
-// next phase. Exists so `/` resolves publicly once proxy.ts opens it up.
+export const metadata: Metadata = {
+  title: "Akomapa Academy — Global Health Education & Leadership (GHELP)",
+  description:
+    "Empowering the next generation of health leaders through student-powered, expert-supervised learning. Ten courses, measured growth, verifiable certificates. Nya Akomapa — have a good heart.",
+  openGraph: {
+    title: "Akomapa Academy — GHELP",
+    description:
+      "Student-powered, expert-supervised global health education. Begin with a good heart.",
+    images: ["/landing/hero-poster.jpg"],
+  },
+};
+
 const LandingPage = () => {
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center gap-6 bg-surface-deep px-6 text-center text-surface-deep-foreground">
-      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-akomapa-gold">
-        Nya Akomapa — Have a good heart
-      </p>
-      <h1 className="font-display max-w-3xl text-4xl font-semibold md:text-6xl">
-        Empowering the next generation of health leaders.
-      </h1>
-      <p className="max-w-xl text-base opacity-80">
-        Student-powered, expert-supervised learning through the Akomapa Global
-        Health Education &amp; Leadership Program (GHELP).
-      </p>
-      <div className="flex gap-3">
-        <Link href="/sign-up">
-          <Button size="lg" className="bg-akomapa-gold text-foreground hover:bg-akomapa-gold/90">
-            Get started
-          </Button>
-        </Link>
-        <Link href="/sign-in">
-          <Button size="lg" variant="outline" className="border-surface-deep-foreground/40 bg-transparent text-surface-deep-foreground hover:bg-surface-deep-foreground/10">
-            Sign in
-          </Button>
-        </Link>
-      </div>
+    <main>
+      <Hero />
+      <MissionSection />
+      <StatsBand />
+      <JourneySection />
+      <OutcomesSection />
+      <CommunitySection />
+      <CertificateTeaser />
+      <CtaSection />
     </main>
   );
 };
