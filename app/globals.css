@@ -2,50 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-.animate-slide-in {
-  animation: slideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-.animate-scale-in {
-  animation: scaleIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
+/* fade-in / slide-in / scale-in animations live in tailwind.config.ts (animate-fade-in etc.) */
 
 /* Smooth transitions */
 .hover-lift {
@@ -111,7 +68,17 @@ body,
     --input: 189 47% 89%; /* Ice Cold #d5edf1 */
     --ring: 189 100% 35%; /* Munsell Blue #0097b2 */
 
-    --radius: 0.5rem;
+    --success: 160 60% 34%;
+    --success-foreground: 0 0% 100%;
+    --warning: 32 90% 42%;
+    --warning-foreground: 0 0% 100%;
+
+    /* Deep teal marketing/editorial surface (same family as sidebar) */
+    --surface-deep: 187 80% 14%;
+    --surface-deep-foreground: 189 47% 95%;
+
+    --header-height: 4rem;
+    --radius: 0.625rem;
 
     /* Akomapa Brand Colors */
     --akomapa-teal: 189 100% 35%;
@@ -160,6 +127,14 @@ body,
     --border: 215 28% 25%;
     --input: 215 28% 25%;
     --ring: 189 100% 40%;
+
+    --success: 160 50% 45%;
+    --success-foreground: 215 28% 10%;
+    --warning: 38 90% 55%;
+    --warning-foreground: 215 28% 10%;
+
+    --surface-deep: 215 35% 7%;
+    --surface-deep-foreground: 189 47% 92%;
 
     /* Sidebar stays deep in dark mode too */
     --sidebar-bg: 215 28% 8%;
