@@ -5,6 +5,7 @@ import {
   BookHeart,
   BookOpen,
   Compass,
+  ExternalLink,
   FileQuestion,
   GraduationCap,
   LayoutDashboard,
@@ -14,6 +15,9 @@ import {
   Users,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
+
+import { useSidebar } from "@/components/shell/sidebar-context";
+import { cn } from "@/lib/utils";
 
 import { SidebarItem } from "./sidebar-item";
 
@@ -118,6 +122,8 @@ export const SidebarRoutes = () => {
 };
 
 export const SidebarBottomRoutes = () => {
+  const { collapsed } = useSidebar();
+
   return (
     <div className="flex w-full flex-col gap-y-1 px-3 py-2">
       {bottomRoutes.map((route) => (
@@ -128,6 +134,19 @@ export const SidebarBottomRoutes = () => {
           href={route.href}
         />
       ))}
+      <a
+        href="https://www.akomapa.org"
+        target="_blank"
+        rel="noopener noreferrer"
+        title={collapsed ? "Akomapa.org" : undefined}
+        className={cn(
+          "flex w-full items-center gap-x-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-muted transition-colors hover:bg-sidebar-hover hover:text-sidebar-foreground",
+          collapsed && "justify-center px-0"
+        )}
+      >
+        <ExternalLink size={18} className="shrink-0 text-sidebar-muted" />
+        {!collapsed && <span className="truncate">Akomapa.org</span>}
+      </a>
     </div>
   );
 };

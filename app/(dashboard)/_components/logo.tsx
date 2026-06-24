@@ -1,17 +1,35 @@
-import { BrandMark } from "@/components/brand/logo";
+"use client";
+
+import Image from "next/image";
+
+import { useSidebar } from "@/components/shell/sidebar-context";
 
 export const Logo = () => {
-    return (
-        <div className="flex items-center gap-x-2.5">
-            <BrandMark size={36} />
-            <div className="flex flex-col">
-                <span className="text-sm font-semibold text-sidebar-foreground tracking-tight leading-tight">
-                    Akomapa
-                </span>
-                <span className="text-[10px] font-medium text-sidebar-muted leading-tight">
-                    Academy
-                </span>
+    const { collapsed } = useSidebar();
+
+    if (collapsed) {
+        return (
+            <div className="flex items-center justify-center p-3">
+                <Image
+                    src="/logo/mark.png"
+                    alt="Akomapa Academy"
+                    width={466}
+                    height={444}
+                    className="h-10 w-auto"
+                />
             </div>
+        );
+    }
+
+    return (
+        <div className="p-6">
+            <Image
+                src="/logo/wordmark-footer.png"
+                alt="Akomapa Academy"
+                width={728}
+                height={280}
+                className="h-9 w-auto"
+            />
         </div>
-    )
-}
+    );
+};

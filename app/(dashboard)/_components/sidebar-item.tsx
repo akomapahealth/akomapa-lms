@@ -3,6 +3,7 @@
 import { LucideIcon } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 
+import { useSidebar } from "@/components/shell/sidebar-context";
 import { cn } from "@/lib/utils";
 
 
@@ -19,6 +20,7 @@ export const SidebarItem = ({
 }: SidebarItemProps) => {
     const pathname = usePathname();
     const router = useRouter();
+    const { collapsed } = useSidebar();
 
     // Index-style routes only highlight on exact match so they don't
     // stay active on every child page (e.g. /admin on /admin/courses).
@@ -35,8 +37,10 @@ export const SidebarItem = ({
         <button
             onClick={onClick}
             type="button"
+            title={collapsed ? label : undefined}
             className={cn(
                 "flex w-full items-center gap-x-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-muted transition-colors hover:bg-sidebar-hover hover:text-sidebar-foreground",
+                collapsed && "justify-center px-0",
                 isActive && "bg-sidebar-active text-sidebar-foreground hover:bg-sidebar-active"
             )}
         >
@@ -47,7 +51,7 @@ export const SidebarItem = ({
                     isActive && "text-sidebar-accent"
                 )}
             />
-            {label}
+            {!collapsed && <span className="truncate">{label}</span>}
         </button>
     )
 }

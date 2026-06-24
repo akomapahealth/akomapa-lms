@@ -1,6 +1,7 @@
 import { NavbarRoutes } from "@/components/navbar-routes";
 
 import { MobileNav } from "./mobile-nav";
+import { SidebarToggle } from "./sidebar-toggle";
 
 interface AppHeaderProps {
   /** Sidebar node rendered inside the mobile drawer */
@@ -12,6 +13,7 @@ export const AppHeader = ({ sidebar, children }: AppHeaderProps) => {
   return (
     <header className="z-30 flex h-[var(--header-height)] shrink-0 items-center gap-x-2 border-b border-border/60 bg-background/80 px-4 backdrop-blur-md sm:px-6">
       <MobileNav>{sidebar}</MobileNav>
+      <SidebarToggle />
       {children ?? <NavbarRoutes />}
     </header>
   );
