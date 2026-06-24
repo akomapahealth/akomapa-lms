@@ -8,10 +8,11 @@ export const MarketingFooter = () => {
         <div className="flex flex-col gap-10 md:flex-row md:items-start md:justify-between">
           <div className="max-w-sm">
             <Image
-              src="/logo/wordmark-footer.png"
+              src="/logo/wordmark-footer.svg"
               alt="Akomapa Academy"
-              width={728}
-              height={280}
+              width={784}
+              height={329}
+              unoptimized
               className="h-10 w-auto"
             />
             <p className="mt-4 text-sm leading-relaxed opacity-70">

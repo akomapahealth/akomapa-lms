@@ -24,10 +24,11 @@ export const Logo = () => {
     return (
         <div className="p-6">
             <Image
-                src="/logo/wordmark-footer.png"
+                src="/logo/wordmark-footer.svg"
                 alt="Akomapa Academy"
-                width={728}
-                height={280}
+                width={784}
+                height={329}
+                unoptimized
                 className="h-9 w-auto"
             />
         </div>

@@ -1,6 +1,6 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="public/logo/wordmark-footer.png">
+    <source media="(prefers-color-scheme: dark)" srcset="public/logo/wordmark-footer.svg">
     <img src="public/logo/wordmark.png" alt="Akomapa Academy" width="420">
   </picture>
 </p>
