@@ -23,13 +23,22 @@ export const Hero = () => {
   const words = HEADLINE.split(" ");
 
   return (
-    <section className="bg-surface-deep text-surface-deep-foreground">
+    <section className="relative overflow-hidden bg-background text-foreground">
+      {/* Soft teal wash + tinted glow for airy depth (decorative) */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-secondary/60 via-background to-background"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-32 right-[-10%] -z-10 h-[32rem] w-[32rem] rounded-full bg-primary/15 blur-3xl"
+      />
       <div className="mx-auto max-w-7xl px-4 pb-16 pt-32 sm:px-6 sm:pb-20 sm:pt-36 lg:px-8 lg:pt-44">
         <motion.p
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1, ease: EASE }}
-          className="text-xs font-semibold uppercase tracking-[0.28em] text-akomapa-gold sm:text-sm"
+          className="text-xs font-semibold uppercase tracking-[0.28em] text-primary sm:text-sm"
         >
           Nya Akomapa — Have a good heart
         </motion.p>
@@ -59,7 +68,7 @@ export const Hero = () => {
           transition={{ duration: 0.7, delay: 0.8, ease: EASE }}
           className="mt-8 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between"
         >
-          <p className="max-w-xl text-pretty text-base leading-relaxed opacity-85 sm:text-lg">
+          <p className="max-w-xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
             Student-powered, expert-supervised learning through the Akomapa
             Global Health Education &amp; Leadership Program — GHELP.
           </p>
@@ -74,7 +83,7 @@ export const Hero = () => {
             </Link>
             <Link
               href="/sign-in"
-              className="text-sm font-semibold underline-offset-4 opacity-80 transition hover:opacity-100 hover:underline"
+              className="text-sm font-semibold text-foreground/70 underline-offset-4 transition hover:text-foreground hover:underline"
             >
               Sign in
             </Link>
@@ -86,7 +95,7 @@ export const Hero = () => {
           initial={{ opacity: 0, y: 32 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.9, delay: 1, ease: EASE }}
-          className="mt-14 overflow-hidden rounded-2xl ring-1 ring-surface-deep-foreground/15 sm:mt-16"
+          className="mt-14 overflow-hidden rounded-2xl shadow-lift ring-1 ring-border sm:mt-16"
         >
           <div className="relative aspect-[16/10] sm:aspect-[21/10]">
             <Image

@@ -1,6 +1,5 @@
+import Image from "next/image";
 import Link from "next/link";
-
-import { BrandMark } from "@/components/brand/logo";
 
 export const MarketingFooter = () => {
   return (
@@ -8,12 +7,13 @@ export const MarketingFooter = () => {
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-10 md:flex-row md:items-start md:justify-between">
           <div className="max-w-sm">
-            <div className="flex items-center gap-2.5">
-              <BrandMark size={38} />
-              <span className="font-display text-xl font-semibold">
-                Akomapa Academy
-              </span>
-            </div>
+            <Image
+              src="/logo/wordmark-footer.png"
+              alt="Akomapa Academy"
+              width={728}
+              height={280}
+              className="h-10 w-auto"
+            />
             <p className="mt-4 text-sm leading-relaxed opacity-70">
               The Akomapa Global Health Education &amp; Leadership Program
               (GHELP). Student-powered, expert-supervised learning for the next

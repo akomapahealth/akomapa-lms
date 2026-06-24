@@ -1,8 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { BrandLogo } from "@/components/brand/logo";
-
 const currentYear = new Date().getFullYear();
 
 const stats = [
@@ -17,14 +15,14 @@ const AuthLayout = ({ children }: { children: React.ReactNode }) => {
       {/* Left — brand panel */}
       <div className="relative hidden overflow-hidden bg-surface-deep text-surface-deep-foreground md:flex md:w-1/2">
         <Image
-          src="/landing/auth.jpg"
+          src="/landing/auth-portrait.jpg"
           alt=""
           fill
           priority
           sizes="(max-width: 767px) 0px, 50vw"
-          className="object-cover"
+          className="object-cover object-top"
         />
-        <div className="absolute inset-0 bg-[hsl(187_80%_10%)]/70" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[hsl(187_80%_8%)]/95 via-[hsl(187_80%_10%)]/45 to-[hsl(187_80%_12%)]/20" />
         <div className="relative z-10 flex h-full flex-col justify-end p-10 lg:p-14">
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-akomapa-gold">
             Nya Akomapa — Have a good heart
@@ -55,8 +53,15 @@ const AuthLayout = ({ children }: { children: React.ReactNode }) => {
       <div className="flex w-full flex-col items-center justify-center bg-background p-6 md:w-1/2 md:p-12">
         <div className="w-full max-w-md">
           <div className="mb-8 flex flex-col items-center animate-scale-in">
-            <Link href="/" aria-label="Back to Akomapa Academy home">
-              <BrandLogo size={44} wordmarkClassName="text-xl" />
+            <Link href="/" aria-label="Akomapa Academy home" className="inline-block">
+              <Image
+                src="/logo/wordmark.png"
+                alt="Akomapa Academy"
+                width={728}
+                height={280}
+                priority
+                className="h-11 w-auto"
+              />
             </Link>
           </div>
 
