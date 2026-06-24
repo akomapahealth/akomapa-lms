@@ -13,8 +13,8 @@ export const EngagementStats = ({ data }: EngagementStatsProps) => {
       label: "Forum Posts",
       value: data.totalPosts,
       icon: MessageSquare,
-      color: "text-blue-600",
-      bg: "bg-blue-50",
+      color: "text-primary",
+      bg: "bg-primary/10",
     },
     {
       label: "Comments",

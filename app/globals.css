@@ -42,7 +42,7 @@
 
 @layer base {
   :root {
-    /* Akomapa LMS Color Scheme */
+    /* Akomapa LMS Color Scheme — Munsell teal + warm gold (brand) */
     --background: 185 18% 97%; /* Warm teal-tinted off-white #f3f8f9 */
     --foreground: 215 28% 17%; /* Dark Slate #1e293b */
 
@@ -52,7 +52,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 215 28% 17%;
 
-    --primary: 189 100% 35%; /* Munsell Blue #0097b2 */
+    --primary: 189 100% 35%; /* Munsell Blue #0097b2 (brand teal) */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 189 47% 89%; /* Ice Cold #d5edf1 */

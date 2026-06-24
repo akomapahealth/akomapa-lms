@@ -90,7 +90,7 @@ export const ChaptersForm = ({
         <div className="relative mt-6 border bg-muted rounded-md p-4">
             {isUpdating && (
                 <div className="absolute h-full w-full bg-foreground/10 top-0 right-0 rounded-md flex items-center justify-center">
-                    <Loader2 className="animate-spin h-6 w-6 text-sky-700" />
+                    <Loader2 className="animate-spin h-6 w-6 text-primary" />
                 </div>
             )}
             <div className="font-medium flex items-center justify-between">
