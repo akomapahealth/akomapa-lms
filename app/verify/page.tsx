@@ -5,7 +5,7 @@ import { BrandMark } from "@/components/brand/logo";
 import { VerifyForm } from "./_components/verify-form";
 
 export const metadata: Metadata = {
-  title: "Verify a Certificate — Akomapa Academy",
+  title: "Verify a Certificate",
   description:
     "Confirm the authenticity of any Akomapa Academy (GHELP) certificate by its certificate number.",
 };

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import { siteConfig } from "@/lib/site-config";
 
 import { CertificateTeaser } from "./_components/certificate-teaser";
 import { CommunitySection } from "./_components/community-section";
@@ -9,21 +9,45 @@ import { MissionSection } from "./_components/mission-section";
 import { OutcomesSection } from "./_components/outcomes-section";
 import { StatsBand } from "./_components/stats-band";
 
-export const metadata: Metadata = {
-  title: "Akomapa Academy — Global Health Education & Leadership (GHELP)",
-  description:
-    "Empowering the next generation of health leaders through student-powered, expert-supervised learning. Ten courses, measured growth, verifiable certificates. Nya Akomapa — have a good heart.",
-  openGraph: {
-    title: "Akomapa Academy — GHELP",
-    description:
-      "Student-powered, expert-supervised global health education. Begin with a good heart.",
-    images: ["/landing/hero-poster.jpg"],
-  },
+// Homepage inherits the full default metadata (title, canonical, Open Graph)
+// from the root layout via @/lib/site-config.
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "EducationalOrganization",
+      "@id": `${siteConfig.url}/#organization`,
+      name: siteConfig.name,
+      url: siteConfig.url,
+      logo: `${siteConfig.url}/android-chrome-512x512.png`,
+      description: siteConfig.description,
+      parentOrganization: {
+        "@type": "NGO",
+        name: siteConfig.organization,
+        url: siteConfig.organizationUrl,
+      },
+      sameAs: [siteConfig.organizationUrl],
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${siteConfig.url}/#website`,
+      url: siteConfig.url,
+      name: siteConfig.name,
+      description: siteConfig.description,
+      publisher: { "@id": `${siteConfig.url}/#organization` },
+      inLanguage: "en",
+    },
+  ],
 };
 
 const LandingPage = () => {
   return (
     <main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
       <Hero />
       <MissionSection />
       <StatsBand />
