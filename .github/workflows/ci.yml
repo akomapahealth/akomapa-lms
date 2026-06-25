@@ -60,7 +60,9 @@ jobs:
       - run: npx next build --webpack
         env:
           DATABASE_URL: "postgresql://placeholder:placeholder@localhost:5432/placeholder"
-          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_placeholder"
+          # Valid-format dummy key (decodes to clerk.example.com$) so ClerkProvider
+          # initializes during static prerender without a real key. Not a secret.
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_Y2xlcmsuZXhhbXBsZS5jb20k"
           CLERK_SECRET_KEY: "sk_test_placeholder"
           NEXT_PUBLIC_CLERK_SIGN_IN_URL: "/sign-in"
           NEXT_PUBLIC_CLERK_SIGN_UP_URL: "/sign-up"
