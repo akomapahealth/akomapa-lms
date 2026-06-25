@@ -42,3 +42,5 @@ CHANGELOG.md
 .claude/
 .codex/
 .cursor/
+# Internal planning docs (DO NOT commit — agents should not stage these files)
+/docs

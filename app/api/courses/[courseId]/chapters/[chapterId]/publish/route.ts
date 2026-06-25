@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { logError } from "@/lib/logger";
 
 export async function PATCH(
     req: Request,
@@ -26,36 +27,34 @@ export async function PATCH(
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        const chapter = await db.chapter.findUnique({
+        const topic = await db.topic.findUnique({
             where: {
                 id: routeParams.chapterId,
-                courseId: routeParams.courseId,
             }
         });
 
         const muxData = await db.muxData.findUnique({
             where: {
-                chapterId: routeParams.chapterId,
+                topicId: routeParams.chapterId,
             }
         });
 
-        if (!chapter || !muxData || !chapter.title || !chapter.description || !chapter.videoUrl) {
+        if (!topic || !muxData || !topic.title || !topic.description || !topic.videoUrl) {
             return new NextResponse("Missing required fields", { status: 400 });
         }
 
-        const publishedChapter = await db.chapter.update({
+        const publishedTopic = await db.topic.update({
             where: {
                 id: routeParams.chapterId,
-                courseId: routeParams.courseId,
             },
             data: {
                 isPublished: true,
             }
         });
 
-        return NextResponse.json(publishedChapter);
+        return NextResponse.json(publishedTopic);
     } catch (error) {
-        console.log("[CHAPTER_PUBLISH]", error);
+        logError("CHAPTER_PUBLISH", error);
         return new NextResponse("Internal Error", { status: 500 });
     }
 }

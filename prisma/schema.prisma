@@ -20,11 +20,36 @@ model User {
   firstName String?
   lastName  String?
   imageUrl  String?
+  role      String   @default("STUDENT") // STUDENT, FACULTY, ADMIN
+
+  // Faculty-specific fields
+  bio            String? @db.Text
+  title          String? // e.g., "Dr.", "Prof."
+  specialization String?
 
   courses       Course[]
   purchases     Purchase[]
   progress      UserProgress[]
   stripeAccount StripCustomer?
+  enrollments   Enrollment[]
+  quizAttempts  QuizAttempt[]
+
+  // Forum relations
+  forumPosts    ForumPost[]
+  forumComments ForumComment[]
+  postLikes     PostLike[]
+  commentLikes  CommentLike[]
+
+  // Faculty relation
+  assignedModules Module[] @relation("ModuleFaculty")
+
+  // Phase 5: Gamification, Journals, Certificates
+  badges            UserBadge[]
+  learningStreak    LearningStreak?
+  journalEntries    JournalEntry[]
+  caseStudyAttempts CaseStudyAttempt[]
+  certificates      Certificate[]
+  settings          UserSettings?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -43,9 +68,14 @@ model Course {
   categoryId String?
   category   Category? @relation(fields: [categoryId], references: [id])
 
-  chapters    Chapter[]
+  modules     Module[]
   attachments Attachment[]
   purchases   Purchase[]
+  enrollments    Enrollment[]
+  quizzes        Quiz[]
+  forumPosts     ForumPost[]
+  journalEntries JournalEntry[]
+  certificates   Certificate[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -57,6 +87,32 @@ model Category {
   id      String   @id @default(uuid())
   name    String   @unique
   courses Course[]
+}
+
+model Module {
+  id          String  @id @default(uuid())
+  title       String
+  description String? @db.Text
+  imageUrl    String? @db.Text
+  position    Int
+  isPublished Boolean @default(false)
+
+  courseId String
+  course  Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  facultyId String?
+  faculty   User?   @relation("ModuleFaculty", fields: [facultyId], references: [id])
+
+  reflectionPrompt String? @db.Text
+
+  topics  Topic[]
+  quizzes Quiz[]
+  journalEntries JournalEntry[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([courseId])
 }
 
 model Attachment {
@@ -73,26 +129,30 @@ model Attachment {
   @@index([courseId])
 }
 
-model Chapter {
+model Topic {
   id          String  @id @default(uuid())
   title       String
   description String? @db.Text
   videoUrl    String? @db.Text
+  textContent String? @db.Text
+  contentType String  @default("VIDEO") // VIDEO, TEXT, INTERACTIVE
   position    Int
   isPublished Boolean @default(false)
   isFree      Boolean @default(false)
 
-  muxData MuxData?
+  muxData   MuxData?
+  caseStudy CaseStudy?
 
-  courseId String
-  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  moduleId String
+  module   Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
 
   userProgress UserProgress[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([courseId])
+  @@map("Chapter")
+  @@index([moduleId])
 }
 
 model MuxData {
@@ -100,8 +160,8 @@ model MuxData {
   playbackId String
   assetId    String
 
-  chapterId String  @unique
-  chapter   Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  topicId String @unique @map("chapterId")
+  topic   Topic  @relation(fields: [topicId], references: [id], onDelete: Cascade)
 }
 
 model UserProgress {
@@ -109,16 +169,16 @@ model UserProgress {
   userId String
   user   User   @relation(fields: [userId], references: [id])
 
-  chapterId String
-  chapter   Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  topicId String @map("chapterId")
+  topic   Topic  @relation(fields: [topicId], references: [id], onDelete: Cascade)
 
   isCompleted Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([userId, chapterId])
-  @@index([chapterId])
+  @@unique([userId, topicId], map: "UserProgress_userId_chapterId_key")
+  @@index([topicId], map: "UserProgress_chapterId_idx")
 }
 
 model Purchase {
@@ -136,6 +196,24 @@ model Purchase {
   @@index([courseId])
 }
 
+model Enrollment {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  courseId String
+  course  Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  status     String   @default("ACTIVE") // ACTIVE, COMPLETED, SUSPENDED
+  enrolledAt DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, courseId])
+  @@index([courseId])
+}
+
 model StripCustomer {
   id               String @default(uuid())
   userId           String @unique
@@ -143,5 +221,342 @@ model StripCustomer {
   stripeCustomerId String @unique
 
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─── Quiz System ───
+
+model Quiz {
+  id               String  @id @default(uuid())
+  title            String
+  type             String  // PRE_TEST, POST_TEST, MODULE_QUIZ
+  timeLimitMinutes Int?
+  passingScore     Float   @default(70)
+  isPublished      Boolean @default(false)
+
+  courseId String?
+  course  Course? @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  moduleId String?
+  module   Module? @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  questions Question[]
+  attempts  QuizAttempt[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([courseId])
+  @@index([moduleId])
+}
+
+model Question {
+  id       String @id @default(uuid())
+  text     String @db.Text
+  position Int
+  points   Int    @default(1)
+
+  quizId String
+  quiz   Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  options QuestionOption[]
+  answers QuizAnswer[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([quizId])
+}
+
+model QuestionOption {
+  id        String  @id @default(uuid())
+  text      String
+  isCorrect Boolean @default(false)
+  position  Int
+
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  selectedIn QuizAnswer[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([questionId])
+}
+
+model QuizAttempt {
+  id          String    @id @default(uuid())
+  score       Float?
+  totalPoints Int?
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  quizId String
+  quiz   Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  answers QuizAnswer[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([quizId])
+}
+
+model QuizAnswer {
+  id String @id @default(uuid())
+
+  attemptId String
+  attempt   QuizAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  selectedOptionId String?
+  selectedOption   QuestionOption? @relation(fields: [selectedOptionId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([attemptId])
+  @@index([questionId])
+}
+
+// ─── Forum / Community ───
+
+model ForumCategory {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  description String? @db.Text
+  color       String  @default("#0097b2")
+  position    Int     @default(0)
+
+  posts ForumPost[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ForumPost {
+  id       String  @id @default(uuid())
+  title    String
+  content  String  @db.Text
+  isPinned Boolean @default(false)
+  isLocked Boolean @default(false)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  categoryId String
+  category   ForumCategory @relation(fields: [categoryId], references: [id])
+
+  courseId String?
+  course  Course? @relation(fields: [courseId], references: [id])
+
+  comments ForumComment[]
+  likes    PostLike[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([courseId])
+  @@index([userId])
+}
+
+model ForumComment {
+  id      String @id @default(uuid())
+  content String @db.Text
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  postId String
+  post   ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  parentId String?
+  parent   ForumComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies  ForumComment[] @relation("CommentReplies")
+
+  likes CommentLike[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([postId])
+  @@index([parentId])
+  @@index([userId])
+}
+
+model PostLike {
+  id String @id @default(uuid())
+
+  userId String
+  user   User @relation(fields: [userId], references: [id])
+
+  postId String
+  post   ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, postId])
+  @@index([postId])
+}
+
+model CommentLike {
+  id String @id @default(uuid())
+
+  userId String
+  user   User @relation(fields: [userId], references: [id])
+
+  commentId String
+  comment   ForumComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, commentId])
+  @@index([commentId])
+}
+
+// ─── Phase 5: Gamification ───
+
+model Badge {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  description String
+  imageUrl    String? @db.Text
+  type        String // COMPLETION, STREAK, COMMUNITY, QUIZ_SCORE, MILESTONE
+  criteria    Json
+
+  userBadges UserBadge[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model UserBadge {
+  id       String   @id @default(uuid())
+  earnedAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  badgeId String
+  badge   Badge  @relation(fields: [badgeId], references: [id])
+
+  @@unique([userId, badgeId])
+  @@index([userId])
+}
+
+model LearningStreak {
+  id               String    @id @default(uuid())
+  currentStreak    Int       @default(0)
+  longestStreak    Int       @default(0)
+  lastActivityDate DateTime?
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  updatedAt DateTime @updatedAt
+}
+
+// ─── Phase 5: Reflection Journal ───
+
+model JournalEntry {
+  id        String  @id @default(uuid())
+  title     String
+  content   String  @db.Text
+  isPrivate Boolean @default(true)
+
+  prompt String? @db.Text
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  moduleId String?
+  module   Module? @relation(fields: [moduleId], references: [id])
+
+  courseId String?
+  course   Course? @relation(fields: [courseId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([moduleId])
+  @@index([courseId])
+}
+
+// ─── Phase 5: Case Study Simulator ───
+
+model CaseStudy {
+  id          String @id @default(uuid())
+  title       String
+  description String @db.Text
+  scenario    Json
+
+  topicId String @unique
+  topic   Topic  @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  attempts CaseStudyAttempt[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CaseStudyAttempt {
+  id        String  @id @default(uuid())
+  choices   Json
+  completed Boolean @default(false)
+
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  caseStudyId String
+  caseStudy   CaseStudy @relation(fields: [caseStudyId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([caseStudyId])
+}
+
+// ─── Phase 5: Certificates ───
+
+model Certificate {
+  id                String   @id @default(uuid())
+  certificateNumber String   @unique
+  issuedAt          DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  courseId String
+  course  Course @relation(fields: [courseId], references: [id])
+
+  pdfUrl String? @db.Text
+
+  @@unique([userId, courseId])
+  @@index([userId])
+}
+
+// ─── Phase 5: User Settings ───
+
+model UserSettings {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  theme                  String  @default("light")
+  defaultJournalPrivacy  Boolean @default(true)
+  showProfileInCommunity Boolean @default(true)
+  emailOnBadgeEarned     Boolean @default(true)
+  emailOnForumReply      Boolean @default(true)
+  emailOnFacultyComment  Boolean @default(true)
+
   updatedAt DateTime @updatedAt
 }

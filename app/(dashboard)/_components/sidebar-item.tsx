@@ -3,6 +3,7 @@
 import { LucideIcon } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 
+import { useSidebar } from "@/components/shell/sidebar-context";
 import { cn } from "@/lib/utils";
 
 
@@ -19,11 +20,14 @@ export const SidebarItem = ({
 }: SidebarItemProps) => {
     const pathname = usePathname();
     const router = useRouter();
+    const { collapsed } = useSidebar();
 
-    const isActive = 
-        (pathname === "/" && href === "/") ||
-        (pathname ===href) ||
-        (pathname?.startsWith(`${href}/`));
+    // Index-style routes only highlight on exact match so they don't
+    // stay active on every child page (e.g. /admin on /admin/courses).
+    const indexRoutes = ["/dashboard", "/admin"];
+    const isActive =
+        pathname === href ||
+        (!indexRoutes.includes(href) && pathname?.startsWith(`${href}/`));
 
     const onClick = () => {
         router.push(href);
@@ -33,27 +37,21 @@ export const SidebarItem = ({
         <button
             onClick={onClick}
             type="button"
+            title={collapsed ? label : undefined}
             className={cn(
-                "flex items-center gap-x-2 text-slate-500 text-sm font-[500] pl-6 w-full transition-all hover:text-akomapa-teal hover:bg-akomapa-ice/50", 
-                isActive && "text-akomapa-teal bg-akomapa-ice/50 hover:bg-akomapa-ice/50 hover:text-akomapa-teal"
+                "flex w-full items-center gap-x-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-muted transition-colors hover:bg-sidebar-hover hover:text-sidebar-foreground",
+                collapsed && "justify-center px-0",
+                isActive && "bg-sidebar-active text-sidebar-foreground hover:bg-sidebar-active"
             )}
         >
-            <div className="flex items-center gap-x-2 py-4">
-                <Icon
-                    size={22}
-                    className={cn(
-                        "text-slate-500",
-                        isActive && "text-akomapa-teal"
-                    )}
-                />
-                {label}
-            </div>
-            <div 
+            <Icon
+                size={18}
                 className={cn(
-                    "ml-auto opacity-0 border-2 border-akomapa-teal self-stretch transition-all",
-                    isActive && "opacity-100"
+                    "shrink-0 text-sidebar-muted transition-colors",
+                    isActive && "text-sidebar-accent"
                 )}
             />
+            {!collapsed && <span className="truncate">{label}</span>}
         </button>
     )
 }

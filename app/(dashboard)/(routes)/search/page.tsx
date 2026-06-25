@@ -8,6 +8,7 @@ import { Categories } from "./_components/categories";
 import { SearchInput } from "@/components/search-input";
 import { getCourses } from "@/actions/get-courses";
 import { CoursesList } from "@/components/courses-list";
+import { PageContainer } from "@/components/shell/page-container";
 
 
 interface SearchPageProps {
@@ -23,7 +24,7 @@ const SearchPage = async ({
     const { userId } = await auth();
 
     if (!userId) {
-        return redirect("/");
+        return redirect("/dashboard");
     }
     const categories = await db.category.findMany({
         orderBy: {
@@ -44,16 +45,18 @@ const SearchPage = async ({
                     <SearchInput />
                 </Suspense>
             </div>
-            <div className="p-6 space-y-4">
-                <Suspense fallback={null}>
-                    <Categories 
-                        items={categories}
-                    />
-                </Suspense>
+            <PageContainer width="wide" className="space-y-4">
+                <div className="sticky top-0 z-10 -mx-4 bg-background/90 px-4 py-2 backdrop-blur-sm sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+                    <Suspense fallback={null}>
+                        <Categories
+                            items={categories}
+                        />
+                    </Suspense>
+                </div>
                 <CoursesList 
                     items={courses}
                 />
-            </div>
+            </PageContainer>
         </>
      );
 }

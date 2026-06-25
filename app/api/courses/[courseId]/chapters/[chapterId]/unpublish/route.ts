@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { logError } from "@/lib/logger";
 
 export async function PATCH(
     req: Request,
@@ -26,24 +27,23 @@ export async function PATCH(
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        const unpublishedChapter = await db.chapter.update({
+        const unpublishedTopic = await db.topic.update({
             where: {
                 id: routeParams.chapterId,
-                courseId: routeParams.courseId,
             },
             data: {
                 isPublished: false,
             }
         });
 
-        const publishedChaptersInCourse = await db.chapter.findMany({
+        const publishedTopicsInCourse = await db.topic.findMany({
             where: {
-                courseId: routeParams.courseId,
+                module: { courseId: routeParams.courseId },
                 isPublished: true,
             }
         });
 
-        if (!publishedChaptersInCourse.length) {
+        if (!publishedTopicsInCourse.length) {
             await db.course.update({
                 where: {
                     id: routeParams.courseId,
@@ -54,9 +54,9 @@ export async function PATCH(
             });
         }
 
-        return NextResponse.json(unpublishedChapter);
+        return NextResponse.json(unpublishedTopic);
     } catch (error) {
-        console.log("[CHAPTER_UNPUBLISH]", error);
+        logError("CHAPTER_UNPUBLISH", error);
         return new NextResponse("Internal Error", { status: 500 });
     }
 }

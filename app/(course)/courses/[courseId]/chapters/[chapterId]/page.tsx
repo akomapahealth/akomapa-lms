@@ -1,15 +1,20 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { File } from "lucide-react";
+import { File, ChevronLeft, ChevronRight } from "lucide-react";
+import Link from "next/link";
 
-import { getChapter } from "@/actions/get-chapter";
+import { getTopic } from "@/actions/get-topic";
 import { Banner } from "@/components/banner";
 import { Separator } from "@/components/ui/separator";
 import { Preview } from "@/components/preview";
+import { Breadcrumb } from "@/components/breadcrumb";
 
 import { VideoPlayer } from "./_components/video-player";
 import { CourseEnrollButton } from "./_components/course-enroll-button";
 import { CourseProgressButton } from "./_components/course-progress-button";
+import { CaseStudyPlayer } from "./_components/case-study-player";
+import { type CaseStudyScenario } from "@/lib/case-study-types";
+import { db } from "@/lib/db";
 
 const ChapterIdPage = async ({
     params
@@ -21,70 +26,105 @@ const ChapterIdPage = async ({
     const { userId } = await auth();
 
     if (!userId) {
-        return redirect("/");
+        return redirect("/dashboard");
     }
 
     const {
-        chapter,
+        topic,
         course,
         muxData,
         attachments,
-        nextChapter,
+        nextTopic,
+        previousTopic,
         userProgress,
         purchase,
-    } = await getChapter({
+    } = await getTopic({
         userId,
-        chapterId: chapterId,
+        topicId: chapterId,
         courseId: courseId,
     });
 
-    if (!chapter || !course) {
-        return redirect("/");
+    if (!topic || !course) {
+        return redirect("/dashboard");
     }
 
-    const isLocked = !chapter.isFree && !purchase;
+    const isLocked = !topic.isFree && !purchase;
     const completeOnEnd = !!purchase && !userProgress?.isCompleted;
-    return ( 
+
+    // Check for case study content
+    let caseStudy = null;
+    if (topic.contentType === "INTERACTIVE") {
+        caseStudy = await db.caseStudy.findUnique({
+            where: { topicId: chapterId },
+        });
+    }
+
+    return (
         <div>
             {userProgress?.isCompleted && (
-                <Banner 
+                <Banner
                     variant="success"
-                    label="You already complete the chapter"
+                    label="You already completed this topic"
                 />
             )}
             {isLocked && (
-                <Banner 
+                <Banner
                     variant="warning"
-                    label="You need to purchase this course to watch this chapter"
+                    label="You need to purchase this course to watch this topic"
                 />
             )}
 
-            <div className="flex flex-col max-w-4xl mx-auto pb-20">
-                <div className="p-4">
-                    <VideoPlayer 
-                        chapterId={chapterId}
-                        title={chapter.title}
-                        courseId={courseId}
-                        nextChapterId={nextChapter?.id}
-                        playbackId={muxData?.playbackId!}
-                        isLocked={isLocked}
-                        completeOnEnd={completeOnEnd}
+            <div className="flex flex-col max-w-4xl mx-auto pb-6 sm:pb-12">
+                <div className="px-4 pt-4">
+                    <Breadcrumb
+                        items={[
+                            { label: "Courses", href: "/courses" },
+                            { label: topic.module.title },
+                            { label: topic.title },
+                        ]}
                     />
                 </div>
+                <div className="p-4">
+                    {caseStudy ? (
+                        <CaseStudyPlayer
+                            caseStudyId={caseStudy.id}
+                            title={caseStudy.title}
+                            scenario={caseStudy.scenario as unknown as CaseStudyScenario}
+                            courseId={courseId}
+                        />
+                    ) : (
+                        <VideoPlayer
+                            topicId={chapterId}
+                            title={topic.title}
+                            courseId={courseId}
+                            nextTopicId={nextTopic?.id}
+                            playbackId={muxData?.playbackId!}
+                            isLocked={isLocked}
+                            completeOnEnd={completeOnEnd}
+                        />
+                    )}
+                </div>
                 <div>
-                    <div className="p-4 flex flex-col md:flex-row items-center justify-between">
-                        <h2 className="text-2xl font-semibold mb-2">
-                            {chapter.title}
-                        </h2>
+                    <div className="px-4 py-4 flex flex-col md:flex-row items-center justify-between gap-3">
+                        <div>
+                            <p className="text-xs text-akomapa-teal font-medium">
+                                {topic.module.title}
+                            </p>
+                            <h2 className="font-display text-xl sm:text-2xl font-semibold mb-2">
+                                {topic.title}
+                            </h2>
+                        </div>
                         {purchase ? (
-                            <CourseProgressButton 
-                                chapterId={chapterId}
+                            <CourseProgressButton
+                                topicId={chapterId}
                                 courseId={courseId}
-                                nextChapterId={nextChapter?.id}
+                                nextTopicId={nextTopic?.id}
                                 isCompleted={!!userProgress?.isCompleted}
+                                moduleId={topic.moduleId}
+                                reflectionPrompt={topic.module.reflectionPrompt}
                             />
                         ): (
-                            <CourseEnrollButton 
+                            <CourseEnrollButton
                                 courseId={courseId}
                                 price={course.price!}
                             />
@@ -92,7 +132,7 @@ const ChapterIdPage = async ({
                     </div>
                     <Separator />
                     <div>
-                        <Preview value={chapter.description!} />
+                        <Preview value={topic.description!} />
                     </div>
                     {!!attachments.length && (
                         <>
@@ -103,7 +143,7 @@ const ChapterIdPage = async ({
                                         href={attachment.url}
                                         target="_blank"
                                         key={attachment.id}
-                                        className="flex items-center p-3 w-full bg-sky-200 border text-sky-700 rounded-md hover:underline"
+                                        className="flex items-center gap-2 p-3 w-full bg-akomapa-teal/10 border border-akomapa-teal/20 text-akomapa-teal rounded-md hover:underline"
                                     >
                                         <File />
                                         <p className="line-clamp-1">
@@ -114,10 +154,47 @@ const ChapterIdPage = async ({
                             </div>
                         </>
                     )}
+
+                    {/* Previous/Next Navigation — sticky on mobile so it's always reachable */}
+                    <Separator />
+                    <div className="sticky bottom-0 z-10 flex items-center justify-between border-t border-border/60 bg-background/95 p-4 backdrop-blur-sm md:static md:border-t-0 md:bg-transparent md:backdrop-blur-none">
+                        {previousTopic ? (
+                            <Link
+                                href={`/courses/${courseId}/chapters/${previousTopic.id}`}
+                                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-akomapa-teal transition"
+                            >
+                                <ChevronLeft className="h-4 w-4" />
+                                <span className="truncate max-w-[200px]">
+                                    {previousTopic.title}
+                                </span>
+                            </Link>
+                        ) : (
+                            <div />
+                        )}
+                        <Link
+                            href={`/courses/${courseId}`}
+                            className="text-sm text-muted-foreground hover:text-akomapa-teal transition"
+                        >
+                            Back to Course
+                        </Link>
+                        {nextTopic ? (
+                            <Link
+                                href={`/courses/${courseId}/chapters/${nextTopic.id}`}
+                                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-akomapa-teal transition"
+                            >
+                                <span className="truncate max-w-[200px]">
+                                    {nextTopic.title}
+                                </span>
+                                <ChevronRight className="h-4 w-4" />
+                            </Link>
+                        ) : (
+                            <div />
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
      );
 }
- 
+
 export default ChapterIdPage;

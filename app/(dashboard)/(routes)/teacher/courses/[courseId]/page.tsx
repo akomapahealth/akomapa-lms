@@ -24,7 +24,7 @@ const CourseIdPage = async ({
     const { userId } = await auth();
 
     if (!userId) {
-        return redirect("/");
+        return redirect("/dashboard");
     }
 
     const course = await db.course.findUnique({
@@ -33,7 +33,14 @@ const CourseIdPage = async ({
             userId
         },
         include: {
-            chapters: {
+            modules: {
+                include: {
+                    topics: {
+                        orderBy: {
+                            position: "asc",
+                        },
+                    },
+                },
                 orderBy: {
                     position: "asc",
                 },
@@ -53,7 +60,7 @@ const CourseIdPage = async ({
     });
 
     if (!course) {
-        return redirect("/");
+        return redirect("/dashboard");
     }
 
     const requiredFields = [
@@ -62,7 +69,7 @@ const CourseIdPage = async ({
         course.imageUrl,
         course.price,
         course.categoryId,
-        course.chapters.some(chapter => chapter.isPublished),
+        course.modules.some(m => m.topics.some(t => t.isPublished)),
     ];
 
     const totalFields = requiredFields.length;
@@ -85,7 +92,7 @@ const CourseIdPage = async ({
                         <h1 className="text-2xl font-medium">
                             Course Setup
                         </h1>
-                        <span className="text-sm text-slate-700">
+                        <span className="text-sm text-muted-foreground">
                             Complete all fields {completionText}
                         </span>
                     </div>
@@ -132,8 +139,11 @@ const CourseIdPage = async ({
                                     Course chapters
                                 </h2>
                             </div>
-                            <ChaptersForm 
-                                initialData={course}
+                            <ChaptersForm
+                                initialData={{
+                                    ...course,
+                                    chapters: course.modules.flatMap(m => m.topics),
+                                }}
                                 courseId={course.id}
                             />
                         </div>

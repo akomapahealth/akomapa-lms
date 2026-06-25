@@ -24,13 +24,12 @@ const ChapterIdPAge = async ({
     const { userId } = await auth();
 
     if (!userId) {
-        return redirect("/");
+        return redirect("/dashboard");
     }
 
-    const chapter = await db.chapter.findUnique({
+    const chapter = await db.topic.findUnique({
         where: {
             id: chapterId,
-            courseId: courseId
         },
         include: {
             muxData: true,
@@ -38,7 +37,7 @@ const ChapterIdPAge = async ({
     });
 
     if (!chapter) {
-        return redirect("/");
+        return redirect("/dashboard");
     }
 
     const requiredFields = [

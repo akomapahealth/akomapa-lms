@@ -3,15 +3,16 @@ import { redirect } from "next/navigation";
 
 import { db } from "@/lib/db";
 
-import { DataTable } from "./_components/data-table";
-import { columns } from "./_components/columns"; 
+import { DataTable } from "@/components/admin/data-table";
+import { columns } from "@/components/admin/columns"; 
+import { PageContainer } from "@/components/shell/page-container";
 
 
 const CoursesPage = async () => {
     const { userId } = await auth();
 
     if (!userId) {
-        return redirect("/");
+        return redirect("/dashboard");
     }
 
     const courses = await db.course.findMany({
@@ -23,9 +24,9 @@ const CoursesPage = async () => {
         },
     });
     return ( 
-        <div className="p-6">
+        <PageContainer width="wide">
             <DataTable columns={columns} data={courses} />
-        </div>
+        </PageContainer>
      );
 }
  

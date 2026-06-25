@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { logError } from "@/lib/logger";
 
 export async function PATCH(
     req: Request,
@@ -20,20 +21,17 @@ export async function PATCH(
                 id: routeParams.courseId,
                 userId,
             },
-            include: {
-                chapters: {
-                    include: {
-                        muxData: true,
-                    }
-                }
-            }
         });
 
         if (!course) {
             return new NextResponse("Course not found", { status: 404 });
         }
 
-        const hasPublishedChapter = course.chapters.some((chapter) => chapter.isPublished);
+        const publishedTopics = await db.topic.findMany({
+            where: { module: { courseId: routeParams.courseId }, isPublished: true }
+        });
+
+        const hasPublishedChapter = publishedTopics.length > 0;
 
         if (!course.title || !course.description || !course.imageUrl || !course.categoryId || !hasPublishedChapter) {
             return new NextResponse("Missing required fields", { status: 401 });
@@ -50,7 +48,7 @@ export async function PATCH(
 
         return NextResponse.json(publishedCourse);
     } catch (error) {
-        console.log("[COURSE_ID_PUBLISH]", error);
+        logError("COURSE_ID_PUBLISH", error);
         return new NextResponse("Internal Error", { status: 500 });
     }
 }

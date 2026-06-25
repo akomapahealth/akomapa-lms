@@ -1,6 +1,6 @@
 "use client";
 
-import { Chapter } from "@prisma/client";
+import { Topic } from "@prisma/client";
 import { useEffect, useState } from "react";
 
 import {
@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
 interface ChaptersListProps {
-    items: Chapter[];
+    items: Topic[];
     onReorder: (updateData: {id: string; position: number}[]) => void;
     onEdit: (id: string) => void;
 };
@@ -79,16 +79,16 @@ export const ChaptersList = ({
                                 {(provided) => (
                                     <div
                                         className={cn(
-                                            "flex items-center gap-x-2 bg-slate-200 border-slate-200 border text-slate-700 rounded-md mb-4 text-sm",
-                                            chapter.isPublished && "bg-sky-100 border-sky-200 text-sky-700"
+                                            "flex items-center gap-x-2 bg-muted border-border border text-foreground rounded-md mb-4 text-sm",
+                                            chapter.isPublished && "bg-primary/10 border-primary/30 text-primary"
                                         )}
                                         ref={provided.innerRef}
-                                        {...provided.draggableProps}
+                                        {...provided.draggableProps as any}
                                     >
                                         <div
                                             className={cn(
-                                                "px-2 py-3 border-r border-r-slate-200 hover:bg-slate-300 rounded-l-md transition",
-                                                chapter.isPublished && "border-r-sky-200 hover:bg-sky-200"
+                                                "px-2 py-3 border-r border-r-border hover:bg-muted rounded-l-md transition",
+                                                chapter.isPublished && "border-r-primary/30 hover:bg-primary/20"
                                             )}
                                             {...provided.dragHandleProps}
                                         >
@@ -107,8 +107,8 @@ export const ChaptersList = ({
                                             )}
                                             <Badge
                                                 className={cn(
-                                                    "bg-slate-500",
-                                                    chapter.isPublished && "bg-sky-700"
+                                                    "bg-muted-foreground/60",
+                                                    chapter.isPublished && "bg-primary"
                                                 )}
                                             >
                                                 {chapter.isPublished ? "Published" : "Draft"}

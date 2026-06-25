@@ -2,50 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-.animate-slide-in {
-  animation: slideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-.animate-scale-in {
-  animation: scaleIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
+/* fade-in / slide-in / scale-in animations live in tailwind.config.ts (animate-fade-in etc.) */
 
 /* Smooth transitions */
 .hover-lift {
@@ -74,16 +31,19 @@
   transform: rotate(12deg);
 }
 
-html,
-body,
-:root {
-  height: 100%;
-}
+/*
+ * Z-index scale:
+ *   0   page content
+ *   10  in-page sticky elements (filter bars, table headers)
+ *   30  app header
+ *   50  overlays — Sheet/Dialog/Dropdown (shadcn default)
+ *   100 toasts / confetti
+ */
 
 @layer base {
   :root {
-    /* Akomapa LMS Color Scheme */
-    --background: 180 20% 99%; /* Brilliance #fdfefe */
+    /* Akomapa LMS Color Scheme — Munsell teal + warm gold (brand) */
+    --background: 185 18% 97%; /* Warm teal-tinted off-white #f3f8f9 */
     --foreground: 215 28% 17%; /* Dark Slate #1e293b */
 
     --card: 0 0% 100%;
@@ -92,7 +52,7 @@ body,
     --popover: 0 0% 100%;
     --popover-foreground: 215 28% 17%;
 
-    --primary: 189 100% 35%; /* Munsell Blue #0097b2 */
+    --primary: 189 100% 35%; /* Munsell Blue #0097b2 (brand teal) */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 189 47% 89%; /* Ice Cold #d5edf1 */
@@ -107,11 +67,21 @@ body,
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 189 47% 78%; /* Light Blue #aadce5 */
+    --border: 189 30% 85%; /* Softer border */
     --input: 189 47% 89%; /* Ice Cold #d5edf1 */
     --ring: 189 100% 35%; /* Munsell Blue #0097b2 */
 
-    --radius: 0.5rem;
+    --success: 160 60% 34%;
+    --success-foreground: 0 0% 100%;
+    --warning: 32 90% 42%;
+    --warning-foreground: 0 0% 100%;
+
+    /* Deep teal marketing/editorial surface (same family as sidebar) */
+    --surface-deep: 187 80% 14%;
+    --surface-deep-foreground: 189 47% 95%;
+
+    --header-height: 4rem;
+    --radius: 0.625rem;
 
     /* Akomapa Brand Colors */
     --akomapa-teal: 189 100% 35%;
@@ -121,6 +91,15 @@ body,
     --akomapa-ice: 189 47% 89%;
     --akomapa-light-blue: 189 47% 78%;
     --akomapa-cream: 180 20% 99%;
+
+    /* Sidebar */
+    --sidebar-bg: 187 80% 14%; /* Deep teal #06373f */
+    --sidebar-fg: 189 47% 95%; /* Light text */
+    --sidebar-muted: 189 30% 60%; /* Muted sidebar text */
+    --sidebar-accent: 44 83% 55%; /* Gold accent */
+    --sidebar-border: 187 50% 20%; /* Subtle dark border */
+    --sidebar-hover: 187 60% 18%; /* Hover state */
+    --sidebar-active: 187 60% 22%; /* Active item bg */
   }
 
   .dark {
@@ -151,6 +130,22 @@ body,
     --border: 215 28% 25%;
     --input: 215 28% 25%;
     --ring: 189 100% 40%;
+
+    --success: 160 50% 45%;
+    --success-foreground: 215 28% 10%;
+    --warning: 38 90% 55%;
+    --warning-foreground: 215 28% 10%;
+
+    --surface-deep: 215 35% 7%;
+    --surface-deep-foreground: 189 47% 92%;
+
+    /* Sidebar stays deep in dark mode too */
+    --sidebar-bg: 215 28% 8%;
+    --sidebar-fg: 189 47% 90%;
+    --sidebar-muted: 189 30% 50%;
+    --sidebar-border: 215 28% 15%;
+    --sidebar-hover: 215 28% 14%;
+    --sidebar-active: 215 28% 18%;
   }
 }
 
@@ -163,6 +158,39 @@ body,
   }
 }
 
+/*
+ * App shell sidebar — deliberately plain CSS, outside all Tailwind layers.
+ * The persistent desktop sidebar is core navigation; this guarantees it
+ * renders at >=768px no matter what happens to utility class generation.
+ */
+.app-shell-sidebar {
+  display: none;
+}
+@media (min-width: 768px) {
+  .app-shell-sidebar {
+    display: flex !important;
+  }
+}
+
 .ql-container {
   font-size: 16px !important;
+}
+
+/* Quill editor dark-mode support */
+.dark .ql-toolbar,
+.dark .ql-container {
+  border-color: hsl(var(--border)) !important;
+}
+.dark .ql-toolbar .ql-stroke {
+  stroke: hsl(var(--muted-foreground));
+}
+.dark .ql-toolbar .ql-fill {
+  fill: hsl(var(--muted-foreground));
+}
+.dark .ql-toolbar .ql-picker,
+.dark .ql-editor.ql-blank::before {
+  color: hsl(var(--muted-foreground));
+}
+.dark .ql-editor {
+  color: hsl(var(--foreground));
 }

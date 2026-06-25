@@ -3,6 +3,7 @@ import { stripe } from "@/lib/stripe";
 import { currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
+import { logError } from "@/lib/logger";
 
 export async function POST(
     req: Request,
@@ -91,7 +92,7 @@ export async function POST(
 
         return NextResponse.json({ url: session.url });
     } catch (error) {
-        console.log("[COURSE_ID_CHECKOUT]", error);
+        logError("COURSE_ID_CHECKOUT", error);
         return new NextResponse("Internal Error", { status: 500 });
     }
 }

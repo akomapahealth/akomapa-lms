@@ -6,7 +6,7 @@ import MuxPlayer from "@mux/mux-player-react";
 import { Pencil, PlusCircle, VideoIcon } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { Chapter, MuxData } from "@prisma/client";
+import { Topic, MuxData } from "@prisma/client";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
@@ -16,7 +16,7 @@ import { FileUpload } from "@/components/file-upload";
 
 
 interface ChapterVideoFormProps {
-    initialData: Chapter & { muxData?: MuxData | null };
+    initialData: Topic & { muxData?: MuxData | null };
     courseId: string;
     chapterId: string;
 };
@@ -48,7 +48,7 @@ export const ChapterVideoForm = ({
     }
 
     return (
-        <div className="mt-6 border bg-slate-100 rounded-md p-4">
+        <div className="mt-6 border bg-muted rounded-md p-4">
             <div className="font-medium flex items-center justify-between">
                 Chapter video 
                 <Button onClick={toggleEdit} variant="ghost">
@@ -71,8 +71,8 @@ export const ChapterVideoForm = ({
             </div>
             {!isEditing && (
                 !initialData.videoUrl ? (
-                    <div className="flex items-center justify-center h-60 bg-slate-200 rounded-md">
-                        <VideoIcon className="h-10 w-10 text-slate-500" />
+                    <div className="flex items-center justify-center h-60 bg-muted rounded-md">
+                        <VideoIcon className="h-10 w-10 text-muted-foreground" />
                     </div>
                 ) : (
                     <div className="relative aspect-video mt-2">

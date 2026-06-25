@@ -2,6 +2,10 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
+import { evaluateBadges, type BadgeEvent } from "@/lib/badge-service";
+import { updateStreak } from "@/lib/streak-service";
+import { generateCertificate } from "@/lib/certificate-service";
+import { logError } from "@/lib/logger";
 
 export async function PUT(
     req: Request,
@@ -19,9 +23,9 @@ export async function PUT(
 
         const userProgress = await db.userProgress.upsert({
             where: {
-                userId_chapterId: {
+                userId_topicId: {
                     userId,
-                    chapterId: routeParams.chapterId,
+                    topicId: routeParams.chapterId,
                 }
             },
             update: {
@@ -29,15 +33,132 @@ export async function PUT(
             },
             create: {
                 userId,
-                chapterId: routeParams.chapterId,
+                topicId: routeParams.chapterId,
                 isCompleted,
             }
         });
 
-        return NextResponse.json(userProgress);
+        // Check if this completion finishes the entire module
+        let isModuleComplete = false;
+        let moduleName = "";
+
+        if (isCompleted) {
+            const topic = await db.topic.findUnique({
+                where: { id: routeParams.chapterId },
+                select: {
+                    moduleId: true,
+                    module: {
+                        select: {
+                            title: true,
+                            topics: {
+                                where: { isPublished: true },
+                                select: {
+                                    id: true,
+                                    userProgress: {
+                                        where: { userId },
+                                        select: { isCompleted: true },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            });
+
+            if (topic?.module) {
+                moduleName = topic.module.title;
+                isModuleComplete = topic.module.topics.every((t) =>
+                    t.id === routeParams.chapterId
+                        ? true // just completed this one
+                        : t.userProgress.some((p) => p.isCompleted)
+                );
+            }
+
+            // Gamification: update streak and evaluate badges
+            const currentStreak = await updateStreak(userId);
+
+            const badgeEvents: BadgeEvent[] = [
+                { type: "topic_completed", topicId: routeParams.chapterId },
+                { type: "streak_updated", currentStreak },
+            ];
+
+            if (isModuleComplete && topic?.moduleId) {
+                badgeEvents.push({ type: "module_completed", moduleId: topic.moduleId });
+            }
+
+            // Check if entire course is complete
+            if (isModuleComplete) {
+                const allModules = await db.module.findMany({
+                    where: { courseId: routeParams.courseId, isPublished: true },
+                    include: {
+                        topics: {
+                            where: { isPublished: true },
+                            select: {
+                                id: true,
+                                userProgress: {
+                                    where: { userId },
+                                    select: { isCompleted: true },
+                                },
+                            },
+                        },
+                    },
+                });
+
+                const isCourseComplete = allModules.every((mod) =>
+                    mod.topics.every((t) =>
+                        t.id === routeParams.chapterId
+                            ? true
+                            : t.userProgress.some((p) => p.isCompleted)
+                    )
+                );
+
+                if (isCourseComplete) {
+                    badgeEvents.push({ type: "course_completed", courseId: routeParams.courseId });
+
+                    // Mark enrollment as completed
+                    await db.enrollment.updateMany({
+                        where: { userId, courseId: routeParams.courseId },
+                        data: { status: "COMPLETED" },
+                    });
+
+                    // Auto-generate certificate on course completion
+                    try {
+                        await generateCertificate(userId, routeParams.courseId);
+                    } catch (err) {
+                        logError("CERTIFICATE_AUTO_GENERATE", err);
+                    }
+                }
+            }
+
+            // Evaluate all badge events
+            const allAwardedBadges = [];
+            for (const event of badgeEvents) {
+                const awarded = await evaluateBadges(userId, event);
+                allAwardedBadges.push(...awarded);
+            }
+
+            return NextResponse.json({
+                ...userProgress,
+                isModuleComplete,
+                moduleName,
+                awardedBadges: allAwardedBadges.map((b) => ({
+                    id: b.id,
+                    name: b.name,
+                    description: b.description,
+                    type: b.type,
+                })),
+            });
+        }
+
+        return NextResponse.json({
+            ...userProgress,
+            isModuleComplete,
+            moduleName,
+            awardedBadges: [],
+        });
 
     } catch (error) {
-        console.log("[CHAPTER_ID_PROGRESS]", error);
+        logError("CHAPTER_ID_PROGRESS", error);
         return new NextResponse("Internal Error", { status: 500 });
     }
 }

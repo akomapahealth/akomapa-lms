@@ -5,9 +5,12 @@ export const getProgress = async (
     courseId: string,
 ): Promise<number> => {
     try {
-        const publishedChapters = await db.chapter.findMany({
+        // Find all published topics across all modules in this course
+        const publishedTopics = await db.topic.findMany({
             where: {
-                courseId: courseId,
+                module: {
+                    courseId: courseId,
+                },
                 isPublished: true,
             },
             select: {
@@ -15,19 +18,23 @@ export const getProgress = async (
             }
         });
 
-        const publishedChapterIds = publishedChapters.map((chapter) => chapter.id);
+        const publishedTopicIds = publishedTopics.map((topic) => topic.id);
 
-        const validCompletedChapters = await db.userProgress.count({
+        if (publishedTopicIds.length === 0) {
+            return 0;
+        }
+
+        const validCompletedTopics = await db.userProgress.count({
             where: {
                 userId: userId,
-                chapterId: {
-                    in: publishedChapterIds
+                topicId: {
+                    in: publishedTopicIds
                 },
                 isCompleted: true,
             }
         });
 
-        const progressPercentage = (validCompletedChapters / publishedChapterIds.length) * 100;
+        const progressPercentage = (validCompletedTopics / publishedTopicIds.length) * 100;
 
         return progressPercentage;
     } catch (error) {

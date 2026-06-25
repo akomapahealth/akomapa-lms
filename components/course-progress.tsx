@@ -9,7 +9,7 @@ interface CourseProgressProps {
 
 const colorByVariant = {
     default: "text-akomapa-teal",
-    success: "text-emerald-700",
+    success: "text-success",
 }
 
 const sizeByVariant = {
