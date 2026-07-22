@@ -150,10 +150,12 @@ jobs:
 
       - run: npm ci
 
-      # Blocking: fail the pipeline on critical known vulnerabilities.
-      # (High-severity transitive advisories are tracked via Dependabot PRs.)
-      - name: npm audit (critical)
-        run: npm audit --audit-level=critical
+      # Blocking: fail the pipeline on critical vulnerabilities in PRODUCTION
+      # dependencies. Dev-only tooling (e.g. semantic-release's bundled npm ->
+      # tar) never ships to production, so it is excluded here; those and any
+      # high-severity transitive advisories are tracked via Dependabot PRs.
+      - name: npm audit (critical, production deps)
+        run: npm audit --audit-level=critical --omit=dev
 
       - name: Check for .env files in repo
         run: |
@@ -188,4 +190,4 @@ jobs:
           gitleaks version
 
       - name: Run gitleaks
-        run: gitleaks detect --source . --redact --no-banner --verbose
+        run: gitleaks detect --source . --config .gitleaks.toml --redact --no-banner --verbose

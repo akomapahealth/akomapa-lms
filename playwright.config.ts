@@ -1,7 +1,11 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const PORT = Number(process.env.E2E_PORT ?? 3000);
-const baseURL = process.env.E2E_BASE_URL ?? `http://localhost:${PORT}`;
+// Bind and target 127.0.0.1 rather than "localhost": Chromium on CI runners can
+// fail to resolve the "localhost" hostname (net::ERR_NAME_NOT_RESOLVED), while a
+// numeric loopback address needs no DNS resolution.
+const HOST = process.env.E2E_HOST ?? "127.0.0.1";
+const baseURL = process.env.E2E_BASE_URL ?? `http://${HOST}:${PORT}`;
 const isCI = !!process.env.CI;
 
 /**
@@ -29,7 +33,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `npx next start -p ${PORT}`,
+    command: `npx next start -p ${PORT} -H ${HOST}`,
     url: baseURL,
     timeout: 120_000,
     reuseExistingServer: !isCI,
