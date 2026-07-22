@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^6.15.0",
-    "@hello-pangea/dnd": "^16.6.0",
+    "@hello-pangea/dnd": "^18.0.1",
     "@hookform/resolvers": "^3.4.2",
     "@mux/mux-node": "^8.7.1",
     "@mux/mux-player-react": "^2.7.0",
