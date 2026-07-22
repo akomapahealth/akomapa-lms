@@ -1,0 +1,24 @@
+title = "akomapa-academy gitleaks config"
+
+# Start from gitleaks' built-in ruleset, then allowlist known non-secret
+# placeholder values used only for CI builds and smoke tests.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "CI placeholder (non-secret) values and example env files"
+# Matched (unanchored) against the detected secret value, so these neutralize
+# findings across the entire git history. We deliberately allowlist by
+# non-secret-shaped fragments (no live-key-style prefixes) so this config
+# itself does not trip gitleaks or GitHub push protection.
+regexes = [
+  # Base64 fragment of the dummy Clerk key (decodes to "clerk.example.com$"),
+  # used so ClerkProvider initializes during prerender/tests without a real key.
+  '''Y2xlcmsuZXhhbXBsZS5jb20k''',
+  # Every non-secret CI dummy value contains the literal word "placeholder".
+  '''placeholder''',
+]
+# The template file intentionally contains example-shaped values.
+paths = [
+  '''\.env\.example''',
+]

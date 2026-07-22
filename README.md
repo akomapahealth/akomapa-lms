@@ -126,11 +126,14 @@ npm install
 
 ### 2. Configure environment
 
-Create `.env.local`:
+Copy `.env.example` to `.env.local` and fill in real values. The variable names
+below are authoritative (they match what the code reads):
 
 ```env
 # Database
 DATABASE_URL="postgresql://postgres:postgres@localhost:5433/akomapa?schema=public"
+# Direct (non-pooler) URL for Prisma CLI migrations; falls back to DATABASE_URL.
+DIRECT_URL="postgresql://postgres:postgres@localhost:5433/akomapa?schema=public"
 
 # Clerk
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
@@ -145,22 +148,20 @@ CLERK_WEBHOOK_SECRET=whsec_...
 MUX_TOKEN_ID=...
 MUX_TOKEN_SECRET=...
 
-# UploadThing
-UPLOADTHING_SECRET=sk_live_...
-UPLOADTHING_APP_ID=...
+# UploadThing (v7 uses a single base64 token)
+UPLOADTHING_TOKEN=...
 
-# Stripe
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
-STRIPE_SECRET_KEY=sk_test_...
+# Stripe (code reads STRIPE_API_KEY, not STRIPE_SECRET_KEY)
+STRIPE_API_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 
 # URLs
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 # Canonical/OG base for production (else falls back to the Vercel production URL)
-NEXT_PUBLIC_SITE_URL=https://your-production-domain
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
 
-# Admin/teacher access
-NEXT_PUBLIC_TEACHER_ID=user_...
+# Admin/teacher access (server-only; code reads TEACHER_ID, not NEXT_PUBLIC_TEACHER_ID)
+TEACHER_ID=user_...
 ```
 
 ### 3. Database

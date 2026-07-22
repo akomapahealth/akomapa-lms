@@ -1,0 +1,16 @@
+# Code owners for Akomapa Academy.
+# Pair this with branch protection: enable "Require review from Code Owners"
+# on `main` and `dev` so these paths need an owner's approval before merge.
+# Add teammates/teams (e.g. @akomapahealth/engineering) as the team grows.
+
+# Default owner for everything.
+*                       @nanaagyei
+
+# Deploy / CI / security surface — keep tightly reviewed.
+/.github/               @nanaagyei
+/prisma/                @nanaagyei
+/next.config.mjs        @nanaagyei
+/vercel.json            @nanaagyei
+/commitlint.config.cjs  @nanaagyei
+/.husky/                @nanaagyei
+/lib/env.ts             @nanaagyei

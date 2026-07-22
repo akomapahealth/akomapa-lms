@@ -1,0 +1,38 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+    open-pull-requests-limit: 10
+    target-branch: dev
+    labels:
+      - dependencies
+    commit-message:
+      # Keep Dependabot commits Conventional-Commits compliant so commitlint and
+      # semantic-release handle them correctly.
+      prefix: fix
+      prefix-development: chore
+      include: scope
+    groups:
+      # Batch low-risk updates to reduce PR noise.
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+    target-branch: dev
+    labels:
+      - dependencies
+      - github-actions
+    commit-message:
+      prefix: ci
+      include: scope
