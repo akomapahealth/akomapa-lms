@@ -120,9 +120,9 @@ jobs:
 
       - run: npx prisma generate
 
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-
+      # Smoke tests use Playwright's Node-based `request` client (no browser),
+      # so we intentionally skip `playwright install` — no browser binaries are
+      # needed, which keeps this job fast and avoids Chromium CI networking bugs.
       - name: Build app
         run: npx next build --webpack
 
