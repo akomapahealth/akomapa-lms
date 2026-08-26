@@ -73,12 +73,24 @@ const AuthLayout = ({ children }: { children: React.ReactNode }) => {
             <p>
               A program of Akomapa Health Foundation — a 501(c)(3) nonprofit.
             </p>
-            <div className="mt-3 flex justify-center gap-4">
+            <div className="mt-3 flex flex-wrap justify-center gap-4">
               <Link
                 href="/"
                 className="transition-colors hover:text-akomapa-teal"
               >
                 About the Academy
+              </Link>
+              <Link
+                href="/privacy"
+                className="transition-colors hover:text-akomapa-teal"
+              >
+                Privacy
+              </Link>
+              <Link
+                href="/terms"
+                className="transition-colors hover:text-akomapa-teal"
+              >
+                Terms
               </Link>
               <a
                 href="https://www.akomapa.org"

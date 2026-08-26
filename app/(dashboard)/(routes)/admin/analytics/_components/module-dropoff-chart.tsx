@@ -39,7 +39,7 @@ export const ModuleDropoffChart = ({ data }: ModuleDropoffChartProps) => {
                 width={150}
                 fontSize={12}
               />
-              <Tooltip formatter={(value: number) => `${value}%`} />
+              <Tooltip formatter={(value) => `${Number(value ?? 0)}%`} />
               <Bar
                 dataKey="completionRate"
                 name="Completion %"

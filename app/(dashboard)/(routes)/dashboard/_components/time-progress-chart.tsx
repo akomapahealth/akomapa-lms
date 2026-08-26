@@ -95,7 +95,7 @@ export const TimeProgressChart = ({
                 tickFormatter={(v) => `${v}%`}
               />
               <Tooltip
-                formatter={(value: number) => [`${value}%`, "Completion"]}
+                formatter={(value) => [`${Number(value ?? 0)}%`, "Completion"]}
               />
               <Line
                 type="monotone"
