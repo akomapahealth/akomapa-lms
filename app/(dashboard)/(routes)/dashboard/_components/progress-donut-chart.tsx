@@ -61,9 +61,9 @@ export const ProgressDonutChart = ({
               ))}
             </Pie>
             <Tooltip
-              formatter={(value: number, name: string) => [
-                `${value} module${value !== 1 ? "s" : ""}`,
-                name,
+              formatter={(value, name) => [
+                `${Number(value ?? 0)} module${Number(value ?? 0) !== 1 ? "s" : ""}`,
+                String(name),
               ]}
             />
           </PieChart>
