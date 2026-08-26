@@ -28,6 +28,22 @@ test("sign-in page is reachable", async ({ request }) => {
   );
 });
 
+test("privacy policy is public", async ({ request }) => {
+  const response = await request.get("/privacy");
+  expect(response.status(), "privacy should not error").toBeLessThan(400);
+  const html = await response.text();
+  expect(html).toMatch(/Privacy Policy/i);
+  expect(html).toMatch(/Google/i);
+});
+
+test("terms of service are public", async ({ request }) => {
+  const response = await request.get("/terms");
+  expect(response.status(), "terms should not error").toBeLessThan(400);
+  const html = await response.text();
+  expect(html).toMatch(/Terms of Service/i);
+  expect(html).toMatch(/medical advice/i);
+});
+
 test("security headers are present", async ({ request }) => {
   const response = await request.get("/");
   const headers = response.headers();

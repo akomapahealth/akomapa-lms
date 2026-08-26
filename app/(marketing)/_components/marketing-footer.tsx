@@ -27,13 +27,13 @@ export const MarketingFooter = () => {
           <div className="grid grid-cols-2 gap-10 text-sm sm:grid-cols-3">
             <div className="flex flex-col gap-3">
               <p className="font-semibold">Program</p>
-              <Link href="#mission" className="opacity-70 transition hover:opacity-100">
+              <Link href="/#mission" className="opacity-70 transition hover:opacity-100">
                 Mission
               </Link>
-              <Link href="#journey" className="opacity-70 transition hover:opacity-100">
+              <Link href="/#journey" className="opacity-70 transition hover:opacity-100">
                 The Journey
               </Link>
-              <Link href="#outcomes" className="opacity-70 transition hover:opacity-100">
+              <Link href="/#outcomes" className="opacity-70 transition hover:opacity-100">
                 Outcomes
               </Link>
             </div>
@@ -59,6 +59,12 @@ export const MarketingFooter = () => {
               >
                 akomapa.org
               </a>
+              <Link href="/privacy" className="opacity-70 transition hover:opacity-100">
+                Privacy
+              </Link>
+              <Link href="/terms" className="opacity-70 transition hover:opacity-100">
+                Terms
+              </Link>
             </div>
           </div>
         </div>
@@ -67,7 +73,14 @@ export const MarketingFooter = () => {
             © {new Date().getFullYear()} Akomapa Health Foundation. A 501(c)(3)
             nonprofit organization.
           </p>
-          <p>Made with ❤️ for healthcare education.</p>
+          <div className="flex gap-4">
+            <Link href="/privacy" className="transition hover:opacity-100">
+              Privacy
+            </Link>
+            <Link href="/terms" className="transition hover:opacity-100">
+              Terms
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

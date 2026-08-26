@@ -27,6 +27,21 @@ export const siteConfig = {
   locale: "en_US",
   organization: "Akomapa Health Foundation",
   organizationUrl: "https://www.akomapa.org",
+  contactUrl: "https://www.akomapa.org/contact",
+  legalEffectiveDate: "25 August 2026",
+  offices: {
+    ghana: {
+      label: "Ghana office",
+      address: "43 Yam Street, Tema Community 23, Adjei Kojo, Accra, Ghana",
+      phone: "+233 50 296 6072",
+    },
+    usa: {
+      label: "USA office",
+      address:
+        "University Towers, Apt 5N, 100 York Street, New Haven, CT 06511, United States",
+      phone: "+1 (203) 410-6306",
+    },
+  },
   keywords: [
     "Akomapa Academy",
     "GHELP",

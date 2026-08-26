@@ -16,9 +16,9 @@ import {
 import { cn } from "@/lib/utils";
 
 const links = [
-  { label: "Mission", href: "#mission" },
-  { label: "The Journey", href: "#journey" },
-  { label: "Outcomes", href: "#outcomes" },
+  { label: "Mission", href: "/#mission" },
+  { label: "The Journey", href: "/#journey" },
+  { label: "Outcomes", href: "/#outcomes" },
   { label: "Verify a Certificate", href: "/verify" },
 ];
 
