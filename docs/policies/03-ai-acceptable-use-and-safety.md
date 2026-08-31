@@ -22,8 +22,8 @@ are open.
 ### Provider processing
 
 1. All model access goes through the single provider seam in ADR 0006. No
-   feature imports a vendor SDK directly. **No vendor is selected yet**: see
-   the provider-selection issue linked from ADR 0006.
+   feature imports a vendor SDK directly. **No vendor is selected yet**:
+   [#123](https://github.com/akomapahealth/akomapa-lms/issues/123).
 2. The provider is a **processor**, not a controller, under a data processing
    agreement executed before any learner data reaches it.
 3. **No training on Academy data.** The contract must prohibit the provider
@@ -97,9 +97,8 @@ it against a provider is [#79](https://github.com/akomapahealth/akomapa-lms/issu
 
 ## Still open
 
-- **Provider selection.** No vendor is chosen. See the provider-selection issue
-  linked from ADR 0006.
-- **Cost posture and spend thresholds.** No cost owner is named.
+- **Provider selection.** No vendor is chosen: [#123](https://github.com/akomapahealth/akomapa-lms/issues/123).
+- **Cost posture and spend thresholds.** No cost owner is named: [#124](https://github.com/akomapahealth/akomapa-lms/issues/124).
 - **The clinical boundary in rubric dimension D3** and the bias matched pairs
-  need review by a clinician or health educator.
+  need review by a clinician or health educator: [#124](https://github.com/akomapahealth/akomapa-lms/issues/124).
 - **AI conversation retention** is pending legal review.

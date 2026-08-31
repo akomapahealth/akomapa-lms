@@ -29,7 +29,7 @@ threat model's final section govern that, and all of them are open.
 seam; that presumption is not carried forward, because the seam's value is that
 it makes the choice reversible, and locking a vendor in the same record that
 creates the abstraction would waste it. Provider selection is an explicit open
-decision with its own issue, and #71's title presumes an answer it does not
+decision, [#123](https://github.com/akomapahealth/akomapa-lms/issues/123), and #71's title presumes an answer it does not
 have.
 
 The seam must be satisfiable by more than one vendor. A design that only works
@@ -157,7 +157,7 @@ resolve to a refusal or an honest unavailable state. None fabricates.
 main benefit at the moment of creating it, and the selection criteria (safety
 performance against this dataset, DPA and no-training terms, cost, regional
 availability) cannot be evaluated before the dataset exists and the cost owner
-is named.
+is named. Deferred to [#123](https://github.com/akomapahealth/akomapa-lms/issues/123) and [#124](https://github.com/akomapahealth/akomapa-lms/issues/124).
 
 **Call a provider SDK directly from features.** Rejected: scatters credentials,
 quota, and logging decisions, and makes provider substitution and offline
