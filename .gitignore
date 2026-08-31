@@ -66,3 +66,10 @@ CHANGELOG.md
 !/docs/ai/**
 !/docs/release/
 !/docs/release/**
+# Phase specifications: the historical record the release matrix audits
+# against. Committed so that audit is reproducible by anyone.
+!/docs/phase-1.md
+!/docs/phase-2.md
+!/docs/phase-3.md
+!/docs/phase-4.md
+!/docs/phase-5.md
