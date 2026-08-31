@@ -34,7 +34,10 @@ Course
 
 **Course.** A complete unit of the GHELP curriculum, the thing a learner
 enrols in and can be certified for. Carries a nullable `price`; `isPublished`
-gates all learner visibility. Prisma: `Course`.
+gates all learner visibility. The invariants a Course, Module, Topic, or Quiz
+must satisfy before it may be published are owned by
+[#65](https://github.com/akomapahealth/akomapa-lms/issues/65). Prisma:
+`Course`.
 
 **Module.** An ordered division of a Course, the unit a Faculty member owns and
 supervises. Carries an optional `reflectionPrompt` that seeds a Journal Entry.

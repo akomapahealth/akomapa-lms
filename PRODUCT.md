@@ -142,7 +142,9 @@ two floors:
   `app/(course)/`, `app/verify/`): mobile first. The design floor is a mid
   range Android phone on intermittent mobile data. Pages must be readable and
   navigable before video or images resolve. Video must degrade rather than
-  block. Losing a connection mid Quiz must never cost a learner their attempt.
+  block. Losing a connection mid Quiz must never cost a learner their attempt;
+  autosave, reconnection, and abandonment behaviour are owned by
+  [#64](https://github.com/akomapahealth/akomapa-lms/issues/64).
 - **Faculty and administrator surfaces** (`app/(dashboard)/(routes)/admin/`,
   `app/(dashboard)/(routes)/teacher/`): desktop primary on reliable
   connections, with dense tables and authoring tools. They remain responsive
