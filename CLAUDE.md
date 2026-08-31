@@ -22,6 +22,7 @@ This repository uses a single-context domain documentation layout. See `docs/age
 - `DESIGN.md`: approved tokens, navigation, responsive floors, accessibility baseline, exception process.
 - `CONTEXT.md`: canonical domain terms, legacy terminology, invariants.
 - `docs/adr/`: approved architectural seams. Start at `docs/adr/README.md`.
+- `docs/policies/`: data protection, retention, AI safety, educational scope, support, incident response, moderation, and the obligation-to-control map. Start at `docs/policies/README.md`.
 
 ### Delivery order
 
@@ -34,3 +35,4 @@ Implement release work in dependency waves and keep tests inside each vertical s
 - Do not defer tests, authorization checks, observability, accessibility, migrations, or rollback notes to an unspecified later task.
 - Preserve the Course → Module → Topic vocabulary; `Chapter` is a legacy route and storage term only. `CONTEXT.md` is the authority on every domain term.
 - Stop for a `ready-for-human` decision instead of silently choosing pricing, policy, destructive migration, AI safety, or final visual direction.
+- Never implement a policy clause marked `PENDING LEGAL REVIEW` in `docs/policies/`, and never publish it to learners.
