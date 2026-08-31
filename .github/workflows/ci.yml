@@ -105,6 +105,24 @@ jobs:
       # unit-test runner when that lands.
       - run: npm run test:evals
 
+  checks:
+    name: Docs & Release Matrix
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      # Keeps the source-of-truth documents honest: every cited path, anchor,
+      # Prisma model, and npm script must resolve, and the release matrix's
+      # summary counts are asserted from its own tables rather than trusted.
+      - run: npm run test:checks
+
   build:
     name: Build
     runs-on: ubuntu-latest
