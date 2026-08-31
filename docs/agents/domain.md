@@ -4,14 +4,15 @@ This repository uses a single-context domain documentation layout.
 
 ## Sources of truth
 
-Before changing a domain area, read:
+These exist and are binding. Before changing a domain area, read:
 
-- `CONTEXT.md` at the repository root when it exists.
-- Relevant records under `docs/adr/` when they exist.
-- The phase specifications under `docs/phase-*.md`.
-- `PRODUCT.md` and `DESIGN.md` for product and interface decisions when they exist.
+- [`CONTEXT.md`](../../CONTEXT.md) for canonical domain terms, legacy terminology, naming rules, and system invariants.
+- [`PRODUCT.md`](../../PRODUCT.md) for audiences, purpose, the paid/free boundary, anti-references, and open product decisions.
+- [`DESIGN.md`](../../DESIGN.md) for approved tokens, the navigation model, responsive floors, the accessible state vocabulary, and the exception process.
+- The relevant records under [`docs/adr/`](../adr/README.md) for the architectural seam you are about to cross.
+- The phase specifications under `docs/phase-*.md` for implementation history.
 
-If a source does not exist yet, continue using the implemented behavior and phase documents as evidence. Create or update domain terminology and ADRs only when a decision has been approved.
+Where a document and the code disagree, the document is the decision and the code is the defect, unless an ADR says otherwise. Create or update domain terminology and ADRs only when a decision has been approved, and record the approver by name.
 
 ## Vocabulary
 

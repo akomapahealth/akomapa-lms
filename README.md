@@ -193,9 +193,23 @@ npm run dev                 # http://localhost:3000
 | `npm run db:studio` | Open Prisma Studio |
 | `npm run seed` | Seed the database |
 
+## Source-of-truth documents
+
+Product, design, domain, and architecture decisions are written down and binding. Read the relevant one before changing an area:
+
+| Document | Covers |
+| --- | --- |
+| [PRODUCT.md](PRODUCT.md) | Audiences, purpose, positioning, paid/free boundary, anti-references, launch success criteria, open decisions |
+| [DESIGN.md](DESIGN.md) | Approved tokens, typography, navigation model, responsive floors, motion policy, accessible state vocabulary, exception process |
+| [CONTEXT.md](CONTEXT.md) | Canonical domain terms, legacy terminology, naming rules, system invariants |
+| [docs/adr/](docs/adr/README.md) | Approved architectural seams: identity and RBAC, entitlements, RLS, completion, outbox, AI, releases |
+| [docs/agents/](docs/agents/domain.md) | Shared workflow for coding agents: issue tracker, triage labels, domain docs, delivery order |
+
 ## Design system
 
 The brand pairs Akomapa's Munsell teal with a warm gold accent, set in Fraunces (display) and Outfit (text). All color is driven by CSS variables in `app/globals.css` and mapped through `tailwind.config.ts`, so theming (including dark mode) stays centralized. The marketing site uses an editorial rhythm of light sections with deep-teal anchor bands; the app uses a shared shell with a collapsible sidebar rail.
+
+[DESIGN.md](DESIGN.md) is the normative record: it names these tokens, binds the accessibility baseline (WCAG 2.2 AA), and defines the process for approving an intentional exception.
 
 | Token | Value |
 | --- | --- |
