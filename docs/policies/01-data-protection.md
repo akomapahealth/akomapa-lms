@@ -90,8 +90,7 @@ standard. Confirm the Ghanaian Act 843 timescale and any US state deadline that
 is shorter, and adopt the shortest.
 
 **No self-service path exists yet.** Deletion and export are manual operations
-today. The self-service account deletion and export flow is tracked in policy
-08.
+today. The self-service flow is tracked in [#117](https://github.com/akomapahealth/akomapa-lms/issues/117).
 
 ## International transfers
 

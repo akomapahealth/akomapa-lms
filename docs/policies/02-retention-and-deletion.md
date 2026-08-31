@@ -70,8 +70,11 @@ Answer keys, other learners' data, and internal moderation notes are excluded.
 ## Current capability gap
 
 **Deletion and export are manual operations today.** There is no self-service
-flow, no scheduled job to enforce these periods, and no `vercel.json` cron
-configured. Until the work in policy 08 lands, retention is enforced by a named
-person following this schedule, and every execution is recorded. This is stated
+flow ([#117](https://github.com/akomapahealth/akomapa-lms/issues/117)), no scheduled job to enforce these periods
+([#118](https://github.com/akomapahealth/akomapa-lms/issues/118)), and no `vercel.json` cron configured. The public page still
+says "a reasonable period" and is corrected by [#119](https://github.com/akomapahealth/akomapa-lms/issues/119). Certificate
+revocation, offered above as the alternative to deletion, is not implemented
+([#120](https://github.com/akomapahealth/akomapa-lms/issues/120)). Until those land, retention is enforced by a named person
+following this schedule, and every execution is recorded. This is stated
 plainly rather than implied, because a published policy promising automatic
 deletion that does not happen is worse than no policy.

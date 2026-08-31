@@ -61,7 +61,7 @@ Stated explicitly so nothing is inferred:
   `emailOnFacultyComment` flags in `UserSettings` are stored preferences with
   **no delivery mechanism**: no email provider is installed. Until that changes,
   no policy, page, or interface may imply that email is sent. Tracked in
-  [policy 08](08-obligation-to-control-map.md).
+  [#121](https://github.com/akomapahealth/akomapa-lms/issues/121).
 - No live chat, no telephone support, no guaranteed response outside working
   hours.
 - No support for a learner's own device, browser, or network conditions beyond
