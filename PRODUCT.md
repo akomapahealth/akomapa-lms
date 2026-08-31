@@ -312,8 +312,8 @@ resolve one of these by inference.
 
 | Decision | Owner issue |
 | --- | --- |
-| Course price points, currency, regional and scholarship pricing, refund policy | *to be filed* |
-| Numeric thresholds for completion, certificates, activation, and retention success criteria | *to be filed* |
+| Course price points, currency, regional and scholarship pricing, refund policy | [#114](https://github.com/akomapahealth/akomapa-lms/issues/114) |
+| Numeric thresholds for completion, certificates, activation, and retention success criteria | [#115](https://github.com/akomapahealth/akomapa-lms/issues/115) |
 | Privacy, educational safety, support, retention, and incident policies | [#38](https://github.com/akomapahealth/akomapa-lms/issues/38) |
 | AI architecture, threat model, safety rubric, and evaluation dataset | [#70](https://github.com/akomapahealth/akomapa-lms/issues/70) |
 | Final human visual sign-off | [#101](https://github.com/akomapahealth/akomapa-lms/issues/101) |
