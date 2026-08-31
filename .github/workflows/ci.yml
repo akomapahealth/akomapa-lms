@@ -85,6 +85,26 @@ jobs:
 
       - run: npm run typecheck
 
+  evals:
+    name: AI Evaluation Dataset
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      # Structural validation of evals/dataset.v1.jsonl against the safety
+      # rubric and thresholds. Does not call a model: the harness that executes
+      # these cases against a provider is #79. Uses the Node built-in test
+      # runner, so it adds no dependency; #106 may replace it with the shared
+      # unit-test runner when that lands.
+      - run: npm run test:evals
+
   build:
     name: Build
     runs-on: ubuntu-latest
