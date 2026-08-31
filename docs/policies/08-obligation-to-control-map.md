@@ -38,7 +38,7 @@ awaiting review.
 | Right of access, rectification, erasure, restriction, portability, objection | Runbook | Manual process, [policy 01](01-data-protection.md). Requests via `siteConfig.contactUrl` |
 | Identity verified before disclosure or deletion | Runbook | Verified against the Clerk account |
 | Acknowledge in 5 working days, complete in 30 | Runbook | [policy 05](05-support-and-service-levels.md) targets |
-| Self-service account deletion and export | **Issue** | **To be filed.** No self-service flow exists |
+| Self-service account deletion and export | Issue | [#117](https://github.com/akomapahealth/akomapa-lms/issues/117). No self-service flow exists today |
 | Learner administration including suspension and deletion | Issue | [#88](https://github.com/akomapahealth/akomapa-lms/issues/88) |
 | Confirm the shortest statutory response deadline across regimes | **Legal** | Pending review, [policy 01](01-data-protection.md) |
 
@@ -47,11 +47,11 @@ awaiting review.
 | Obligation | Type | Control |
 | --- | --- | --- |
 | A named retention period for every data class | Runbook | Schedule in [policy 02](02-retention-and-deletion.md) |
-| Automatic enforcement of retention periods | **Issue** | **To be filed.** No scheduled job and no `vercel.json` cron exist |
+| Automatic enforcement of retention periods | Issue | [#118](https://github.com/akomapahealth/akomapa-lms/issues/118). No scheduled job and no `vercel.json` cron exist today |
 | Retention, cascades, and concurrency correct at the database layer | Issue | [#51](https://github.com/akomapahealth/akomapa-lms/issues/51) |
-| Public page states real periods, not "a reasonable period" | **Issue** | **To be filed.** Update `lib/legal-content.ts` and bump `siteConfig.legalEffectiveDate` |
+| Public page states real periods, not "a reasonable period" | Issue | [#119](https://github.com/akomapahealth/akomapa-lms/issues/119). Update `lib/legal-content.ts` and bump `siteConfig.legalEffectiveDate` |
 | Confirm the financial retention minimum and the deletion grace period | **Legal** | Pending review, [policy 02](02-retention-and-deletion.md) |
-| Certificates survive account deletion, and revocation is the alternative | Disclosure, **Issue** | Disclosed in policy 02. **Revocation is not implemented**; to be filed |
+| Certificates survive account deletion, and revocation is the alternative | Disclosure, Issue | Disclosed in policy 02. Revocation is not implemented: [#120](https://github.com/akomapahealth/akomapa-lms/issues/120) |
 
 ## Payments
 
@@ -87,7 +87,7 @@ awaiting review.
 | --- | --- | --- |
 | Single support channel and published targets | Disclosure | [policy 05](05-support-and-service-levels.md); `siteConfig.contactUrl` |
 | Named escalation contact | Runbook | Policy 05 |
-| Do not imply email notification that cannot be sent | **Issue** | **To be filed.** `UserSettings.emailOn*` flags have no delivery mechanism; no email provider is installed |
+| Do not imply email notification that cannot be sent | Issue | [#121](https://github.com/akomapahealth/akomapa-lms/issues/121). `UserSettings.emailOn*` flags have no delivery mechanism; no email provider is installed |
 
 ## Incident response
 
@@ -124,9 +124,10 @@ and none may be implemented before it closes.
 
 ## Summary of what is not yet satisfied
 
-- **Five issues to be filed:** self-service deletion and export; automated
-  retention enforcement; public privacy page retention and AI update;
-  certificate revocation; the email-notification capability gap.
+- **Five issues filed and open:** [#117](https://github.com/akomapahealth/akomapa-lms/issues/117) self-service deletion and
+  export; [#118](https://github.com/akomapahealth/akomapa-lms/issues/118) automated retention enforcement; [#119](https://github.com/akomapahealth/akomapa-lms/issues/119) public
+  privacy and terms update; [#120](https://github.com/akomapahealth/akomapa-lms/issues/120) certificate revocation;
+  [#121](https://github.com/akomapahealth/akomapa-lms/issues/121) the email-notification capability gap.
 - **Six clauses pending legal review:** processor DPAs; transfer mechanisms;
   the data subject response deadline; the financial retention minimum and
   deletion grace period; breach notification deadlines; AI conversation
