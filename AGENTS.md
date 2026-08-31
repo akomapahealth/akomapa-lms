@@ -20,6 +20,7 @@ This repository uses a single-context domain documentation layout. See `docs/age
 - `DESIGN.md`: approved tokens, navigation, responsive floors, accessibility baseline, exception process.
 - `CONTEXT.md`: canonical domain terms, legacy terminology, invariants.
 - `docs/adr/`: approved architectural seams. Start at `docs/adr/README.md`.
+- `docs/policies/`: data protection, retention, AI safety, educational scope, support, incident response, moderation, and the obligation-to-control map. Start at `docs/policies/README.md`.
 
 ### Delivery order
 

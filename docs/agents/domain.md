@@ -10,6 +10,7 @@ These exist and are binding. Before changing a domain area, read:
 - [`PRODUCT.md`](../../PRODUCT.md) for audiences, purpose, the paid/free boundary, anti-references, and open product decisions.
 - [`DESIGN.md`](../../DESIGN.md) for approved tokens, the navigation model, responsive floors, the accessible state vocabulary, and the exception process.
 - The relevant records under [`docs/adr/`](../adr/README.md) for the architectural seam you are about to cross.
+- The relevant policy under [`docs/policies/`](../policies/README.md) when the change touches personal data, retention, AI, moderation, support, or incident behavior.
 - The phase specifications under `docs/phase-*.md` for implementation history.
 
 Where a document and the code disagree, the document is the decision and the code is the defect, unless an ADR says otherwise. Create or update domain terminology and ADRs only when a decision has been approved, and record the approver by name.
