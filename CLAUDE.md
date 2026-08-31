@@ -23,6 +23,7 @@ This repository uses a single-context domain documentation layout. See `docs/age
 - `CONTEXT.md`: canonical domain terms, legacy terminology, invariants.
 - `docs/adr/`: approved architectural seams. Start at `docs/adr/README.md`.
 - `docs/policies/`: data protection, retention, AI safety, educational scope, support, incident response, moderation, and the obligation-to-control map. Start at `docs/policies/README.md`.
+- `docs/release/`: the Phase 1 to 5 implementation matrix and the v1 release checklist. Start at `docs/release/implementation-matrix.md`.
 
 ### Delivery order
 

@@ -203,6 +203,7 @@ Product, design, domain, and architecture decisions are written down and binding
 | [DESIGN.md](DESIGN.md) | Approved tokens, typography, navigation model, responsive floors, motion policy, accessible state vocabulary, exception process |
 | [CONTEXT.md](CONTEXT.md) | Canonical domain terms, legacy terminology, naming rules, system invariants |
 | [docs/adr/](docs/adr/README.md) | Approved architectural seams: identity and RBAC, entitlements, RLS, completion, outbox, AI, releases |
+| [docs/release/](docs/release/implementation-matrix.md) | Phase 1 to 5 implementation matrix with evidence-backed status per requirement, and the seven-gate v1 release checklist |
 | [docs/policies/](docs/policies/README.md) | Operating policies: data protection, retention and deletion, AI safety, educational scope, support, incident response, moderation, and the obligation-to-control map |
 | [docs/agents/](docs/agents/domain.md) | Shared workflow for coding agents: issue tracker, triage labels, domain docs, delivery order |
 
