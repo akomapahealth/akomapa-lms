@@ -1,0 +1,199 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-30T00:00:00.000Z",
+  "title": "Design System: Akomapa Academy",
+  "extensions": {
+    "colorMeta": {
+      "atlantic-teal": {
+        "role": "primary",
+        "displayName": "Atlantic Teal",
+        "canonical": "hsl(189 100% 35%)",
+        "tonalRamp": ["hsl(189 100% 12%)", "hsl(189 100% 18%)", "hsl(189 100% 25%)", "hsl(189 100% 35%)", "hsl(189 80% 48%)", "hsl(189 65% 62%)", "hsl(189 52% 78%)", "hsl(189 47% 92%)"]
+      },
+      "harbour-deep": {
+        "role": "secondary",
+        "displayName": "Harbour Deep",
+        "canonical": "hsl(187 80% 14%)",
+        "tonalRamp": ["hsl(187 80% 7%)", "hsl(187 80% 11%)", "hsl(187 80% 14%)", "hsl(187 70% 20%)", "hsl(187 60% 30%)", "hsl(187 50% 46%)", "hsl(187 45% 68%)", "hsl(187 45% 90%)"]
+      },
+      "harmattan-gold": {
+        "role": "tertiary",
+        "displayName": "Harmattan Gold",
+        "canonical": "hsl(44 83% 55%)",
+        "tonalRamp": ["hsl(44 83% 16%)", "hsl(44 83% 24%)", "hsl(44 83% 34%)", "hsl(44 83% 45%)", "hsl(44 83% 55%)", "hsl(44 83% 68%)", "hsl(44 80% 82%)", "hsl(44 75% 94%)"]
+      },
+      "morning-ice": {
+        "role": "secondary",
+        "displayName": "Morning Ice",
+        "canonical": "hsl(189 47% 89%)",
+        "tonalRamp": ["hsl(189 47% 18%)", "hsl(189 47% 28%)", "hsl(189 47% 40%)", "hsl(189 47% 55%)", "hsl(189 47% 70%)", "hsl(189 47% 78%)", "hsl(189 47% 89%)", "hsl(189 47% 96%)"]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "hsl(185 18% 97%)",
+        "tonalRamp": ["hsl(185 18% 15%)", "hsl(185 18% 25%)", "hsl(185 18% 40%)", "hsl(185 18% 55%)", "hsl(185 18% 70%)", "hsl(185 18% 85%)", "hsl(185 18% 93%)", "hsl(185 18% 97%)"]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "hsl(215 28% 17%)",
+        "tonalRamp": ["hsl(215 28% 10%)", "hsl(215 28% 17%)", "hsl(215 24% 28%)", "hsl(215 20% 40%)", "hsl(215 17% 50%)", "hsl(215 20% 68%)", "hsl(215 25% 85%)", "hsl(215 30% 95%)"]
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "hsl(189 30% 85%)",
+        "tonalRamp": ["hsl(189 30% 20%)", "hsl(189 30% 32%)", "hsl(189 30% 45%)", "hsl(189 30% 58%)", "hsl(189 30% 70%)", "hsl(189 30% 85%)", "hsl(189 30% 92%)", "hsl(189 30% 97%)"]
+      },
+      "affirm": { "role": "neutral", "displayName": "Affirm", "canonical": "hsl(160 60% 34%)", "tonalRamp": ["hsl(160 60% 12%)", "hsl(160 60% 20%)", "hsl(160 60% 27%)", "hsl(160 60% 34%)", "hsl(160 55% 45%)", "hsl(160 50% 60%)", "hsl(160 45% 78%)", "hsl(160 45% 93%)"] },
+      "caution": { "role": "neutral", "displayName": "Caution", "canonical": "hsl(32 90% 42%)", "tonalRamp": ["hsl(32 90% 14%)", "hsl(32 90% 22%)", "hsl(32 90% 32%)", "hsl(32 90% 42%)", "hsl(32 85% 55%)", "hsl(32 80% 68%)", "hsl(32 75% 83%)", "hsl(32 70% 94%)"] },
+      "refuse": { "role": "neutral", "displayName": "Refuse", "canonical": "hsl(0 84% 60%)", "tonalRamp": ["hsl(0 84% 18%)", "hsl(0 84% 27%)", "hsl(0 84% 38%)", "hsl(0 84% 48%)", "hsl(0 84% 60%)", "hsl(0 80% 72%)", "hsl(0 75% 85%)", "hsl(0 70% 95%)"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Marketing hero, certificate teaser, Course landing title. One per screen." },
+      "headline": { "displayName": "Headline", "purpose": "Marketing section openers, Quiz result headlines, empty-state headings." },
+      "title": { "displayName": "Title", "purpose": "In-app page and card titles, Module names. Sans, not serif." },
+      "body": { "displayName": "Body", "purpose": "All reading text. Measure capped at 65 to 75 characters." },
+      "label": { "displayName": "Label", "purpose": "Buttons, form labels, navigation, table headers, chips, metadata." }
+    },
+    "shadows": [
+      { "name": "soft", "value": "0 2px 16px -4px hsl(187 80% 14% / 0.08)", "purpose": "Ambient teal-tinted shadow for resting cards on marketing surfaces only." },
+      { "name": "lift", "value": "0 12px 32px -12px hsl(187 80% 14% / 0.18)", "purpose": "Hover and drag states, paired with a 4px translate. Never at rest in the app." },
+      { "name": "hairline", "value": "0 1px 2px 0 hsl(187 80% 14% / 0.05)", "purpose": "The shadcn shadow-sm carried by the base Card primitive. The heaviest permitted resting shadow in the app." }
+    ],
+    "motion": [
+      { "name": "ease-standard", "value": "cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Default easing for colour, opacity, and transform state transitions." },
+      { "name": "duration-state", "value": "200ms", "purpose": "Hover, focus, and press transitions. Calm rather than snappy." },
+      { "name": "duration-enter", "value": "600ms", "purpose": "fade-in, slide-in, and scale-in entrances on marketing surfaces." },
+      { "name": "reduced-motion", "value": "fade only", "purpose": "Under prefers-reduced-motion, transforms are dropped and only opacity animates. No motion is load bearing." }
+    ],
+    "breakpoints": [
+      { "name": "learner-floor", "value": "360px" },
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" },
+      { "name": "2xl", "value": "1536px" },
+      { "name": "container-max", "value": "1400px" }
+    ],
+    "zIndex": [
+      { "name": "content", "value": 0 },
+      { "name": "sticky", "value": 10 },
+      { "name": "header", "value": 30 },
+      { "name": "overlay", "value": 50 },
+      { "name": "toast", "value": 100 }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single main action on a screen. Atlantic Teal ground, white label.",
+      "html": "<button class=\"ds-btn-primary\">Start pre-test</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; height: 2.5rem; padding: 0 1rem; background: hsl(189 100% 35%); color: hsl(0 0% 100%); font-family: var(--font-sans), system-ui, sans-serif; font-size: 0.875rem; font-weight: 500; border: none; border-radius: 0.5rem; cursor: pointer; transition: background-color 200ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-btn-primary:hover { background: hsl(189 100% 31%); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 2px hsl(185 18% 97%), 0 0 0 4px hsl(189 100% 35%); } .ds-btn-primary:active { background: hsl(188 97% 36%); } .ds-btn-primary:disabled { opacity: 0.5; pointer-events: none; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "The supporting action beside a primary. Morning Ice ground, Ink label.",
+      "html": "<button class=\"ds-btn-secondary\">Review answers</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; height: 2.5rem; padding: 0 1rem; background: hsl(189 47% 89%); color: hsl(215 28% 17%); font-family: var(--font-sans), system-ui, sans-serif; font-size: 0.875rem; font-weight: 500; border: none; border-radius: 0.5rem; cursor: pointer; transition: background-color 200ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-btn-secondary:hover { background: hsl(189 47% 82%); } .ds-btn-secondary:focus-visible { outline: none; box-shadow: 0 0 0 2px hsl(185 18% 97%), 0 0 0 4px hsl(189 100% 35%); }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Neither primary nor destructive. Paper ground with a hairline border.",
+      "html": "<button class=\"ds-btn-outline\">Cancel</button>",
+      "css": ".ds-btn-outline { display: inline-flex; align-items: center; justify-content: center; height: 2.5rem; padding: 0 1rem; background: hsl(185 18% 97%); color: hsl(215 28% 17%); font-family: var(--font-sans), system-ui, sans-serif; font-size: 0.875rem; font-weight: 500; border: 1px solid hsl(189 30% 85%); border-radius: 0.5rem; cursor: pointer; transition: background-color 200ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-btn-outline:hover { background: hsl(189 47% 89%); } .ds-btn-outline:focus-visible { outline: none; box-shadow: 0 0 0 2px hsl(185 18% 97%), 0 0 0 4px hsl(189 100% 35%); }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Labelled input. The visible label is never replaced by a placeholder.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Certificate number</span><input class=\"ds-input\" type=\"text\" placeholder=\"AKA-0000-0000\" /></label>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 0.375rem; font-family: var(--font-sans), system-ui, sans-serif; } .ds-field-label { font-size: 0.875rem; font-weight: 500; color: hsl(215 28% 17%); } .ds-input { height: 2.5rem; width: 100%; padding: 0 0.75rem; background: hsl(185 18% 97%); color: hsl(215 28% 17%); font-family: inherit; font-size: 0.875rem; border: 1px solid hsl(189 30% 85%); border-radius: 0.5rem; transition: border-color 200ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-input::placeholder { color: hsl(215 17% 50%); } .ds-input:focus-visible { outline: none; box-shadow: 0 0 0 2px hsl(185 18% 97%), 0 0 0 4px hsl(189 100% 35%); } .ds-input:disabled { opacity: 0.5; cursor: not-allowed; }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "A reading surface for one actionable unit. Flat at rest, hairline bordered.",
+      "html": "<article class=\"ds-card\"><h3 class=\"ds-card-title\">Positionality and Power</h3><p class=\"ds-card-body\">Module 2 of 10. Four topics, one case study.</p></article>",
+      "css": ".ds-card { background: hsl(0 0% 100%); color: hsl(215 28% 17%); border: 1px solid hsl(189 30% 85%); border-radius: 0.625rem; padding: 1.5rem; box-shadow: 0 1px 2px 0 hsl(187 80% 14% / 0.05); font-family: var(--font-sans), system-ui, sans-serif; } .ds-card-title { margin: 0 0 0.375rem; font-size: 1.5rem; font-weight: 600; line-height: 1.25; letter-spacing: -0.01em; } .ds-card-body { margin: 0; font-size: 1rem; line-height: 1.6; color: hsl(215 17% 50%); }"
+    },
+    {
+      "name": "Sidebar Navigation Item",
+      "kind": "nav",
+      "refersTo": "sidebar",
+      "description": "Harbour Deep rail item. The active state is the one navigational use of Harmattan Gold.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-item\" href=\"#\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 19.5A2.5 2.5 0 0 1 6.5 17H20\"/><path d=\"M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z\"/></svg>Courses</a><a class=\"ds-nav-item ds-nav-item-active\" href=\"#\" aria-current=\"page\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 2v20M2 12h20\"/></svg>Learning path</a></nav>",
+      "css": ".ds-nav { display: flex; flex-direction: column; gap: 0.25rem; width: 16rem; padding: 1rem; background: hsl(187 80% 14%); border-radius: 0.625rem; font-family: var(--font-sans), system-ui, sans-serif; } .ds-nav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 0.75rem; color: hsl(189 30% 60%); font-size: 0.875rem; font-weight: 500; text-decoration: none; border-radius: 0.5rem; border-left: none; transition: background-color 200ms cubic-bezier(0.4, 0, 0.2, 1), color 200ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-nav-item:hover { background: hsl(187 60% 18%); color: hsl(189 47% 95%); } .ds-nav-item:focus-visible { outline: none; box-shadow: 0 0 0 2px hsl(187 80% 14%), 0 0 0 4px hsl(189 100% 40%); } .ds-nav-item-active { background: hsl(187 60% 22%); color: hsl(189 47% 95%); } .ds-nav-item-active svg { color: hsl(44 83% 55%); }"
+    },
+    {
+      "name": "Quiz Option",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "A full-width answer row with a 44px minimum target. Correctness is never colour alone.",
+      "html": "<fieldset class=\"ds-quiz\"><legend class=\"ds-quiz-legend\">Which best describes positionality?</legend><label class=\"ds-quiz-option\"><input type=\"radio\" name=\"q\" /><span>The geographic position of a health facility</span></label><label class=\"ds-quiz-option ds-quiz-option-selected\"><input type=\"radio\" name=\"q\" checked /><span>How your identity shapes what you can see and do</span></label></fieldset>",
+      "css": ".ds-quiz { border: none; margin: 0; padding: 0; font-family: var(--font-sans), system-ui, sans-serif; } .ds-quiz-legend { padding: 0 0 1rem; font-size: 1.5rem; font-weight: 600; line-height: 1.25; color: hsl(215 28% 17%); } .ds-quiz-option { display: flex; align-items: center; gap: 0.75rem; min-height: 44px; margin-bottom: 0.5rem; padding: 0.75rem 1rem; background: hsl(0 0% 100%); color: hsl(215 28% 17%); font-size: 1rem; line-height: 1.6; border: 1px solid hsl(189 30% 85%); border-radius: 0.5rem; cursor: pointer; transition: background-color 200ms cubic-bezier(0.4, 0, 0.2, 1), border-color 200ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-quiz-option:hover { background: hsl(189 47% 96%); } .ds-quiz-option:focus-within { outline: none; box-shadow: 0 0 0 2px hsl(185 18% 97%), 0 0 0 4px hsl(189 100% 35%); } .ds-quiz-option-selected { background: hsl(189 47% 89%); border-color: hsl(189 100% 35%); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Reading Room and the Field Notebook",
+    "overview": "One system with two named expressions, bound by surface mode. The Reading Room governs the surfaces where someone is deciding or verifying: app/(marketing)/, app/verify/, and the legal pages. There the deep harbour ground opens up, Fraunces is given room, the measure is generous, and there is ceremony, because a Certificate and a mission deserve weight. The Field Notebook governs the surfaces where someone is working: app/(dashboard)/ and app/(course)/. There the ground goes pale, structure becomes ruling rather than ornament, density rises, and the interface gets out of the way of the material. Same palette, same type, different ceremony.\n\nThe character is precise and unhurried, and warm to the touch. Borders are hairlines, padding is generous, transitions are calm rather than snappy, and focus is unmistakable. Corners are softened and interactive elements answer to the pointer with a small, honest lift. The two halves are held together by restraint: the primary action on any screen is obvious from placement and weight, never from volume. Nothing here is trying to keep anyone on the platform.\n\nWhat this system rejects: the marketplace catalogue, the gamified nudge, the grey clinical console, and the charity appeal. Practically that means no ratings or enrolment-count social proof, no streak-break pressure or mascots, no dense chromeless data grids as a default, and no imagery of people receiving rather than working.",
+    "keyCharacteristics": [
+      "Deep harbour teal as shelter, pale ice as the working ground.",
+      "Gold is earned, never decorative.",
+      "Serif display against a geometric sans body; hierarchy from contrast, not size alone.",
+      "Flat at rest, lifted only by intent.",
+      "Hairlines and generous padding rather than boxes inside boxes.",
+      "Legible on a mid-range phone in bright light before it is beautiful on a laptop."
+    ],
+    "rules": [
+      { "name": "The Earned Gold Rule", "body": "Harmattan Gold marks achievement and nothing else. It never appears on a call to action, a marketing flourish, a chart series chosen for variety, or an empty state. If a learner has not earned it, it is not gold.", "section": "colors" },
+      { "name": "The Two Grounds Rule", "body": "A surface is either Harbour Deep or Paper. Those are the only two grounds in the system. A screen that needs a third ground has a structure problem, not a colour problem.", "section": "colors" },
+      { "name": "The Never Pure Black Rule", "body": "No #000 and no untinted grey. Every neutral is tinted toward the brand hue, and text is Ink or Ink Muted, never a raw greyscale value.", "section": "colors" },
+      { "name": "The Colour Is Never Alone Rule", "body": "Correctness, status, progress, and locked state must be carried by text, icon, or position in addition to colour.", "section": "colors" },
+      { "name": "The Serif Is For Voice Rule", "body": "Fraunces speaks when the product is speaking: mission, welcome, achievement, verification. Outfit speaks when the interface is speaking: labels, controls, data, navigation. A serif button label is always wrong.", "section": "typography" },
+      { "name": "The Measure Rule", "body": "No line of reading text exceeds 75 characters, at any breakpoint, in any container. Wide viewports get wider margins, not wider text.", "section": "typography" },
+      { "name": "The One Display Rule", "body": "One Display-size element per screen. A page with two things shouting has nothing to say.", "section": "typography" },
+      { "name": "The Sidebar Is Structure Rule", "body": "The desktop sidebar is not a component that can be conditionally styled away. Anything that would hide it at 768px and above is a defect.", "section": "layout" },
+      { "name": "The Reserve The Space Rule", "body": "Video, images, and charts declare their dimensions before they load. On the target device the skeleton is what most learners see first, so it must be the right shape.", "section": "layout" },
+      { "name": "The Flat At Rest Rule", "body": "If an element is not hovered, focused, dragged, or overlaying the page, it has no shadow.", "section": "elevation" },
+      { "name": "The One Layer Rule", "body": "Nothing that already sits on a raised surface may raise itself again. Nested cards are always a structure error.", "section": "elevation" },
+      { "name": "The No Side Stripe Rule", "body": "A coloured left or right border thicker than one pixel is banned everywhere: cards, list items, callouts, alerts, and Quiz feedback.", "section": "shapes" },
+      { "name": "The Four Sides Rule", "body": "A border is on all four sides or it is not a border. Partial borders are a divider, and dividers belong between rows, not around things.", "section": "shapes" },
+      { "name": "The Same Focus Everywhere Rule", "body": "Every focusable element in the product uses the identical two-pixel offset Atlantic Teal ring. Focus styling is never removed, never restyled per component, and never replaced by a colour change alone.", "section": "components" },
+      { "name": "The Modal Is Last Rule", "body": "Reach for inline disclosure, a dedicated route, or a side sheet before a dialog. Dialogs are for destructive confirmation and for genuinely blocking decisions.", "section": "components" }
+    ],
+    "dos": [
+      "Do derive every colour, radius, and shadow from the tokens in app/globals.css and tailwind.config.ts. A raw hex in a component is a defect.",
+      "Do keep reading measure between 65 and 75 characters at every breakpoint.",
+      "Do pair every colour signal with text or an icon.",
+      "Do design the learner surfaces at 360px before the desktop layout.",
+      "Do reserve layout space for video, images, and charts before they load.",
+      "Do give every empty state a Headline that names what is missing and one primary action that fixes it.",
+      "Do write errors that say what happened and what the person can do next.",
+      "Do respect prefers-reduced-motion: fade only, and never make motion load bearing.",
+      "Do keep the desktop sidebar rendered at 768px and above, unconditionally."
+    ],
+    "donts": [
+      "Don't use Harmattan Gold for anything a learner has not earned.",
+      "Don't use a coloured left or right border as an accent, anywhere.",
+      "Don't use gradient text (background-clip: text) anywhere in the product.",
+      "Don't nest a card inside a card, or raise a raised surface again.",
+      "Don't repeat identical icon-heading-text cards in a grid.",
+      "Don't use #000, #fff, or an untinted grey outside the Card White reading surface.",
+      "Don't introduce a third ground beside Harbour Deep and Paper.",
+      "Don't animate layout properties, or use bounce and elastic easing.",
+      "Don't use motion, colour, or copy to create urgency, streak anxiety, or fear of loss.",
+      "Don't show ratings, enrolment counts, countdowns, or any marketplace social proof.",
+      "Don't put a Fraunces label on a control."
+    ]
+  }
+}
