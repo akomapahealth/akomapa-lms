@@ -1,94 +1,184 @@
 # 0006. Put AI behind a provider seam with a kill switch
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-08-30
-- **Approver:** pending, gated on [#70](https://github.com/akomapahealth/akomapa-lms/issues/70)
+- **Approver:** Prince Agyei Tuffour (@nanaagyei)
 - **Implemented by:** [#71](https://github.com/akomapahealth/akomapa-lms/issues/71)
+- **Supporting artifacts:** [threat model](../ai/threat-model.md), [safety rubric](../ai/safety-rubric.md), [evaluation dataset](../../evals/README.md), [policy 03](../policies/03-ai-acceptable-use-and-safety.md)
 
 ## Context
 
-AI Pro appears in the domain vocabulary and owns all of Wave 6, but no AI code
-exists in the repository today.
-[PRODUCT.md](../../PRODUCT.md#ai-pro) records the approved position: AI Pro is
-a committed future capability and is **out of scope for v1**. No AI feature
-ships in the v1.0.0 release.
+This record was Proposed under issue #36 and is accepted under
+[#70](https://github.com/akomapahealth/akomapa-lms/issues/70), which supplies
+the threat model, safety rubric, and versioned evaluation dataset that
+justified acceptance.
 
-The v1 obligation is narrow and real. Wave 6 will introduce a second
-entitlement (an AI subscription), a new class of logged data (prompts and model
-output), a new cost centre, and a new abuse surface. If the boundaries built in
-Waves 1 to 5 assume a single entitlement and unrestricted logging, Wave 6 will
-require reworking them. Recording the seam now costs nothing and prevents that.
+AI Pro remains **out of v1 scope**. No AI feature ships in the v1.0.0 release.
+This record fixes the seam now because Waves 1 and 2 are building the
+entitlement, logging, and retrieval boundaries that a later AI feature must
+satisfy, and retrofitting them would be expensive.
 
-This record is **Proposed**, not Accepted. The safety posture, threat model,
-and evaluation rubric are a `ready-for-human` decision owned by
-[#70](https://github.com/akomapahealth/akomapa-lms/issues/70). Do not build
-against this record until it is approved.
+Accepting the seam is not approval to build a feature. The preconditions in the
+threat model's final section govern that, and all of them are open.
 
 ## Decision
 
-Proposed, pending #70:
+### Provider
 
-1. **One provider seam.** All model access goes through a single internal
-   interface. No feature imports a vendor SDK directly, so the provider can be
-   changed, mocked in tests, and stubbed in CI without touching feature code.
-2. **AI entitlement is separate from Course entitlement.** The AI subscription
-   is its own entitlement and is never read by the Course access path.
-   Purchased Course access must never depend on AI subscription state, and an
-   AI outage or a lapsed subscription must never remove Course access. See
-   [ADR 0002](0002-enrollment-as-canonical-entitlement.md).
-3. **Disabled by default, with a kill switch.** Learner-facing AI is off unless
-   explicitly enabled, and a single server-side switch disables it immediately
-   without a deploy. The switch is exercised in a drill before AI is enabled
-   for anyone.
-4. **Quota, cost, and concurrency are accounted before the call.** Every
-   request is attributed to a principal and checked against a limit before it
-   reaches a provider. There is no unmetered path.
-5. **Prompts and completions are never logged.** They join secrets, tokens,
-   raw payment data, Journal and private Community content, and answer keys on
-   the never-logged list in [CONTEXT.md](../../CONTEXT.md). Telemetry records
-   correlation ids, token counts, latency, cost, and outcome, never content.
-6. **Retrieval is authorization-scoped.** Any Course content an AI feature
-   retrieves is filtered by the same entitlement the learner has for reading it
-   directly. Ingestion never crosses a Course boundary the principal cannot
-   cross.
-7. **Grounded and attributed, or refused.** Learner-facing answers are grounded
-   in retrieved Course content and cite it. An answer that cannot be grounded is
-   refused rather than improvised, and no AI output modifies a Quiz, grade,
-   completion, or Certificate without Faculty review.
+**No vendor is selected by this record.** #70's brief presumed an OpenAI-first
+seam; that presumption is not carried forward, because the seam's value is that
+it makes the choice reversible, and locking a vendor in the same record that
+creates the abstraction would waste it. Provider selection is an explicit open
+decision with its own issue, and #71's title presumes an answer it does not
+have.
+
+The seam must be satisfiable by more than one vendor. A design that only works
+with one provider's proprietary feature has failed this record.
+
+### Provider responsibilities
+
+The seam owns, and no feature may reimplement: credential handling; model class
+selection; request assembly, including the redaction allowlist; structured
+output validation; timeout, retry, and backoff; quota, cost, and concurrency
+accounting before the call; the kill switch; and telemetry that records
+correlation id, token counts, latency, cost, and outcome but never content.
+
+A feature calling the seam supplies a principal, a task type, and its inputs.
+It receives a validated result or a typed failure. It never sees a raw provider
+response.
+
+### Model and configuration selection
+
+1. **Select by class, not by name.** Features request a capability class,
+   currently `reasoning` for grounded tutoring and `fast` for short
+   classification. The mapping from class to a concrete model and its
+   configuration lives in one place in the seam.
+2. **Pin exactly, and record it.** The concrete model id, its version, and the
+   full generation configuration are pinned. Floating aliases that a provider
+   can repoint are prohibited: a model that changes under you invalidates every
+   evaluation you have run.
+3. **Any change re-runs the dataset.** A provider change, model change,
+   configuration change, or prompt change is a **model change** under the
+   [safety rubric](../ai/safety-rubric.md) and must meet the model-change gate
+   before it reaches learners.
+4. **Provider documentation is authoritative over recollection.** Model names,
+   context limits, and pricing are read from the provider's current
+   documentation at selection time, never from memory.
+
+### Structured output
+
+5. All model output is requested and parsed as a **schema-validated structure**,
+   never free-form prose that a feature parses itself. The schema carries the
+   answer, its citations, and an explicit grounding and uncertainty signal.
+6. **Validation failure discards.** Invalid output is not repaired, not
+   partially used, and not shown. Retry once, then fail to the unavailable
+   state.
+7. The schema is versioned with the prompt that produces it.
+
+### Retrieval and citation contract
+
+8. **Retrieval is authorization-scoped.** The corpus is restricted to content
+   the principal may already read, by the entitlement API of
+   [ADR 0002](0002-enrollment-as-canonical-entitlement.md), running under the
+   transaction-scoped principal of
+   [ADR 0003](0003-rls-and-transaction-scoped-principal.md).
+9. **Assessment content and answer keys are never indexed.** Exclusion from the
+   corpus is the control; refusal behaviour is secondary.
+10. **Journal Entries and private Community content are never indexed**, under
+    any setting.
+11. **Every citation is verified server-side** to resolve to content the
+    principal may read, before the answer is returned. An unresolvable or
+    unpermitted citation invalidates the entire answer, not just the citation.
+12. **Ungrounded means refused.** If retrieval returns nothing permitted, the
+    feature refuses and says so. It never answers from model memory.
+13. Retrieval implementation, including the vector index, is
+    [#74](https://github.com/akomapahealth/akomapa-lms/issues/74). This record
+    fixes the contract, not the index technology.
+
+### Entitlement
+
+14. **AI entitlement is separate from Course entitlement**, and neither reads
+    the other. An AI outage or a lapsed AI subscription must never remove
+    Course access someone paid for. Reconciliation is
+    [#72](https://github.com/akomapahealth/akomapa-lms/issues/72).
+
+### Storage and retention
+
+15. **Prompts and completions are never logged.** See
+    [policy 01](../policies/01-data-protection.md).
+16. Stored AI conversations, if a feature stores them, follow the retention
+    period in [policy 03](../policies/03-ai-acceptable-use-and-safety.md), are
+    deleted on account deletion with no de-identified residue, and are never
+    used for training.
+17. The provider is a processor under an executed DPA with a no-training
+    commitment, added to the inventory in policy 01 and disclosed on the public
+    privacy page before the feature is enabled.
+
+### Failure modes
+
+The safe state is always "no AI answer", never "an answer we are unsure about".
+The full table is in the [threat model](../ai/threat-model.md); the binding
+summary: provider unavailable, malformed output, empty permitted retrieval,
+unresolvable citation, quota exceeded, and missing or stale entitlement all
+resolve to a refusal or an honest unavailable state. None fabricates.
+
+### Kill switch
+
+18. A single server-side switch disables learner-facing AI immediately without
+    a deploy. Any Administrator may pull it without approval. It is **drilled
+    before launch**, and an undrilled kill switch is not a control. Ownership
+    and restore criteria are in the threat model.
+
+### Assessment authority
+
+19. AI output never sets or alters a Quiz score, grade, completion, Badge, or
+    Certificate. Generated Quiz variants require Faculty review before any
+    learner sees them.
 
 ## Consequences
 
-- v1 carries no AI dependency, no AI cost, and no AI failure mode. The only v1
-  cost is honouring the never-logged list and keeping the entitlement paths
-  separate, both of which are required anyway.
-- Wave 6 issues (#71 to #79) build against this seam rather than negotiating it
-  per feature.
-- Any pull request that imports a model vendor SDK outside the seam, logs a
-  prompt, or couples AI entitlement to Course entitlement contradicts this
-  record and is rejected.
-- Evaluation, cost alerting, and abuse defences are prerequisites for enabling
-  the feature, not follow-ups: #70, #72 to #75, #78, and the relevant gates in
-  #79 must all be complete first.
+- v1 carries no AI dependency, cost, or failure mode. The only v1 obligations
+  are the never-logged list and keeping the two entitlement paths separate,
+  both required anyway.
+- Wave 6 builds against this seam rather than renegotiating it per feature.
+- A pull request that imports a vendor SDK outside the seam, logs a prompt,
+  couples AI entitlement to Course entitlement, uses a floating model alias, or
+  ships an answer with an unverified citation contradicts this record and is
+  rejected.
+- Evaluation becomes a release gate rather than a quality report. A model
+  change that cannot meet the blocking gate does not roll out, whatever it
+  saves.
+- Pinning models and re-running evaluations makes provider changes slower and
+  more deliberate. That is the intended trade.
 
 ## Alternatives considered
 
-**Call a provider SDK directly from features.** Rejected: it scatters
-credentials, quota, and logging decisions across the codebase, and makes
-provider substitution and offline testing impossible.
+**Lock OpenAI now, as #70's brief assumed.** Rejected: it spends the seam's
+main benefit at the moment of creating it, and the selection criteria (safety
+performance against this dataset, DPA and no-training terms, cost, regional
+availability) cannot be evaluated before the dataset exists and the cost owner
+is named.
 
-**Treat AI as part of Course entitlement.** Rejected: it couples a paid
-subscription to purchased Course access, so an AI billing failure would remove
-access someone already paid for.
+**Call a provider SDK directly from features.** Rejected: scatters credentials,
+quota, and logging decisions, and makes provider substitution and offline
+testing impossible.
 
-**Defer the decision entirely until Wave 6.** Rejected: the logging and
-entitlement boundaries are being built now, in Waves 1 and 2, and are expensive
-to revisit afterwards.
+**Treat AI as part of Course entitlement.** Rejected: an AI billing failure
+would remove access someone already paid for.
 
-**Log prompts for debugging, redacted.** Rejected: prompts contain learner
-questions about their own understanding, which is sensitive educational data,
-and redaction is not reliable enough to justify the risk.
+**Free-form prose output parsed per feature.** Rejected: unparseable output
+becomes a silent partial answer, and citation verification has nothing reliable
+to verify.
+
+**Prompt-based isolation between Courses.** Rejected outright: an instruction
+is not an access control. See threat model T3.
+
+**Defer the whole decision to Wave 6.** Rejected: the logging and entitlement
+boundaries are being built now and are expensive to revisit.
 
 ## Links
 
-- [PRODUCT.md](../../PRODUCT.md#ai-pro), [CONTEXT.md](../../CONTEXT.md), [ADR 0002](0002-enrollment-as-canonical-entitlement.md)
-- Issues [#70](https://github.com/akomapahealth/akomapa-lms/issues/70), [#71](https://github.com/akomapahealth/akomapa-lms/issues/71), [#72](https://github.com/akomapahealth/akomapa-lms/issues/72), [#78](https://github.com/akomapahealth/akomapa-lms/issues/78), [#79](https://github.com/akomapahealth/akomapa-lms/issues/79)
+- [Threat model](../ai/threat-model.md), [safety rubric](../ai/safety-rubric.md), [evaluation dataset](../../evals/README.md)
+- [PRODUCT.md](../../PRODUCT.md#ai-pro), [CONTEXT.md](../../CONTEXT.md), [policy 03](../policies/03-ai-acceptable-use-and-safety.md)
+- [ADR 0002](0002-enrollment-as-canonical-entitlement.md), [ADR 0003](0003-rls-and-transaction-scoped-principal.md)
+- Issues [#70](https://github.com/akomapahealth/akomapa-lms/issues/70), [#71](https://github.com/akomapahealth/akomapa-lms/issues/71), [#72](https://github.com/akomapahealth/akomapa-lms/issues/72), [#74](https://github.com/akomapahealth/akomapa-lms/issues/74), [#78](https://github.com/akomapahealth/akomapa-lms/issues/78), [#79](https://github.com/akomapahealth/akomapa-lms/issues/79)

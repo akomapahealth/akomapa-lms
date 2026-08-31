@@ -19,7 +19,7 @@ until a qualified reviewer signs them off.
 | --- | --- |
 | [01 Data protection](01-data-protection.md) | Regulatory scope, controller and processor roles, the data inventory, lawful bases, data subject rights, international transfers |
 | [02 Retention and deletion](02-retention-and-deletion.md) | The retention schedule for every store, account deletion, export, and the records that survive deletion |
-| [03 AI acceptable use and safety](03-ai-acceptable-use-and-safety.md) | Rules that bind AI Pro before it may be enabled, including provider processing, grounding, refusal, and conversation retention |
+| [03 AI acceptable use and safety](03-ai-acceptable-use-and-safety.md) | Rules that bind AI Pro before it may be enabled, including provider processing, grounding, refusal, and conversation retention. Enforced by the [safety rubric](../ai/safety-rubric.md) and [evaluation dataset](../../evals/README.md) |
 | [04 Educational scope](04-educational-scope.md) | Not a clinic, not medical advice, no protected health information, and what happens when someone submits it anyway |
 | [05 Support and service levels](05-support-and-service-levels.md) | Channels, hours, response targets, ownership, and what is explicitly not promised |
 | [06 Incident response](06-incident-response.md) | Severity definitions, roles, timeline, regulatory notification duties, and the postmortem requirement |
@@ -72,7 +72,7 @@ rather than segmenting the product by geography.
 | --- | --- |
 | 01 Data protection | Approved, with marked clauses pending legal review |
 | 02 Retention and deletion | Approved, with retention minimums pending legal review |
-| 03 AI acceptable use and safety | Proposed. Gated on [#70](https://github.com/akomapahealth/akomapa-lms/issues/70); AI Pro is out of v1 scope |
+| 03 AI acceptable use and safety | Approved under [#70](https://github.com/akomapahealth/akomapa-lms/issues/70), with provider selection, cost posture, the clinical boundary, and conversation retention still open. AI Pro remains out of v1 scope |
 | 04 Educational scope | Approved |
 | 05 Support and service levels | Approved |
 | 06 Incident response | Approved, with notification deadlines pending legal review |

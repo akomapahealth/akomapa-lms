@@ -1,28 +1,29 @@
 # 03. AI acceptable use and safety
 
-- **Status:** **Proposed.** Not approved, and not implementable
-- **Approver:** pending, gated on [#70](https://github.com/akomapahealth/akomapa-lms/issues/70)
+- **Status:** Approved, with the clauses marked below still pending
+- **Approver:** Prince Agyei Tuffour (@nanaagyei), 2026-08-30, under [#70](https://github.com/akomapahealth/akomapa-lms/issues/70)
 - **Scope:** binds AI Pro before it may be enabled for anyone
+- **Supporting artifacts:** [threat model](../ai/threat-model.md), [safety rubric](../ai/safety-rubric.md), [evaluation dataset](../../evals/README.md)
 
 ## Standing
 
-AI Pro is out of v1 scope. See
+AI Pro remains out of v1 scope. See
 [PRODUCT.md](../../PRODUCT.md#ai-pro) and
-[ADR 0006](../adr/0006-ai-provider-abstraction.md), which is itself Proposed.
+[ADR 0006](../adr/0006-ai-provider-abstraction.md), now Accepted.
 
-This policy exists so that the privacy, retention, and safety obligations of an
-AI feature are written down **before** the boundaries that must satisfy them
-are built in Waves 1 and 2. It is deliberately not approved: the threat model,
-safety rubric, and evaluation dataset that would justify approval are the
-deliverable of #70. Nothing here may be implemented, published, or relied on
-until #70 closes and an approver is recorded above.
+This policy was Proposed under issue #38 and is approved under #70, which
+supplied the threat model, safety rubric, and versioned evaluation dataset that
+justified approval. Approving it does not authorise building an AI feature: the
+preconditions in the threat model's final section govern that, and all of them
+are open.
 
-## Rules proposed
+## Rules
 
 ### Provider processing
 
 1. All model access goes through the single provider seam in ADR 0006. No
-   feature imports a vendor SDK directly.
+   feature imports a vendor SDK directly. **No vendor is selected yet**: see
+   the provider-selection issue linked from ADR 0006.
 2. The provider is a **processor**, not a controller, under a data processing
    agreement executed before any learner data reaches it.
 3. **No training on Academy data.** The contract must prohibit the provider
@@ -67,10 +68,10 @@ until #70 closes and an approver is recorded above.
 
 ### Retention of conversations
 
-13. **PENDING LEGAL REVIEW and #70:** proposed retention is 90 days for AI
-    conversations, deleted on account deletion with no de-identified residue,
-    and never used for training. Confirm against the abuse-investigation need
-    before adoption.
+13. **PENDING LEGAL REVIEW:** retention is 90 days for AI conversations,
+    deleted on account deletion with no de-identified residue, and never used
+    for training. The period is approved as product policy; its statutory
+    sufficiency and the abuse-investigation need remain for legal review.
 14. Prompts and completions are never logged. Telemetry records correlation
     id, token counts, latency, cost, and outcome only, per
     [policy 01](01-data-protection.md).
@@ -86,11 +87,19 @@ until #70 closes and an approver is recorded above.
     to #75, #78, and the relevant evaluation gates in #79 are all complete.
 18. An AI outage or a lapsed AI subscription never removes Course access.
 
-## What #70 must add before this can be approved
+## Enforcement
 
-The threat model (prompt injection, cross-Course retrieval, sensitive-data
-leakage, tool misuse, answer leakage, abuse, billing bypass, provider
-compromise); the educational safety rubric with pass thresholds; the versioned,
-de-identified evaluation dataset with expected citations and refusals; the
-named owners of launch thresholds, escalation, model-change review, and the
-kill switch; and the cost posture.
+Rules 7 to 11 are scored by the [safety rubric](../ai/safety-rubric.md) against
+the [evaluation dataset](../../evals/README.md). Blocking dimensions require a
+100% pass rate at the launch gate and at every model change. The dataset's
+structure is validated in CI by `npm run test:evals`; the harness that executes
+it against a provider is [#79](https://github.com/akomapahealth/akomapa-lms/issues/79).
+
+## Still open
+
+- **Provider selection.** No vendor is chosen. See the provider-selection issue
+  linked from ADR 0006.
+- **Cost posture and spend thresholds.** No cost owner is named.
+- **The clinical boundary in rubric dimension D3** and the bias matched pairs
+  need review by a clinician or health educator.
+- **AI conversation retention** is pending legal review.

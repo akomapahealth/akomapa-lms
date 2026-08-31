@@ -17,7 +17,7 @@ Read the relevant records before changing a domain area, alongside
 | [0003](0003-rls-and-transaction-scoped-principal.md) | Row-level security with a transaction-scoped principal | Accepted | [#43](https://github.com/akomapahealth/akomapa-lms/issues/43) |
 | [0004](0004-transactional-completion-and-events.md) | Completion, grading, and recognition happen in one transaction that also records events | Accepted | [#49](https://github.com/akomapahealth/akomapa-lms/issues/49) |
 | [0005](0005-transactional-outbox-processing.md) | A transactional outbox with an idempotent processor carries all asynchronous work | Accepted | [#69](https://github.com/akomapahealth/akomapa-lms/issues/69) |
-| [0006](0006-ai-provider-abstraction.md) | AI access sits behind a provider seam with a kill switch, disabled in v1 | Proposed | [#70](https://github.com/akomapahealth/akomapa-lms/issues/70), [#71](https://github.com/akomapahealth/akomapa-lms/issues/71) |
+| [0006](0006-ai-provider-abstraction.md) | AI access sits behind a provider-neutral seam with a kill switch, disabled in v1 | Accepted | [#71](https://github.com/akomapahealth/akomapa-lms/issues/71) |
 | [0007](0007-semantic-release-versioning.md) | Conventional Commits drive semantic-release from `main` | Accepted | [#110](https://github.com/akomapahealth/akomapa-lms/issues/110) |
 
 ## Statuses
