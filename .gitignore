@@ -64,3 +64,5 @@ CHANGELOG.md
 !/docs/policies/**
 !/docs/ai/
 !/docs/ai/**
+!/docs/release/
+!/docs/release/**
