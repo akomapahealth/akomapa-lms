@@ -60,3 +60,5 @@ CHANGELOG.md
 !/docs/agents/**
 !/docs/adr/
 !/docs/adr/**
+!/docs/policies/
+!/docs/policies/**
