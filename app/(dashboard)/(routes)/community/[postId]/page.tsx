@@ -1,10 +1,9 @@
-import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
 import { ArrowLeft, Lock, MessageSquare } from "lucide-react";
 
 import { db } from "@/lib/db";
-import { isAdmin } from "@/lib/roles";
+import { can, getPrincipal } from "@/lib/auth";
 import { timeAgo } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -20,8 +19,9 @@ const PostDetailPage = async ({
 }: {
   params: Promise<{ postId: string }>;
 }) => {
-  const { userId } = await auth();
-  if (!userId) return redirect("/sign-in");
+  const principal = await getPrincipal();
+  if (!principal) return redirect("/sign-in");
+  const { userId } = principal;
 
   const { postId } = await params;
 
@@ -79,7 +79,9 @@ const PostDetailPage = async ({
 
   if (!post) return notFound();
 
-  const admin = await isAdmin(userId);
+  // Whether to offer moderation controls. The controls themselves are enforced
+  // server-side by the community route handlers; this only decides rendering.
+  const admin = can(principal, "community:moderate");
   const isAuthor = post.userId === userId;
 
   const authorName =

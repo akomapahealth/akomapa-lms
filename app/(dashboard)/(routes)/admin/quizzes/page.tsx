@@ -1,9 +1,8 @@
-import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
 import Link from "next/link";
 import { FileQuestion, Plus } from "lucide-react";
 
 import { db } from "@/lib/db";
+import { requirePageCapability } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PageContainer } from "@/components/shell/page-container";
@@ -17,13 +16,16 @@ import {
 } from "@/components/ui/table";
 
 const AdminQuizzesPage = async () => {
-  const { userId } = await auth();
+  const principal = await requirePageCapability("staff:access");
 
-  if (!userId) {
-    return redirect("/sign-in");
-  }
-
+  // Scoped to the principal's own Courses. This page previously listed every
+  // Quiz in the product to anyone who reached it, which -- given the old
+  // layout gate -- was any faculty member. The scope matches admin/courses,
+  // which has always filtered by owner.
   const quizzes = await db.quiz.findMany({
+    where: {
+      course: { userId: principal.userId },
+    },
     include: {
       course: { select: { id: true, title: true } },
       module: { select: { title: true } },

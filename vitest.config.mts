@@ -48,7 +48,6 @@ export default defineConfig({
       include: [
         "lib/auth/*.ts",
         "lib/roles.ts",
-        "lib/roles-client.ts",
         "lib/streak-service.ts",
         "lib/badge-service.ts",
         "lib/certificate-service.ts",
@@ -67,7 +66,6 @@ export default defineConfig({
         "lib/auth/actions.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
         "lib/auth/errors.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
         "lib/roles.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
-        "lib/roles-client.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
       },
     },
   },

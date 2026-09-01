@@ -18,8 +18,23 @@ import { PrismaClient } from "@prisma/client";
 import { config } from "dotenv";
 import { Pool } from "pg";
 
+// Precedence: an explicitly exported DATABASE_URL wins over both dotenv files.
+//
+// This matters more here than in most scripts. `.env.local` is loaded with
+// `override: true`, so without capturing the shell value first,
+// `DATABASE_URL=<production> npm run role:grant` would be silently redirected
+// to the developer's local database -- reporting that an administrator was
+// granted in production while granting one in dev, and leaving production with
+// nobody who can administer it. That is the exact failure the pre-flight
+// exists to prevent, so the shell wins.
+const explicitDatabaseUrl = process.env.DATABASE_URL;
+
 config();
 config({ path: ".env.local", override: true });
+
+if (explicitDatabaseUrl) {
+  process.env.DATABASE_URL = explicitDatabaseUrl;
+}
 
 const ROLES = ["STUDENT", "FACULTY", "ADMIN"] as const;
 type Role = (typeof ROLES)[number];
@@ -28,9 +43,28 @@ const connectionString = process.env.DATABASE_URL;
 
 if (!connectionString) {
   console.error(
-    "DATABASE_URL is not set. Add it to .env or .env.local before managing roles."
+    "DATABASE_URL is not set. Add it to .env or .env.local, or export it for " +
+      "this command, before managing roles."
   );
   process.exit(1);
+}
+
+/**
+ * Names the target database without leaking credentials.
+ *
+ * Every command prints this before doing anything. Granting an administrator in
+ * the wrong environment is silent and hard to notice afterwards, so the operator
+ * is shown which database they are about to touch rather than being asked to
+ * remember what DATABASE_URL held.
+ */
+function describeTarget(url: string): string {
+  try {
+    const parsed = new URL(url);
+    const database = parsed.pathname.replace(/^\//, "") || "(default)";
+    return `${parsed.host}/${database}${explicitDatabaseUrl ? "  [from shell]" : "  [from .env]"}`;
+  } catch {
+    return "(unparseable DATABASE_URL)";
+  }
 }
 
 const pool = new Pool({ connectionString });
@@ -133,6 +167,7 @@ async function main() {
     process.exit(1);
   }
 
+  console.log(`target: ${describeTarget(connectionString!)}`);
   process.exitCode = await run();
 }
 

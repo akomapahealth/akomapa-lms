@@ -153,6 +153,43 @@ npm run role:check    # exits non-zero if no ADMIN exists
 
 The user must sign in once first, so the Clerk webhook creates their `User` row.
 
+### Running against production
+
+These commands never run *in* production. They run on your machine and connect
+to whatever `DATABASE_URL` points at — Vercel has no shell to run an npm script
+in. "Granting an administrator in production" therefore means running the command
+locally, pointed at the production database.
+
+```
+vercel link                                              # once per checkout
+vercel env pull .env.production.local --environment production
+
+DATABASE_URL="$(grep -m1 '^DATABASE_URL=' .env.production.local | cut -d= -f2- | tr -d '"')" \
+  npm run role:check
+```
+
+`.env.production.local` matches `.env*.local` in `.gitignore` and is never
+committed.
+
+**Every command prints the database it is about to act on**, with credentials
+stripped:
+
+```
+target: ep-xxxx.eu-central-1.aws.neon.tech:5432/akomapa  [from shell]
+```
+
+Read that line before granting. `[from shell]` means an exported `DATABASE_URL`
+is in effect; `[from .env]` means a dotenv file is, which almost always means you
+are pointed at your own machine.
+
+An exported `DATABASE_URL` takes precedence over both dotenv files. This is not
+incidental: `.env.local` is loaded with `override: true`, so without that
+precedence an operator running the pre-flight against production would be
+silently redirected to their local database — told an administrator was granted,
+while production still had none. That is the exact failure the pre-flight exists
+to prevent.
+
+
 `assertAdminExists()` in `lib/auth/bootstrap.ts` is the same check as a function,
 ready for [#103](https://github.com/akomapahealth/akomapa-lms/issues/103) to
 mount on a readiness endpoint. Until that endpoint exists, `npm run role:check`
