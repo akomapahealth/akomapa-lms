@@ -6,7 +6,6 @@ import { db } from "@/lib/db";
 import { requirePageCourse } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
 const QuizPreviewPage = async ({

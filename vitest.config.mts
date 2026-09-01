@@ -49,6 +49,7 @@ export default defineConfig({
         "lib/auth/*.ts",
         "lib/courses/*.ts",
         "lib/assessments/*.ts",
+        "lib/text/*.ts",
         "lib/streak-service.ts",
         "lib/badge-service.ts",
         "lib/certificate-service.ts",
@@ -73,6 +74,9 @@ export default defineConfig({
         "lib/courses/completion.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
         // Grading feeds certificates and analytics.
         "lib/assessments/grading.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
+        // Excerpt generation from stored rich text; CodeQL flagged the previous
+        // single-pass version at four call sites.
+        "lib/text/strip-html.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
       },
     },
   },

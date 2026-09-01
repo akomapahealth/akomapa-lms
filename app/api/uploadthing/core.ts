@@ -19,7 +19,6 @@ const handleAuth = async () => {
     return { userId: principal.userId };
 }
  
-const auth = (req: Request) => ({ id: "fakeId" });
  
 export const ourFileRouter = {
     courseImage: f({ image: { maxFileSize: "4MB", maxFileCount: 1 } })

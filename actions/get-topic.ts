@@ -190,6 +190,6 @@ export const getTopic = async ({
             previousTopic: null,
             userProgress: null,
             purchase: null,
-        }
+        };
     }
-}
+};
