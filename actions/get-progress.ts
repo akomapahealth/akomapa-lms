@@ -41,4 +41,4 @@ export const getProgress = async (
         console.log("[GET_PROGRESS]", error);
         return 0;
     }
-}
+};

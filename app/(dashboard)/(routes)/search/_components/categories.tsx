@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { Category } from "@prisma/client";
 import {
@@ -25,7 +25,7 @@ const iconMap: Record<Category["name"], IconType> = {
     "Engineering": FcEngineering,
     "Accounting": FcSalesPerformance,
     "Computer Science": FcMultipleDevices
-}
+};
 
 export const Categories = ({
     items,
@@ -41,5 +41,5 @@ export const Categories = ({
                 />
             ))}
         </div>
-    )
-}
+    );
+};

@@ -1,4 +1,4 @@
-import { IconBadge } from "@/components/icon-badge"
+import { IconBadge } from "@/components/icon-badge";
 import { LucideIcon } from "lucide-react";
 
 interface InfoCardProps {
@@ -29,5 +29,5 @@ export const InfoCard = ({
                 </p>
             </div>
         </div>
-    )
-}
+    );
+};

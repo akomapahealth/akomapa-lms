@@ -29,7 +29,7 @@ export const ChaptersList = ({
     const [chapters, setChapters] = useState(items);
 
     useEffect(() => {
-        setIsMounted(true)
+        setIsMounted(true);
     }, []);
 
     useEffect(() => {
@@ -59,7 +59,7 @@ export const ChaptersList = ({
         }));
 
         onReorder(bulkUpdateData);
-    }
+    };
 
     if (!isMounted) {
         return null;
@@ -127,5 +127,5 @@ export const ChaptersList = ({
                 )}
             </Droppable>
         </DragDropContext>
-    )
-}
+    );
+};

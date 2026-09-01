@@ -1,5 +1,4 @@
 import { requirePagePrincipal } from "@/lib/auth";
-import { redirect } from "next/navigation";
 
 import { db } from "@/lib/db";
 import { JournalEditor } from "./_components/journal-editor";

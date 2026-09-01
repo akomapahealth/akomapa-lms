@@ -41,7 +41,7 @@ export const ChaptersForm = ({
 
     const toggleCreating = () => {
         setIsCreating((current) => !current);
-    }
+    };
 
     const router = useRouter();
 
@@ -63,7 +63,7 @@ export const ChaptersForm = ({
         } catch {
             toast.error("Something went wrong");
         }
-    }
+    };
 
     const onReorder = async (updateData: { id: string; position: number }[]) => {
         try {
@@ -79,11 +79,11 @@ export const ChaptersForm = ({
         } finally {
             setIsUpdating(false);
         }
-    }
+    };
 
     const onEdit = (id: string) => {
         router.push(`/teacher/courses/${courseId}/chapters/${id}`);
-    }
+    };
 
     return (
         <div className="relative mt-6 border bg-muted rounded-md p-4">
@@ -157,4 +157,4 @@ export const ChaptersForm = ({
             )}
         </div>
     );
-}
+};

@@ -1,5 +1,4 @@
 import { requirePagePrincipal } from "@/lib/auth";
-import { redirect } from "next/navigation";
 import Link from "next/link";
 
 import { getJournalEntries } from "@/actions/get-journal-entries";

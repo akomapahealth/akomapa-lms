@@ -30,7 +30,7 @@ export const CourseEnrollButton = ({
         } finally {
             setIsLoading(false);
         }
-    }
+    };
 
     return (
         <Button
@@ -41,5 +41,5 @@ export const CourseEnrollButton = ({
         >
             Enroll for {formatPrice(price)}
         </Button>
-    )
-}
+    );
+};

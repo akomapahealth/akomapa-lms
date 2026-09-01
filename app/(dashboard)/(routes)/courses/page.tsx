@@ -1,5 +1,4 @@
 import { requirePagePrincipal } from "@/lib/auth";
-import { redirect } from "next/navigation";
 
 import { getEnrolledCourses } from "@/actions/get-enrolled-courses";
 import { getEnrolledModules } from "@/actions/get-enrolled-modules";

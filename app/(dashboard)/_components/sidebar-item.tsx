@@ -31,7 +31,7 @@ export const SidebarItem = ({
 
     const onClick = () => {
         router.push(href);
-    }
+    };
 
     return (
         <button
@@ -53,5 +53,5 @@ export const SidebarItem = ({
             />
             {!collapsed && <span className="truncate">{label}</span>}
         </button>
-    )
-}
+    );
+};

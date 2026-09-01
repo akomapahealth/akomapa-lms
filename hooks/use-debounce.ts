@@ -5,12 +5,12 @@ export function useDebounce<T>(value: T, delay?:number): T {
 
     useEffect(() => {
         const timer = setTimeout(() => {
-            setDebounceValue(value)
+            setDebounceValue(value);
         }, delay || 500);
 
         return () => {
             clearTimeout(timer);
-        }
+        };
     }, [value, delay]);
 
     return debounceValue;

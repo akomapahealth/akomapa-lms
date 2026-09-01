@@ -64,5 +64,5 @@ export const CourseCard = ({
                 </div>
             </div>
         </Link>
-    )
-}
+    );
+};

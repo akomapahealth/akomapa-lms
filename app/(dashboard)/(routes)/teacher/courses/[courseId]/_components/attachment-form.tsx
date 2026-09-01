@@ -18,6 +18,11 @@ interface AttachmentFormProps {
     courseId: string;
 };
 
+// Declared but never enforced: this form submits from a callback rather
+// than through zodResolver, so the schema only supplies a type. Left in
+// place rather than deleted -- the shape it documents is correct, and
+// wiring it up is a behaviour change that belongs with the form work.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const formSchema = z.object({
     url: z.string().min(1),
 });
@@ -55,7 +60,7 @@ export const AttachmentForm = ({
         } finally {
             setDeletingId(null);
         }
-    }
+    };
 
     return (
         <div className="mt-6 border bg-muted rounded-md p-4">
@@ -127,4 +132,4 @@ export const AttachmentForm = ({
             )}
         </div>
     );
-}
+};

@@ -46,13 +46,13 @@ export const getAnalytics = async (userId: string) => {
             data,
             totalRevenue,
             totalSales,
-        }
+        };
     } catch (error) {
         console.log("[GET_ANALYTICS]", error);
         return {
             data: [],
             totalRevenue: 0,
             totalSales: 0,
-        }
+        };
     }
-}
+};

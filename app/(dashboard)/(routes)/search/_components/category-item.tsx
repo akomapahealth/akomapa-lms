@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import qs from "query-string";
 
@@ -37,7 +37,7 @@ export const CategoryItem = ({
         }, {skipNull: true, skipEmptyString: true});
 
         router.push(url);
-    }
+    };
 
     return (
         <button 
@@ -53,5 +53,5 @@ export const CategoryItem = ({
                 {label}
             </div>
         </button>
-    )
-}
+    );
+};

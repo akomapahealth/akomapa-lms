@@ -28,7 +28,7 @@ export const CourseSidebarItem = ({
 
     const onClick = () => {
         router.push(`/courses/${courseId}/chapters/${id}`);
-    }
+    };
     return (
         <button
             onClick={onClick}
@@ -59,5 +59,5 @@ export const CourseSidebarItem = ({
                 )}
             />
         </button>
-    )
-}
+    );
+};

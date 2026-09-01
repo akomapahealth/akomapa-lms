@@ -1,5 +1,4 @@
 import { requirePagePrincipal } from "@/lib/auth";
-import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowUp, ArrowDown, GraduationCap } from "lucide-react";
 

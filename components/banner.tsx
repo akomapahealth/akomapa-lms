@@ -25,7 +25,7 @@ interface BannerProps extends VariantProps<typeof bannerVariants> {
 const iconMap = {
     warning: AlertTriangle,
     success: CheckCircleIcon,
-}
+};
 
 export const Banner = ({
     label,
@@ -38,5 +38,5 @@ export const Banner = ({
             <Icon className="h-4 w-4 mr-2" />
             {label}
         </div>
-    )
-}
+    );
+};

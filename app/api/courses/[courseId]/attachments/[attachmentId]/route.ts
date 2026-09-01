@@ -12,7 +12,6 @@ export async function DELETE(
     try {
         const principal = await requirePrincipal();
         await authorizeCourse(principal, "attachment:delete", routeParams.courseId);
-        const userId = principal.userId;
 
         const attachment = await db.attachment.delete({
             where: {

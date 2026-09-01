@@ -1,5 +1,4 @@
 import { requirePagePrincipal } from "@/lib/auth";
-import { redirect } from "next/navigation";
 
 import { db } from "@/lib/db";
 
@@ -23,6 +22,6 @@ const CoursesPage = async () => {
             <DataTable columns={columns} data={courses} />
         </PageContainer>
      );
-}
+};
  
 export default CoursesPage;

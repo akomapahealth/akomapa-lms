@@ -59,5 +59,5 @@ export const IconBadge = ({
         <div className={cn(backgroundVariants({ variant, size }))}>
             <Icon className={cn(iconVariants({ variant, size }))} />
         </div>
-    )
+    );
 };

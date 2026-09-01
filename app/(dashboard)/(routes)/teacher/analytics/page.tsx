@@ -1,5 +1,4 @@
 import { requirePagePrincipal } from "@/lib/auth";
-import { redirect } from "next/navigation";
 
 import { getAnalytics } from "@/actions/get-analytics";
 import { DataCard } from "@/components/admin/data-card";
@@ -31,6 +30,6 @@ const AnalyticsPage = async () => {
             />
         </PageContainer>
      );
-}
+};
  
 export default AnalyticsPage;

@@ -44,7 +44,7 @@ export const ChapterActions = ({
         } finally {
             setIsLoading(false);
         }
-    }
+    };
 
     const onDelete = async () => {
         try {
@@ -60,7 +60,7 @@ export const ChapterActions = ({
         } finally {
             setIsLoading(false);
         }
-    }
+    };
 
 
     return (
@@ -81,5 +81,5 @@ export const ChapterActions = ({
                 </Button>
             </ConfirmModal>
         </div>
-    )
-}
+    );
+};

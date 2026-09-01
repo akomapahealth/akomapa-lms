@@ -41,5 +41,5 @@ export const CoursesList = ({
                 </div>
             )}
         </div>
-    )
-}
+    );
+};

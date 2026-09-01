@@ -29,7 +29,7 @@ export const SearchInput = () => {
         }, { skipEmptyString: true, skipNull: true});
 
         router.push(url);
-    }, [debounceValue, currentCategoryId, router, pathname])
+    }, [debounceValue, currentCategoryId, router, pathname]);
 
     return (
         <div className="relative">
@@ -43,5 +43,5 @@ export const SearchInput = () => {
                 placeholder="Search for a course..."
             />
         </div>
-    )
-}
+    );
+};

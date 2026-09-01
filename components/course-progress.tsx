@@ -10,12 +10,12 @@ interface CourseProgressProps {
 const colorByVariant = {
     default: "text-akomapa-teal",
     success: "text-success",
-}
+};
 
 const sizeByVariant = {
     default: "text-sm",
     sm: "text-xs",
-}
+};
 
 export const CourseProgress = ({
     value,
@@ -37,5 +37,5 @@ export const CourseProgress = ({
                 {Math.round(value)}% complete
             </p>
         </div>
-    )
-} 
+    );
+}; 

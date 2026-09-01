@@ -30,5 +30,5 @@ export const DataCard = ({
                 </div>
             </CardContent>
         </Card>
-    )
-}
+    );
+};
