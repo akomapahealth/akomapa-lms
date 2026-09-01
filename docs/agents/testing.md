@@ -10,12 +10,14 @@ one is how suites become slow and flaky.
 | Suite | Command | What belongs in it | Owner |
 | --- | --- | --- | --- |
 | Unit | `npm run test:unit` | Pure domain logic: entitlement, RBAC, completion, grading, badges, streaks, certificate eligibility, AI usage accounting | [#106](https://github.com/akomapahealth/akomapa-lms/issues/106) |
-| Integration | not yet available | Route handlers, RLS policies, transactions, migrations, Stripe and Clerk webhooks, against isolated PostgreSQL | [#107](https://github.com/akomapahealth/akomapa-lms/issues/107) |
+| Integration | `npm run test:integration` | Route handlers, RLS policies, transactions, migrations, constraints, concurrency, webhooks — against real PostgreSQL | [#107](https://github.com/akomapahealth/akomapa-lms/issues/107) |
 | Browser | `npm run test:e2e` | Authenticated learner, faculty, admin, commerce, and AI journeys | [#108](https://github.com/akomapahealth/akomapa-lms/issues/108) |
 | Document | `npm run test:checks`, `npm run test:evals` | Source-of-truth documents and the AI evaluation dataset | [#37](https://github.com/akomapahealth/akomapa-lms/issues/37), [#79](https://github.com/akomapahealth/akomapa-lms/issues/79) |
 
 `npm run validate` runs lint, typecheck, and every suite that does not need a
-database or a browser. Run it before opening a pull request.
+database or a browser. Run it before opening a pull request. The integration
+suite is deliberately excluded — it needs PostgreSQL, and `validate` must stay
+runnable anywhere.
 
 ## The unit suite
 
@@ -83,6 +85,54 @@ awarded, that a certificate is not issued. Coverage percentages prove a line
 ran, not that anything was checked — for the highest-risk invariants, corrupt
 the dependency and assert the deny-by-default contract still holds, as
 `tests/unit/roles.test.ts` does at the persistence boundary.
+
+## The integration suite
+
+```
+npm run test:integration
+npm run test:integration:watch
+```
+
+It needs a PostgreSQL server it may create and drop databases on. Point it at
+one with `TEST_DATABASE_URL`, or let it fall back to `DATABASE_URL`:
+
+```
+TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5432/postgres \
+  npm run test:integration
+```
+
+An exported value wins over the dotenv files, so aiming a run at a throwaway
+server is one shell prefix.
+
+### It builds from the committed migrations
+
+Global setup drops and recreates a template database, then applies
+`prisma/migrations` to it with `prisma migrate deploy` — not a schema push. A
+migration that does not apply cleanly fails the build here rather than in
+production. `tests/integration/harness.test.ts` asserts this, so the suite
+cannot quietly start running against an unmigrated database.
+
+### Each worker owns a database
+
+Every worker clones the template with `CREATE DATABASE ... TEMPLATE`, which is a
+file copy, so adding workers costs almost nothing and no two workers can see
+each other's rows. Tables are truncated between tests; every test creates the
+rows it needs.
+
+Databases are named `akomapa_integration_*` and dropped in teardown, including
+any left behind by a killed run.
+
+### What belongs here rather than in the unit suite
+
+Anything a test double cannot observe: a relation name being wrong, a nested
+filter traversing a different relation than it reads like, a unique constraint,
+a cascade, transaction rollback, two concurrent writes racing, and — from #43 —
+row-level security policies. A mock will happily accept two conflicting writes
+and honour no constraint at all.
+
+Route handlers are exercised for real. Only the Clerk session is mocked; the
+principal lookup, authorization, writes, and cascades all run against
+PostgreSQL.
 
 ### Characterisation tests
 
