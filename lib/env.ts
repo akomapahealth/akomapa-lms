@@ -35,8 +35,6 @@ const serverSchema = z.object({
   STRIPE_API_KEY: nonEmpty,
   STRIPE_WEBHOOK_SECRET: nonEmpty,
 
-  // Optional bootstrap admin (prefer User.role in DB)
-  TEACHER_ID: z.string().optional(),
 });
 
 const clientSchema = z.object({

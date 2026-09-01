@@ -20,6 +20,13 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./", import.meta.url)),
+      // `server-only` is a marker package: outside a React Server Component
+      // condition its entry point throws by design. Point it at the package's
+      // own empty build so a server-only module can be unit tested, while the
+      // Next.js build keeps enforcing the real boundary.
+      "server-only": fileURLToPath(
+        new URL("./node_modules/server-only/empty.js", import.meta.url)
+      ),
     },
   },
   test: {
@@ -39,6 +46,7 @@ export default defineConfig({
       reporter: ["text-summary", "lcov", "html"],
       reportsDirectory: "coverage/unit",
       include: [
+        "lib/auth/*.ts",
         "lib/roles.ts",
         "lib/roles-client.ts",
         "lib/streak-service.ts",
@@ -54,6 +62,10 @@ export default defineConfig({
         statements: 90,
         // Authorization is the highest-risk surface in the codebase: every
         // branch of it must be exercised, including the deny-by-default paths.
+        // The permission matrix is the highest-risk code in the repository.
+        "lib/auth/policy.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
+        "lib/auth/actions.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
+        "lib/auth/errors.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
         "lib/roles.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
         "lib/roles-client.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
       },

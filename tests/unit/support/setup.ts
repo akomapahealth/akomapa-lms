@@ -15,9 +15,10 @@ import { resetDbMock } from "./db";
 // Individual tests move the clock with `freezeTimeAt()` from ./time.
 process.env.TZ = "UTC";
 
-// `lib/roles.ts` grants ADMIN to `process.env.TEACHER_ID`. If a developer has
-// that set in a local shell, authorization tests would pass for the wrong
-// reason. Clear it; the tests that care set it explicitly.
+// TEACHER_ID was retired in #42 and now grants nothing, but a stale value in a
+// developer's shell would still make the regression that proves this pass for
+// the wrong reason. Clear it; the tests that assert its irrelevance set it
+// explicitly.
 delete process.env.TEACHER_ID;
 
 const REAL_RANDOM = Math.random;
