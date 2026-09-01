@@ -115,6 +115,55 @@ jobs:
           path: coverage/unit
           retention-days: 7
 
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+
+    # A real PostgreSQL, because the behaviour this job exists to prove -- row
+    # level security, constraints, cascades, transaction and concurrency
+    # semantics -- is invisible to a test double by construction (ADR 0003).
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      # The suite applies the committed migrations to a template database and
+      # clones it per worker, so a migration that does not apply cleanly fails
+      # here rather than in production.
+      - name: Run integration tests
+        run: npm run test:integration
+        env:
+          TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+
+      - name: Report migration state on failure
+        if: failure()
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -d akomapa_integration_template \
+            -c 'SELECT migration_name, finished_at FROM _prisma_migrations ORDER BY started_at' \
+            || echo "template database unavailable"
+
   evals:
     name: AI Evaluation Dataset
     runs-on: ubuntu-latest
