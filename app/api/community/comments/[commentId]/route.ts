@@ -1,8 +1,7 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
-import { isAdmin } from "@/lib/roles";
+import { authorizeComment, requirePrincipal, toResponse } from "@/lib/auth";
 import { logError } from "@/lib/logger";
 
 export async function PATCH(
@@ -10,29 +9,18 @@ export async function PATCH(
   { params }: { params: Promise<{ commentId: string }> }
 ) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
-
     const { commentId } = await params;
+
+    // Author only, deliberately: a moderator may remove a comment but not
+    // rewrite it, because editing leaves someone's name on words they did not
+    // write. See docs/permission-matrix.md; #89 revisits this with audit trails.
+    const principal = await requirePrincipal();
+    await authorizeComment(principal, "comment:update", commentId);
+
     const { content } = await req.json();
 
     if (!content) {
       return new NextResponse("Content is required", { status: 400 });
-    }
-
-    const comment = await db.forumComment.findUnique({
-      where: { id: commentId },
-      select: { userId: true },
-    });
-
-    if (!comment) {
-      return new NextResponse("Not Found", { status: 404 });
-    }
-
-    if (comment.userId !== userId) {
-      return new NextResponse("Forbidden", { status: 403 });
     }
 
     const updated = await db.forumComment.update({
@@ -42,6 +30,9 @@ export async function PATCH(
 
     return NextResponse.json(updated);
   } catch (error) {
+    const denied = toResponse(error);
+    if (denied) return denied;
+
     logError("COMMUNITY_COMMENT_PATCH", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
@@ -52,31 +43,18 @@ export async function DELETE(
   { params }: { params: Promise<{ commentId: string }> }
 ) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
-
     const { commentId } = await params;
 
-    const comment = await db.forumComment.findUnique({
-      where: { id: commentId },
-      select: { userId: true },
-    });
-
-    if (!comment) {
-      return new NextResponse("Not Found", { status: 404 });
-    }
-
-    const admin = await isAdmin(userId);
-    if (comment.userId !== userId && !admin) {
-      return new NextResponse("Forbidden", { status: 403 });
-    }
+    const principal = await requirePrincipal();
+    await authorizeComment(principal, "comment:delete", commentId);
 
     await db.forumComment.delete({ where: { id: commentId } });
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    const denied = toResponse(error);
+    if (denied) return denied;
+
     logError("COMMUNITY_COMMENT_DELETE", error);
     return new NextResponse("Internal Error", { status: 500 });
   }

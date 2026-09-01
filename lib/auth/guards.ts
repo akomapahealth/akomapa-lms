@@ -91,6 +91,73 @@ export async function authorizeModuleInCourse(
 }
 
 /**
+ * Loads a Quiz, asserting the full Course -> Quiz relationship.
+ *
+ * The `courseId` in the query is what stops a Quiz id belonging to a Course the
+ * principal does not own from being accepted through the route parameter.
+ */
+export async function authorizeQuizInCourse(
+  principal: Principal,
+  action: Action,
+  courseId: string,
+  quizId: string
+) {
+  await authorizeCourse(principal, action, courseId);
+
+  const quiz = await db.quiz.findFirst({ where: { id: quizId, courseId } });
+
+  if (!quiz) throw new Denied("not_found", action);
+  return quiz;
+}
+
+/**
+ * Loads a Question, asserting the full Course -> Quiz -> Question relationship.
+ *
+ * The authoring routes previously wrote with `where: { id: questionId }` alone,
+ * so a faculty member could edit or delete any Question in the product by
+ * supplying its id. Every link in the chain is now asserted in one query.
+ */
+export async function authorizeQuestionInCourse(
+  principal: Principal,
+  action: Action,
+  courseId: string,
+  quizId: string,
+  questionId: string
+) {
+  await authorizeCourse(principal, action, courseId);
+
+  const question = await db.question.findFirst({
+    where: { id: questionId, quizId, quiz: { courseId } },
+  });
+
+  if (!question) throw new Denied("not_found", action);
+  return question;
+}
+
+/**
+ * Loads a Case Study, asserting Course -> Module -> Topic -> Case Study.
+ *
+ * A Case Study hangs off a Topic, which hangs off a Module, which belongs to a
+ * Course. Nothing but that chain establishes who may author it, so the whole
+ * chain is asserted in the query rather than trusting the route parameter.
+ */
+export async function authorizeCaseStudyInCourse(
+  principal: Principal,
+  action: Action,
+  courseId: string,
+  caseStudyId: string
+) {
+  await authorizeCourse(principal, action, courseId);
+
+  const caseStudy = await db.caseStudy.findFirst({
+    where: { id: caseStudyId, topic: { module: { courseId } } },
+  });
+
+  if (!caseStudy) throw new Denied("not_found", action);
+  return caseStudy;
+}
+
+/**
  * Authorizes an action on learner-authored content.
  *
  * The author may act on their own content; a moderator may act on anyone's.

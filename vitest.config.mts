@@ -47,7 +47,6 @@ export default defineConfig({
       reportsDirectory: "coverage/unit",
       include: [
         "lib/auth/*.ts",
-        "lib/roles.ts",
         "lib/streak-service.ts",
         "lib/badge-service.ts",
         "lib/certificate-service.ts",
@@ -65,7 +64,6 @@ export default defineConfig({
         "lib/auth/policy.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
         "lib/auth/actions.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
         "lib/auth/errors.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
-        "lib/roles.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
       },
     },
   },

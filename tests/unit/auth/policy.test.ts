@@ -32,6 +32,9 @@ const faculty = asRole("FACULTY");
 const admin = asRole("ADMIN");
 const otherFaculty = asRole("FACULTY", OTHER);
 const otherAdmin = asRole("ADMIN", OTHER);
+// A moderator who is NOT the author. `otherAdmin` shares OTHER's id, so using it
+// against OTHER's content tests the author path, not the moderator path.
+const moderator = asRole("ADMIN", "user_moderator");
 
 const ownedCourse: Resource = { kind: "course", ownerId: OWNER };
 const otherCourse: Resource = { kind: "course", ownerId: OTHER };
@@ -44,12 +47,8 @@ const ADMIN_ONLY: Action[] = [
   "role:manage",
 ];
 const FACULTY_GLOBAL: Action[] = ["course:create", "upload:courseAsset", "staff:access"];
-const AUTHOR_OR_MODERATOR: Action[] = [
-  "post:update",
-  "post:delete",
-  "comment:update",
-  "comment:delete",
-];
+const AUTHOR_OR_MODERATOR: Action[] = ["post:update", "post:delete", "comment:delete"];
+const AUTHOR_ONLY: Action[] = ["comment:update"];
 const ACTIVE_ENROLLMENT: Action[] = ["course:learn"];
 const RESERVED: Action[] = ["billing:administer", "ai:administer"];
 const FACULTY_OWNED: Action[] = ACTIONS.filter(
@@ -57,6 +56,7 @@ const FACULTY_OWNED: Action[] = ACTIONS.filter(
     !ADMIN_ONLY.includes(action) &&
     !FACULTY_GLOBAL.includes(action) &&
     !AUTHOR_OR_MODERATOR.includes(action) &&
+    !AUTHOR_ONLY.includes(action) &&
     !ACTIVE_ENROLLMENT.includes(action) &&
     !RESERVED.includes(action)
 );
@@ -67,6 +67,7 @@ describe("the matrix is total", () => {
       ...ADMIN_ONLY,
       ...FACULTY_GLOBAL,
       ...AUTHOR_OR_MODERATOR,
+      ...AUTHOR_ONLY,
       ...ACTIVE_ENROLLMENT,
       ...RESERVED,
       ...FACULTY_OWNED,
@@ -220,8 +221,8 @@ describe("author-or-moderator actions", () => {
       expect(can(faculty, action, theirs)).toBe(false);
     });
 
-    it(`allows ADMIN to act on anyone's content for ${action}`, () => {
-      expect(can(otherAdmin, action, theirs)).toBe(true);
+    it(`allows a moderator to act on anyone's content for ${action}`, () => {
+      expect(can(moderator, action, theirs)).toBe(true);
     });
 
     it(`refuses ${action} when the resource is not authored content`, () => {
@@ -234,6 +235,30 @@ describe("author-or-moderator actions", () => {
       // *principal* id is covered by the deny-by-default block below; this is
       // the other half of the pair.
       expect(can(student, action, { kind: "authored", authorId: "" })).toBe(false);
+    });
+  }
+});
+
+describe("author-only actions", () => {
+  const mine: Resource = { kind: "authored", authorId: OWNER };
+  const theirs: Resource = { kind: "authored", authorId: OTHER };
+
+  for (const action of AUTHOR_ONLY) {
+    it(`allows the author for ${action}`, () => {
+      expect(can(student, action, mine)).toBe(true);
+    });
+
+    it(`refuses a moderator for ${action}`, () => {
+      // A moderator may remove a comment but not rewrite it: editing leaves
+      // someone's name on words they did not write, and the person it happened
+      // to cannot see that it did.
+      expect(can(moderator, action, theirs)).toBe(false);
+      expect(can(moderator, action, mine)).toBe(false);
+    });
+
+    it(`refuses a non-author of any role for ${action}`, () => {
+      expect(can(student, action, theirs)).toBe(false);
+      expect(can(faculty, action, theirs)).toBe(false);
     });
   }
 });

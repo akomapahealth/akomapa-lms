@@ -1,8 +1,7 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
-import { isAdmin } from "@/lib/roles";
+import { requireCapability, requirePrincipal, toResponse } from "@/lib/auth";
 import { logError } from "@/lib/logger";
 
 export async function GET() {
@@ -13,6 +12,9 @@ export async function GET() {
 
     return NextResponse.json(categories);
   } catch (error) {
+    const denied = toResponse(error);
+    if (denied) return denied;
+
     logError("COMMUNITY_CATEGORIES_GET", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
@@ -20,11 +22,8 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const { userId } = await auth();
-    if (!userId) return new NextResponse("Unauthorized", { status: 401 });
-
-    const admin = await isAdmin(userId);
-    if (!admin) return new NextResponse("Forbidden", { status: 403 });
+    const principal = await requirePrincipal();
+    requireCapability(principal, "community:moderate");
 
     const { name, description, color, position } = await req.json();
 
@@ -36,6 +35,9 @@ export async function POST(req: Request) {
 
     return NextResponse.json(category);
   } catch (error) {
+    const denied = toResponse(error);
+    if (denied) return denied;
+
     logError("COMMUNITY_CATEGORIES_POST", error);
     return new NextResponse("Internal Error", { status: 500 });
   }

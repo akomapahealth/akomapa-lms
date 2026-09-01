@@ -7,9 +7,17 @@
  * reaches production, because a deployment with no ADMIN row cannot be
  * administered and cannot repair itself.
  *
+ *   npm run role:grant -- --email someone@example.com --role ADMIN
  *   npm run role:grant -- --user user_2abc --role ADMIN
+ *   npm run role:find  -- --email someone@example.com
  *   npm run role:list
  *   npm run role:check
+ *
+ * Prefer --email. Clerk keeps separate user directories for its development and
+ * production instances, so the same person has a different user_... id in each.
+ * A development id can never match a production User row, and nothing in the id
+ * says which instance produced it, so the mistake is silent. Email is stable
+ * across both, and the row is already in whichever database this is pointed at.
  *
  * See docs/permission-matrix.md and docs/adr/0001-identity-authentication-and-rbac.md.
  */
@@ -79,42 +87,91 @@ function isRole(value: string | undefined): value is Role {
   return ROLES.includes(value as Role);
 }
 
+/** Resolves the target user from --email or --user. */
+async function resolveTarget(): Promise<
+  { id: string; role: string } | { error: string }
+> {
+  const email = flag("email");
+  const userId = flag("user");
+
+  if (email && userId) {
+    return { error: "Pass either --email or --user, not both." };
+  }
+
+  if (email) {
+    const user = await database.user.findUnique({
+      where: { email },
+      select: { id: true, role: true },
+    });
+    if (!user) {
+      return {
+        error:
+          `No User row with email ${email} in this database. Confirm the ` +
+          `target line above is the environment you meant, and that the person ` +
+          `has signed in there at least once so the Clerk webhook created ` +
+          `their row.`,
+      };
+    }
+    return user;
+  }
+
+  if (userId) {
+    const user = await database.user.findUnique({
+      where: { id: userId },
+      select: { id: true, role: true },
+    });
+    if (!user) {
+      // The row is created by the Clerk webhook on first sign-in. Creating one
+      // here would invent a user that Clerk does not know about, so refuse. A
+      // frequent cause is an id copied from the development Clerk instance,
+      // which cannot match a production row.
+      return {
+        error:
+          `No User row for ${userId} in this database. Either the person has ` +
+          `not signed in here yet, or this id came from a different Clerk ` +
+          `instance -- development and production ids differ. Try --email.`,
+      };
+    }
+    return user;
+  }
+
+  return { error: "Missing --email <address> or --user <clerkUserId>." };
+}
+
 /** Grants a role. Idempotent: re-running with the same values changes nothing. */
 async function grant(): Promise<number> {
-  const userId = flag("user");
   const role = flag("role");
 
-  if (!userId) {
-    console.error("Missing --user <clerkUserId>.");
-    return 1;
-  }
   if (!isRole(role)) {
     console.error(`Missing or invalid --role. Expected one of: ${ROLES.join(", ")}.`);
     return 1;
   }
 
-  const existing = await database.user.findUnique({
-    where: { id: userId },
-    select: { role: true },
-  });
-
-  if (!existing) {
-    // The row is created by the Clerk webhook on first sign-in. Creating one
-    // here would invent a user that Clerk does not know about, so refuse.
-    console.error(
-      `No User row for ${userId}. The user must sign in once so the Clerk ` +
-        `webhook creates their record, then re-run this command.`
-    );
+  const target = await resolveTarget();
+  if ("error" in target) {
+    console.error(target.error);
     return 1;
   }
 
-  if (existing.role === role) {
-    console.log(`${userId} already has role ${role}. Nothing to do.`);
+  if (target.role === role) {
+    console.log(`${target.id} already has role ${role}. Nothing to do.`);
     return 0;
   }
 
-  await database.user.update({ where: { id: userId }, data: { role } });
-  console.log(`${userId}: ${existing.role} -> ${role}`);
+  await database.user.update({ where: { id: target.id }, data: { role } });
+  console.log(`${target.id}: ${target.role} -> ${role}`);
+  return 0;
+}
+
+/** Looks up one user's id and role in the database being targeted. */
+async function find(): Promise<number> {
+  const target = await resolveTarget();
+  if ("error" in target) {
+    console.error(target.error);
+    return 1;
+  }
+
+  console.log(`${target.role.padEnd(7)} ${target.id}`);
   return 0;
 }
 
@@ -154,7 +211,7 @@ async function check(): Promise<number> {
   return 0;
 }
 
-const COMMANDS: Record<string, () => Promise<number>> = { grant, list, check };
+const COMMANDS: Record<string, () => Promise<number>> = { grant, find, list, check };
 
 async function main() {
   const command = process.argv[2];
