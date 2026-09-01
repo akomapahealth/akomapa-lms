@@ -69,6 +69,10 @@ CHANGELOG.md
 # The permission matrix: the authorization rules every contributor and agent
 # must implement against, asserted by tests/unit/auth/policy.test.ts.
 !/docs/permission-matrix.md
+# Operational runbooks: procedures a deploy or an incident depends on. A runbook
+# that exists only on one machine is not a runbook.
+!/docs/runbooks/
+!/docs/runbooks/**
 # Phase specifications: the historical record the release matrix audits
 # against. Committed so that audit is reproducible by anyone.
 !/docs/phase-1.md
