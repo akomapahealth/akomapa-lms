@@ -1,8 +1,10 @@
+import type { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { authorizeCourse, requirePrincipal, toResponse } from "@/lib/auth";
 import { caseStudyScenarioSchema } from "@/lib/case-study-types";
+import { sanitizeScenario } from "@/lib/case-study-sanitize";
 import { logError } from "@/lib/logger";
 
 export async function POST(
@@ -48,7 +50,11 @@ export async function POST(
         topicId,
         title,
         description: description || "",
-        scenario,
+        // The parsed value, sanitized: storing the raw body kept unknown
+        // fields, and storing unsanitized rich text is what made the player a
+        // stored-XSS vector. Reads sanitize as well, since rows written before
+        // this are still untrusted.
+        scenario: sanitizeScenario(parsed.data) as unknown as Prisma.InputJsonValue,
       },
     });
 

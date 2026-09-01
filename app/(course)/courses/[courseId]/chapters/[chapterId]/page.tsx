@@ -14,6 +14,7 @@ import { CourseEnrollButton } from "./_components/course-enroll-button";
 import { CourseProgressButton } from "./_components/course-progress-button";
 import { CaseStudyPlayer } from "./_components/case-study-player";
 import { type CaseStudyScenario } from "@/lib/case-study-types";
+import { sanitizeScenario } from "@/lib/case-study-sanitize";
 import { db } from "@/lib/db";
 
 const ChapterIdPage = async ({
@@ -84,7 +85,7 @@ const ChapterIdPage = async ({
                         <CaseStudyPlayer
                             caseStudyId={caseStudy.id}
                             title={caseStudy.title}
-                            scenario={caseStudy.scenario as unknown as CaseStudyScenario}
+                            scenario={sanitizeScenario(caseStudy.scenario as unknown as CaseStudyScenario)}
                             courseId={courseId}
                         />
                     ) : (

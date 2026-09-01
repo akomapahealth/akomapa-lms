@@ -69,6 +69,16 @@ one. The permission matrix in `lib/auth/policy.ts` is held at 100%.
 Adding a module to the list without tests will fail the build. That is the
 intent.
 
+### Rich text is sanitized on the server
+
+`lib/text/sanitize-html.ts` is `server-only` deliberately. Sanitizing in the
+browser would still ship the unsafe markup to it first; doing it on the server
+means the raw string never leaves. Anything rendered through
+`dangerouslySetInnerHTML` must be sanitized on the server side of the boundary,
+and its allow-list matches what the editor can produce rather than "the safe
+subset of HTML" — so anything else in a stored value arrived from somewhere
+other than the editor.
+
 ### Identity has one entrance
 
 `getPrincipal`, `requirePrincipal`, and `requirePagePrincipal` in `lib/auth` are

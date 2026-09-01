@@ -50,6 +50,7 @@ export default defineConfig({
         "lib/courses/*.ts",
         "lib/assessments/*.ts",
         "lib/text/*.ts",
+        "lib/case-study-sanitize.ts",
         "lib/streak-service.ts",
         "lib/badge-service.ts",
         "lib/certificate-service.ts",
@@ -77,6 +78,9 @@ export default defineConfig({
         // Excerpt generation from stored rich text; CodeQL flagged the previous
         // single-pass version at four call sites.
         "lib/text/strip-html.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
+        // The stored-XSS boundary for author-written rich text.
+        "lib/text/sanitize-html.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
+        "lib/case-study-sanitize.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
       },
     },
   },

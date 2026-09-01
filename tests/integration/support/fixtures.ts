@@ -91,3 +91,16 @@ export async function aQuizWithQuestion(courseId: string) {
 export async function anAttemptRow(userId: string, quizId: string) {
   return testDb().quizAttempt.create({ data: { userId, quizId } });
 }
+
+/** A Topic with a Case Study attached, for the authoring routes. */
+export async function aCaseStudyRow(topicId: string, scenario: unknown) {
+  return testDb().caseStudy.create({
+    data: {
+      id: unique("case_study"),
+      topicId,
+      title: "Consent in the field",
+      description: "A scenario",
+      scenario: scenario as never,
+    },
+  });
+}
