@@ -68,6 +68,8 @@ export default defineConfig({
         // The Course -> Module -> Topic binding is the fix for #39; every branch
         // of it must be exercised.
         "lib/courses/topic-access.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
+        // Completion decides certificate issuance.
+        "lib/courses/completion.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
       },
     },
   },
