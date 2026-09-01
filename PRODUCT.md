@@ -64,7 +64,7 @@ leadership capability, and hold evidence of it that someone else can verify.
   problems, and answer "is this working" with evidence.
 
 `STUDENT`, `FACULTY`, and `ADMIN` are the persisted role values
-(`lib/roles.ts`). "Learner" is the product word for `STUDENT`; see
+(`lib/auth/`). "Learner" is the product word for `STUDENT`; see
 [CONTEXT.md](CONTEXT.md).
 
 ## Product Purpose

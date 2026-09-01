@@ -6,10 +6,13 @@ import { dbMock } from "../support/db";
 vi.mock("@/lib/db", async () => ({ db: (await import("../support/db")).dbMock }));
 
 const {
+  authorizeCaseStudyInCourse,
   authorizeComment,
   authorizeCourse,
   authorizeModuleInCourse,
   authorizePost,
+  authorizeQuestionInCourse,
+  authorizeQuizInCourse,
   requireCapability,
 } = await import("@/lib/auth/guards");
 const { Denied } = await import("@/lib/auth/errors");
@@ -134,6 +137,120 @@ describe("authorizeModuleInCourse", () => {
 
     expect(
       await reasonFor(authorizeModuleInCourse(faculty, "topic:update", "course_1", "module_9"))
+    ).toBe("not_found");
+  });
+});
+
+describe("authorizeQuizInCourse", () => {
+  beforeEach(() => {
+    dbMock.course.findFirst.mockResolvedValue({ id: "course_1", userId: "user_owner" });
+    dbMock.quiz.findFirst.mockResolvedValue({ id: "quiz_1", courseId: "course_1" });
+  });
+
+  it("binds the Quiz to the Course in the query", async () => {
+    await authorizeQuizInCourse(faculty, "quiz:update", "course_1", "quiz_1");
+
+    expect(dbMock.quiz.findFirst).toHaveBeenCalledWith({
+      where: { id: "quiz_1", courseId: "course_1" },
+    });
+  });
+
+  it("refuses a Quiz belonging to another Course as not_found", async () => {
+    dbMock.quiz.findFirst.mockResolvedValue(null);
+
+    expect(
+      await reasonFor(authorizeQuizInCourse(faculty, "quiz:update", "course_1", "quiz_9"))
+    ).toBe("not_found");
+  });
+
+  it("checks Course ownership before looking at the Quiz at all", async () => {
+    dbMock.course.findFirst.mockResolvedValue(null);
+
+    expect(
+      await reasonFor(authorizeQuizInCourse(faculty, "quiz:update", "course_9", "quiz_1"))
+    ).toBe("not_found");
+    expect(dbMock.quiz.findFirst).not.toHaveBeenCalled();
+  });
+});
+
+describe("authorizeQuestionInCourse", () => {
+  beforeEach(() => {
+    dbMock.course.findFirst.mockResolvedValue({ id: "course_1", userId: "user_owner" });
+    dbMock.question.findFirst.mockResolvedValue({ id: "question_1", quizId: "quiz_1" });
+  });
+
+  it("asserts every link of Course to Quiz to Question in one query", async () => {
+    await authorizeQuestionInCourse(
+      faculty,
+      "question:update",
+      "course_1",
+      "quiz_1",
+      "question_1"
+    );
+
+    // The authoring routes previously wrote with `where: { id: questionId }`
+    // alone, so any Question in the product could be edited by id.
+    expect(dbMock.question.findFirst).toHaveBeenCalledWith({
+      where: { id: "question_1", quizId: "quiz_1", quiz: { courseId: "course_1" } },
+    });
+  });
+
+  it("refuses a Question from another Quiz", async () => {
+    dbMock.question.findFirst.mockResolvedValue(null);
+
+    expect(
+      await reasonFor(
+        authorizeQuestionInCourse(faculty, "question:delete", "course_1", "quiz_1", "question_9")
+      )
+    ).toBe("not_found");
+  });
+
+  it("refuses a learner before touching the database", async () => {
+    expect(
+      await reasonFor(
+        authorizeQuestionInCourse(student, "question:delete", "course_1", "quiz_1", "question_1")
+      )
+    ).toBe("forbidden");
+    expect(dbMock.question.findFirst).not.toHaveBeenCalled();
+  });
+});
+
+describe("authorizeCaseStudyInCourse", () => {
+  beforeEach(() => {
+    dbMock.course.findFirst.mockResolvedValue({ id: "course_1", userId: "user_owner" });
+    dbMock.caseStudy.findFirst.mockResolvedValue({ id: "case_1", topicId: "topic_1" });
+  });
+
+  it("asserts Course to Module to Topic to Case Study in one query", async () => {
+    await authorizeCaseStudyInCourse(faculty, "caseStudy:update", "course_1", "case_1");
+
+    expect(dbMock.caseStudy.findFirst).toHaveBeenCalledWith({
+      where: { id: "case_1", topic: { module: { courseId: "course_1" } } },
+    });
+  });
+
+  it("refuses a Case Study belonging to another Course", async () => {
+    dbMock.caseStudy.findFirst.mockResolvedValue(null);
+
+    expect(
+      await reasonFor(authorizeCaseStudyInCourse(faculty, "caseStudy:delete", "course_1", "case_9"))
+    ).toBe("not_found");
+  });
+
+  it("refuses a learner before touching the database", async () => {
+    expect(
+      await reasonFor(authorizeCaseStudyInCourse(student, "caseStudy:update", "course_1", "case_1"))
+    ).toBe("forbidden");
+    expect(dbMock.caseStudy.findFirst).not.toHaveBeenCalled();
+  });
+
+  it("does not exempt an ADMIN who does not own the Course", async () => {
+    // Case studies previously gated on isAdmin with no ownership check at all,
+    // so any administrator could edit any Course's case studies.
+    dbMock.course.findFirst.mockResolvedValue(null);
+
+    expect(
+      await reasonFor(authorizeCaseStudyInCourse(admin, "caseStudy:update", "course_1", "case_1"))
     ).toBe("not_found");
   });
 });

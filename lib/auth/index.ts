@@ -23,10 +23,13 @@ export {
 } from "./errors";
 export { getPrincipal, requirePrincipal } from "./principal";
 export {
+  authorizeCaseStudyInCourse,
   authorizeComment,
   authorizeCourse,
   authorizeModuleInCourse,
   authorizePost,
+  authorizeQuestionInCourse,
+  authorizeQuizInCourse,
   requireCapability,
 } from "./guards";
 export {

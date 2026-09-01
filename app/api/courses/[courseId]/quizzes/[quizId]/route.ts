@@ -1,8 +1,7 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
-import { isFaculty } from "@/lib/roles";
+import { authorizeQuizInCourse, requirePrincipal, toResponse } from "@/lib/auth";
 import { quizUpdateSchema } from "@/lib/validations/quiz";
 import { logError } from "@/lib/logger";
 
@@ -13,16 +12,13 @@ export async function PATCH(
   const routeParams = await params;
 
   try {
-    const { userId } = await auth();
-
-    if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
-
-    const faculty = await isFaculty(userId);
-    if (!faculty) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
+    const principal = await requirePrincipal();
+    await authorizeQuizInCourse(
+      principal,
+      "quiz:update",
+      routeParams.courseId,
+      routeParams.quizId
+    );
 
     const body = await req.json();
 
@@ -41,6 +37,9 @@ export async function PATCH(
 
     return NextResponse.json(quiz);
   } catch (error) {
+    const denied = toResponse(error);
+    if (denied) return denied;
+
     logError("QUIZ_ID", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
@@ -53,16 +52,13 @@ export async function DELETE(
   const routeParams = await params;
 
   try {
-    const { userId } = await auth();
-
-    if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
-
-    const faculty = await isFaculty(userId);
-    if (!faculty) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
+    const principal = await requirePrincipal();
+    await authorizeQuizInCourse(
+      principal,
+      "quiz:delete",
+      routeParams.courseId,
+      routeParams.quizId
+    );
 
     const quiz = await db.quiz.delete({
       where: {
@@ -73,6 +69,9 @@ export async function DELETE(
 
     return NextResponse.json(quiz);
   } catch (error) {
+    const denied = toResponse(error);
+    if (denied) return denied;
+
     logError("QUIZ_ID_DELETE", error);
     return new NextResponse("Internal Error", { status: 500 });
   }

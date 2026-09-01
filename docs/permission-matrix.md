@@ -37,6 +37,7 @@ Each action maps to exactly one rule.
 | `facultyGlobal` | `FACULTY` or `ADMIN`. No resource ownership required. |
 | `facultyOwned` | `FACULTY` or `ADMIN` **and** the principal owns the resource. |
 | `authorOrModerator` | The content's author, or any principal holding `community:moderate`. |
+| `authorOnly` | The content's author, and nobody else — not even a moderator. |
 | `activeEnrollment` | An Enrollment whose status is `ACTIVE` or `COMPLETED`. |
 | `reserved` | Denied unconditionally until the owning issue implements the surface. |
 
@@ -84,11 +85,19 @@ changing this table and the tests that assert it, deliberately.
 | Action | Rule | STUDENT (author) | STUDENT (other) | FACULTY (other) | ADMIN |
 | --- | --- | --- | --- | --- | --- |
 | `post:update`, `post:delete` | `authorOrModerator` | allow | deny | deny | allow |
-| `comment:update`, `comment:delete` | `authorOrModerator` | allow | deny | deny | allow |
+| `comment:delete` | `authorOrModerator` | allow | deny | deny | allow |
+| `comment:update` | `authorOnly` | allow | deny | deny | **deny** |
 | `community:moderate` | `adminOnly` | deny | deny | deny | allow |
 
 `community:moderate` covers pinning, locking, category management, and acting on
 content the principal did not write.
+
+**`comment:update` is author-only on purpose.** A moderator may remove a comment
+but not rewrite it: editing leaves someone's name on words they did not write,
+which is a worse outcome than removal and is invisible to the person it happened
+to. This preserves the behaviour the comment route has always had.
+[#89](https://github.com/akomapahealth/akomapa-lms/issues/89) revisits it when it
+adds audit trails and reversible moderation.
 
 ### Administration
 
@@ -146,12 +155,25 @@ There is no in-app way to grant the first ADMIN, so a deployment with no ADMIN
 row cannot be administered and cannot repair itself. Before deploying:
 
 ```
-npm run role:grant -- --user <clerkUserId> --role ADMIN
+npm run role:grant -- --email someone@example.com --role ADMIN
 npm run role:list     # confirm
 npm run role:check    # exits non-zero if no ADMIN exists
 ```
 
 The user must sign in once first, so the Clerk webhook creates their `User` row.
+
+**Prefer `--email` over `--user`.** Clerk keeps separate user directories for its
+development and production instances, so the same person has a *different*
+`user_...` id in each. A development id can never match a production `User` row,
+and nothing in the id says which instance produced it — so the mistake is silent.
+Email is stable across both, and the row is already in whichever database the
+command is pointed at, so nothing has to be copied between systems.
+
+To read an id out of a specific environment rather than the Clerk dashboard:
+
+```
+npm run role:find -- --email someone@example.com
+```
 
 ### Running against production
 

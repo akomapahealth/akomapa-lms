@@ -48,6 +48,14 @@ type Rule =
   | "facultyOwned"
   /** The author, or anyone holding `community:moderate`. */
   | "authorOrModerator"
+  /**
+   * The author, and nobody else -- not even a moderator.
+   *
+   * Editing someone's words leaves their name on text they did not write, which
+   * is worse than removing it. Moderation removes; it does not rewrite. #89
+   * revisits this when it adds audit trails and reversible actions.
+   */
+  | "authorOnly"
   /** A learner whose Enrollment is not suspended. */
   | "activeEnrollment"
   /** Reserved: denied unconditionally until the owning issue implements it. */
@@ -93,7 +101,7 @@ const RULES: Record<Action, Rule> = {
   "community:moderate": "adminOnly",
   "post:update": "authorOrModerator",
   "post:delete": "authorOrModerator",
-  "comment:update": "authorOrModerator",
+  "comment:update": "authorOnly",
   "comment:delete": "authorOrModerator",
 
   "staff:access": "facultyGlobal",
@@ -150,6 +158,14 @@ function ownsForAuthoring(principal: Principal, resource: Resource): boolean {
   }
 }
 
+function isAuthor(principal: Principal, resource: Resource): boolean {
+  return (
+    resource.kind === "authored" &&
+    resource.authorId.length > 0 &&
+    principal.userId === resource.authorId
+  );
+}
+
 /**
  * The authorization decision.
  *
@@ -192,11 +208,10 @@ export function can(
 
     case "authorOrModerator":
       if (role === "ADMIN") return true;
-      return (
-        resource.kind === "authored" &&
-        resource.authorId.length > 0 &&
-        principal.userId === resource.authorId
-      );
+      return isAuthor(principal, resource);
+
+    case "authorOnly":
+      return isAuthor(principal, resource);
 
     case "activeEnrollment":
       // Entitlement in full is ADR 0002 / #48. What this rule owns is the

@@ -1,8 +1,7 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
-import { isAdmin } from "@/lib/roles";
+import { authorizePost, requirePrincipal, toResponse } from "@/lib/auth";
 import { logError } from "@/lib/logger";
 
 export async function GET(
@@ -10,10 +9,7 @@ export async function GET(
   { params }: { params: Promise<{ postId: string }> }
 ) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
+    const { userId } = await requirePrincipal();
 
     const { postId } = await params;
 
@@ -79,6 +75,9 @@ export async function GET(
 
     return NextResponse.json(post);
   } catch (error) {
+    const denied = toResponse(error);
+    if (denied) return denied;
+
     logError("COMMUNITY_POST_GET", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
@@ -89,27 +88,14 @@ export async function PATCH(
   { params }: { params: Promise<{ postId: string }> }
 ) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
-
     const { postId } = await params;
+
+    // Author or moderator. The rule lives in lib/auth/policy.ts rather than
+    // being re-derived at each of the call sites that used to inline it.
+    const principal = await requirePrincipal();
+    await authorizePost(principal, "post:update", postId);
+
     const { title, content, categoryId } = await req.json();
-
-    const post = await db.forumPost.findUnique({
-      where: { id: postId },
-      select: { userId: true },
-    });
-
-    if (!post) {
-      return new NextResponse("Not Found", { status: 404 });
-    }
-
-    const admin = await isAdmin(userId);
-    if (post.userId !== userId && !admin) {
-      return new NextResponse("Forbidden", { status: 403 });
-    }
 
     const updated = await db.forumPost.update({
       where: { id: postId },
@@ -122,6 +108,9 @@ export async function PATCH(
 
     return NextResponse.json(updated);
   } catch (error) {
+    const denied = toResponse(error);
+    if (denied) return denied;
+
     logError("COMMUNITY_POST_PATCH", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
@@ -132,31 +121,18 @@ export async function DELETE(
   { params }: { params: Promise<{ postId: string }> }
 ) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
-
     const { postId } = await params;
 
-    const post = await db.forumPost.findUnique({
-      where: { id: postId },
-      select: { userId: true },
-    });
-
-    if (!post) {
-      return new NextResponse("Not Found", { status: 404 });
-    }
-
-    const admin = await isAdmin(userId);
-    if (post.userId !== userId && !admin) {
-      return new NextResponse("Forbidden", { status: 403 });
-    }
+    const principal = await requirePrincipal();
+    await authorizePost(principal, "post:delete", postId);
 
     await db.forumPost.delete({ where: { id: postId } });
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    const denied = toResponse(error);
+    if (denied) return denied;
+
     logError("COMMUNITY_POST_DELETE", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
