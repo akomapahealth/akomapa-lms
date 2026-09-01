@@ -3,8 +3,15 @@ import { db } from "@/lib/db";
 export type UserRole = "STUDENT" | "FACULTY" | "ADMIN";
 
 export async function getUserRole(userId: string): Promise<UserRole> {
-  // Fallback: check server-only env var for backward compatibility
-  if (userId === process.env.TEACHER_ID) {
+  // Fallback: check server-only env var for backward compatibility.
+  // Both sides must be non-empty. `TEACHER_ID` is `z.string().optional()`, so a
+  // blank value is valid configuration, and a blank `userId` is what an
+  // unauthenticated caller produces — comparing them would grant ADMIN to
+  // anonymous requests on any deployment that defines the variable but leaves
+  // it empty. Callers guard with `if (!userId)` today; this makes the grant
+  // safe regardless of whether a future caller remembers to.
+  const teacherId = process.env.TEACHER_ID;
+  if (teacherId && userId && userId === teacherId) {
     return "ADMIN";
   }
 
