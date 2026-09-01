@@ -1,8 +1,10 @@
+import type { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { authorizeCaseStudyInCourse, requirePrincipal, toResponse } from "@/lib/auth";
 import { caseStudyScenarioSchema } from "@/lib/case-study-types";
+import { sanitizeScenario } from "@/lib/case-study-sanitize";
 import { logError } from "@/lib/logger";
 
 export async function PATCH(
@@ -18,8 +20,12 @@ export async function PATCH(
     const values = await req.json();
 
     // Validate scenario if provided
+    let sanitizedScenario: ReturnType<typeof sanitizeScenario> | null = null;
     if (values.scenario) {
       const parsed = caseStudyScenarioSchema.safeParse(values.scenario);
+      if (parsed.success) {
+        sanitizedScenario = sanitizeScenario(parsed.data);
+      }
       if (!parsed.success) {
         return NextResponse.json(
           { error: "Invalid scenario structure", details: parsed.error.flatten() },
@@ -33,7 +39,10 @@ export async function PATCH(
       data: {
         ...(values.title && { title: values.title }),
         ...(values.description !== undefined && { description: values.description }),
-        ...(values.scenario && { scenario: values.scenario }),
+        // Sanitized, and taken from the parsed value rather than the body.
+        ...(sanitizedScenario && {
+          scenario: sanitizedScenario as unknown as Prisma.InputJsonValue,
+        }),
       },
     });
 
