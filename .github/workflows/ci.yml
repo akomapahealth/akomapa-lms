@@ -85,6 +85,36 @@ jobs:
 
       - run: npm run typecheck
 
+  unit:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      # Domain unit suite: entitlement, RBAC, completion, grading, badges,
+      # streaks, and certificate eligibility. Runs with coverage because the
+      # per-file thresholds in vitest.config.mts are the gate -- a module in the
+      # allow-list that loses coverage fails the build rather than quietly
+      # lowering an average. No database, no network: the suite stubs `fetch` to
+      # throw. Route, RLS, and transaction coverage is #107; browser journeys
+      # are #108.
+      - run: npm run test:unit:coverage
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: unit-coverage
+          path: coverage/unit
+          retention-days: 7
+
   evals:
     name: AI Evaluation Dataset
     runs-on: ubuntu-latest
@@ -100,9 +130,10 @@ jobs:
 
       # Structural validation of evals/dataset.v1.jsonl against the safety
       # rubric and thresholds. Does not call a model: the harness that executes
-      # these cases against a provider is #79. Uses the Node built-in test
-      # runner, so it adds no dependency; #106 may replace it with the shared
-      # unit-test runner when that lands.
+      # these cases against a provider is #79. Stays on the Node built-in test
+      # runner: #106 chose Vitest for the TypeScript domain suite and
+      # deliberately left these plain-JavaScript document checks alone, since
+      # porting them would add risk without adding coverage.
       - run: npm run test:evals
 
   checks:

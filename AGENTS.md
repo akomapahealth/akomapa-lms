@@ -26,3 +26,7 @@ This repository uses a single-context domain documentation layout. See `docs/age
 ### Delivery order
 
 Implement release work in dependency waves and keep tests inside each vertical slice. See `docs/agents/implementation-order.md`.
+
+### Testing
+
+Four suites with distinct jobs, and the rules the unit harness enforces. See `docs/agents/testing.md`. Run `npm run validate` before opening a pull request.
