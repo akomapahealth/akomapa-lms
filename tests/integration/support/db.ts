@@ -13,8 +13,10 @@ import { Pool } from "pg";
  */
 let pool: Pool | undefined;
 let client: PrismaClient | undefined;
+let url: string | undefined;
 
 export async function connectTestDatabase(connectionString: string) {
+  url = connectionString;
   pool = new Pool({ connectionString });
   client = new PrismaClient({ adapter: new PrismaPg(pool) });
   await client.$queryRaw`SELECT 1`;
@@ -28,6 +30,17 @@ export function testDb(): PrismaClient {
     );
   }
   return client;
+}
+
+/**
+ * The connection string in use, for tests that need to open a second
+ * connection as a different role. Asking the server for its own host and port
+ * does not work: `inet_server_port()` is null over a unix socket, and the
+ * answer would be the server's view rather than the client's route to it.
+ */
+export function testConnectionString(): string {
+  if (!url) throw new Error("The test database is not connected.");
+  return url;
 }
 
 /** The raw pool, for statements Prisma cannot express. */
