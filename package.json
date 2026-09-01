@@ -25,6 +25,7 @@
     "role:find": "tsx scripts/manage-roles.ts find",
     "role:list": "tsx scripts/manage-roles.ts list",
     "role:check": "tsx scripts/manage-roles.ts check",
+    "db:roles": "tsx scripts/check-database-roles.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "prepare": "husky"
