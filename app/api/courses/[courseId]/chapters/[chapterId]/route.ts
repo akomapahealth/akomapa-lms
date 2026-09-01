@@ -1,8 +1,8 @@
 import { Mux } from "@mux/mux-node";
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
+import { authorizeTopicInCourse, requirePrincipal, toResponse } from "@/lib/auth";
 import { topicUpdateSchema } from "@/lib/validations/topic";
 import { logError } from "@/lib/logger";
 
@@ -20,32 +20,17 @@ export async function DELETE(
         const routeParams = await params;
 
     try {
-        const { userId } = await auth();
+        const principal = await requirePrincipal();
 
-        if (!userId) {
-            return new NextResponse("Unauthorized", { status: 401 });
-        }
-
-        const ownCourse = await db.course.findUnique({
-            where: {
-                id: routeParams.courseId,
-                userId,
-            }
-        });
-
-        if (!ownCourse) {
-            return new NextResponse("Unauthorized", { status: 401 });
-        }
-
-        const topic = await db.topic.findUnique({
-            where:{
-                id: routeParams.chapterId,
-            }
-        });
-
-        if (!topic) {
-            return new NextResponse("Topic Not Found", { status: 404 });
-        }
+        // Asserts Course ownership AND that the Topic is in that Course. The
+        // two used to be separate, so owning any Course was enough to reach a
+        // Topic in any other.
+        const topic = await authorizeTopicInCourse(
+            principal,
+            "topic:delete",
+            routeParams.courseId,
+            routeParams.chapterId
+        );
 
         if (topic.videoUrl) {
             const existingMuxData = await db.muxData.findFirst({
@@ -90,6 +75,9 @@ export async function DELETE(
 
         return NextResponse.json(deletedTopic);
     } catch (error) {
+        const denied = toResponse(error);
+        if (denied) return denied;
+
         logError("CHAPTER_ID_DELETE", error);
 
         return new NextResponse("Internal Error", { status: 500 });
@@ -103,28 +91,22 @@ export async function PATCH(
         const routeParams = await params;
 
     try {
-        const { userId } = await auth();
+        const principal = await requirePrincipal();
+
+        // Course ownership and Topic membership together. Previously the Topic
+        // was updated by id alone, so an owner of any Course could edit a Topic
+        // belonging to another.
+        await authorizeTopicInCourse(
+            principal,
+            "topic:update",
+            routeParams.courseId,
+            routeParams.chapterId
+        );
 
         const body = await req.json();
-
-        if (!userId) {
-            return new NextResponse("Unauthorized", { status: 401 });
-        }
-
         const parsed = topicUpdateSchema.safeParse(body);
         if (!parsed.success) {
             return new NextResponse("Invalid data", { status: 400 });
-        }
-
-        const ownCourse = await db.course.findUnique({
-            where: {
-                id: routeParams.courseId,
-                userId
-            }
-        });
-
-        if (!ownCourse) {
-            return new NextResponse("Unauthorized", { status: 401 });
         }
 
         const updatedTopic = await db.topic.update({
@@ -168,6 +150,9 @@ export async function PATCH(
         return NextResponse.json(updatedTopic);
 
     } catch (error) {
+        const denied = toResponse(error);
+        if (denied) return denied;
+
         logError("COURSES_CHAPTER_ID", error);
 
         return new NextResponse("Internal Error", { status: 500 });

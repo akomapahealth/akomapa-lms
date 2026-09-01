@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { requirePagePrincipal } from "@/lib/auth";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -7,9 +7,7 @@ import { db } from "@/lib/db";
 import { CreatePostForm } from "./_components/create-post-form";
 
 const NewPostPage = async () => {
-  const { userId } = await auth();
-  if (!userId) return redirect("/sign-in");
-
+  const { userId } = await requirePagePrincipal("/sign-in");
   const [categories, enrolledCourses] = await Promise.all([
     db.forumCategory.findMany({ orderBy: { position: "asc" } }),
     db.purchase.findMany({

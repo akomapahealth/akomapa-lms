@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { requirePagePrincipal } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
 import { getEnrolledCourses } from "@/actions/get-enrolled-courses";
@@ -25,9 +25,7 @@ export default async function Dashboard({
 }: {
   searchParams: Promise<{ courseId?: string; period?: string }>;
 }) {
-  const { userId } = await auth();
-  if (!userId) return redirect("/sign-in");
-
+  const { userId } = await requirePagePrincipal("/sign-in");
   const params = await searchParams;
   const selectedCourseId = params.courseId;
   const period = (params.period === "monthly" ? "monthly" : "weekly") as

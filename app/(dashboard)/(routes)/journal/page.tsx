@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { requirePagePrincipal } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 
@@ -17,9 +17,7 @@ export default async function JournalPage({
     search?: string;
   }>;
 }) {
-  const { userId } = await auth();
-  if (!userId) return redirect("/sign-in");
-
+  const { userId } = await requirePagePrincipal("/sign-in");
   const params = await searchParams;
 
   const entries = await getJournalEntries({

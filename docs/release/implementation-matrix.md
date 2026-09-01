@@ -82,7 +82,7 @@ issue, which is exactly why both documents exist.
 | 2.9 | `/courses/[courseId]` shows expandable modules | `verified` | `app/(dashboard)/(routes)/courses/[courseId]/page.tsx` with `actions/get-course-detail.ts` | |
 | 2.10 | Course player sidebar shows nested modules to topics | `verified` | `app/(course)/courses/[courseId]/_components/course-sidebar-module.tsx` and `app/(course)/courses/[courseId]/_components/course-sidebar-item.tsx` | |
 | 2.11 | Breadcrumbs work throughout course navigation | `verified` | `components/breadcrumb.tsx`, used in the course player layout | |
-| 2.12 | Previous/Next topic navigation, including cross-module | `verified` | Navigation computed across modules in `app/(course)/courses/[courseId]/chapters/[chapterId]/page.tsx` | |
+| 2.12 | Previous/Next topic navigation, including cross-module | `verified` | Navigation computed across modules in `actions/get-topic.ts`, derived from a Topic bound to the Course through its Module by `lib/courses/topic-access.ts` | [#39](https://github.com/akomapahealth/akomapa-lms/issues/39) |
 | 2.13 | Module completion triggers celebration | `partial` | `components/providers/confetti-provider.tsx` fires from `app/(course)/courses/[courseId]/chapters/[chapterId]/_components/video-player.tsx` on video end, which is topic completion, not module completion | [#59](https://github.com/akomapahealth/akomapa-lms/issues/59) |
 | 2.14 | All pages responsive on mobile | `partial` | Responsive classes are used throughout and the shell has a mobile nav, but no route-by-route audit has been performed | [#95](https://github.com/akomapahealth/akomapa-lms/issues/95), [#98](https://github.com/akomapahealth/akomapa-lms/issues/98) |
 | 2.15 | `npm run build` succeeds | `verified` | Build job green in CI | |

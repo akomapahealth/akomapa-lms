@@ -1,7 +1,7 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
+import { requirePrincipal, toResponse } from "@/lib/auth";
 import { logError } from "@/lib/logger";
 
 export async function PATCH(
@@ -9,10 +9,7 @@ export async function PATCH(
   { params }: { params: Promise<{ entryId: string }> }
 ) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
+    const { userId } = await requirePrincipal();
 
     const { entryId } = await params;
     const values = await req.json();
@@ -43,6 +40,9 @@ export async function PATCH(
 
     return NextResponse.json(updated);
   } catch (error) {
+    const denied = toResponse(error);
+    if (denied) return denied;
+
     logError("JOURNAL_PATCH", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
@@ -53,10 +53,7 @@ export async function DELETE(
   { params }: { params: Promise<{ entryId: string }> }
 ) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
+    const { userId } = await requirePrincipal();
 
     const { entryId } = await params;
 
@@ -73,6 +70,9 @@ export async function DELETE(
 
     return new NextResponse(null, { status: 204 });
   } catch (error) {
+    const denied = toResponse(error);
+    if (denied) return denied;
+
     logError("JOURNAL_DELETE", error);
     return new NextResponse("Internal Error", { status: 500 });
   }

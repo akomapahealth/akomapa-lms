@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { auth } from "@clerk/nextjs/server";
+import { authorizeTopicInCourse, requirePrincipal, toResponse } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { logError } from "@/lib/logger";
 
@@ -10,28 +10,14 @@ export async function PATCH(
         const routeParams = await params;
 
     try {
-        const { userId } = await auth();
+        const principal = await requirePrincipal();
 
-        if (!userId) {
-            return new NextResponse("Unauthorized", { status: 401 });
-        }
-
-        const ownCourse = await db.course.findUnique({
-            where: {
-                id: routeParams.courseId,
-                userId,
-            }
-        });
-
-        if (!ownCourse) {
-            return new NextResponse("Unauthorized", { status: 401 });
-        }
-
-        const topic = await db.topic.findUnique({
-            where: {
-                id: routeParams.chapterId,
-            }
-        });
+        const topic = await authorizeTopicInCourse(
+            principal,
+            "topic:update",
+            routeParams.courseId,
+            routeParams.chapterId
+        );
 
         const muxData = await db.muxData.findUnique({
             where: {
@@ -54,6 +40,9 @@ export async function PATCH(
 
         return NextResponse.json(publishedTopic);
     } catch (error) {
+        const denied = toResponse(error);
+        if (denied) return denied;
+
         logError("CHAPTER_PUBLISH", error);
         return new NextResponse("Internal Error", { status: 500 });
     }

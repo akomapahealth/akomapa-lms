@@ -1,7 +1,7 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
+import { requirePrincipal, toResponse } from "@/lib/auth";
 import { generateCertificate } from "@/lib/certificate-service";
 import { logError } from "@/lib/logger";
 
@@ -12,10 +12,7 @@ export async function POST(
   { params }: { params: Promise<{ courseId: string }> }
 ) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
+    const { userId } = await requirePrincipal();
 
     const { courseId } = await params;
 
@@ -42,6 +39,9 @@ export async function POST(
 
     return NextResponse.json(result);
   } catch (error) {
+    const denied = toResponse(error);
+    if (denied) return denied;
+
     logError("CERTIFICATE_POST", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
@@ -52,10 +52,7 @@ export async function GET(
   { params }: { params: Promise<{ courseId: string }> }
 ) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
+    const { userId } = await requirePrincipal();
 
     const { courseId } = await params;
 
@@ -73,6 +70,9 @@ export async function GET(
       issuedAt: certificate.issuedAt,
     });
   } catch (error) {
+    const denied = toResponse(error);
+    if (denied) return denied;
+
     logError("CERTIFICATE_GET", error);
     return new NextResponse("Internal Error", { status: 500 });
   }

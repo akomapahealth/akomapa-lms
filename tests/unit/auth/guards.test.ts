@@ -13,6 +13,7 @@ const {
   authorizePost,
   authorizeQuestionInCourse,
   authorizeQuizInCourse,
+  authorizeTopicInCourse,
   requireCapability,
 } = await import("@/lib/auth/guards");
 const { Denied } = await import("@/lib/auth/errors");
@@ -212,6 +213,45 @@ describe("authorizeQuestionInCourse", () => {
       )
     ).toBe("forbidden");
     expect(dbMock.question.findFirst).not.toHaveBeenCalled();
+  });
+});
+
+describe("authorizeTopicInCourse", () => {
+  beforeEach(() => {
+    dbMock.course.findFirst.mockResolvedValue({ id: "course_1", userId: "user_owner" });
+    dbMock.topic.findFirst.mockResolvedValue({ id: "topic_1", moduleId: "module_1" });
+  });
+
+  it("binds the Topic to the Course through its Module", async () => {
+    await authorizeTopicInCourse(faculty, "topic:update", "course_1", "topic_1");
+
+    expect(dbMock.topic.findFirst).toHaveBeenCalledWith({
+      where: { id: "topic_1", module: { courseId: "course_1" } },
+    });
+  });
+
+  it("does not filter on publication, because staff author unpublished Topics", async () => {
+    await authorizeTopicInCourse(faculty, "topic:update", "course_1", "topic_1");
+
+    const where = dbMock.topic.findFirst.mock.calls[0][0].where;
+    expect(where).not.toHaveProperty("isPublished");
+  });
+
+  it("refuses a Topic in another Course even when the principal owns this one", async () => {
+    // The authoring routes confirmed Course ownership and then loaded the Topic
+    // by id alone, so owning any Course reached a Topic in any other.
+    dbMock.topic.findFirst.mockResolvedValue(null);
+
+    expect(
+      await reasonFor(authorizeTopicInCourse(faculty, "topic:delete", "course_1", "topic_9"))
+    ).toBe("not_found");
+  });
+
+  it("refuses a learner before touching the Topic", async () => {
+    expect(
+      await reasonFor(authorizeTopicInCourse(student, "topic:delete", "course_1", "topic_1"))
+    ).toBe("forbidden");
+    expect(dbMock.topic.findFirst).not.toHaveBeenCalled();
   });
 });
 

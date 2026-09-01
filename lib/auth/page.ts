@@ -21,6 +21,21 @@ import { getPrincipal } from "./principal";
  * all, so any faculty member reached every administration page.
  */
 
+/**
+ * The principal for a page, or a redirect.
+ *
+ * For pages that need to know who is calling but have no capability to check --
+ * a learner's own dashboard, journal, or grades. Callers pass the destination
+ * their old `auth()` guard used, so behaviour does not change with the seam.
+ */
+export async function requirePagePrincipal(
+  redirectTo = "/sign-in"
+): Promise<Principal> {
+  const principal = await getPrincipal();
+  if (!principal) redirect(redirectTo);
+  return principal;
+}
+
 /** Requires a capability that needs no resource. Redirects rather than throwing. */
 export async function requirePageCapability(action: Action): Promise<Principal> {
   const principal = await getPrincipal();

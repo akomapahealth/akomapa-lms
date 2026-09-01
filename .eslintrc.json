@@ -3,16 +3,43 @@
     "next/core-web-vitals",
     "plugin:security/recommended-legacy"
   ],
-  "plugins": ["security"],
+  "plugins": [
+    "security"
+  ],
   "rules": {
     "security/detect-object-injection": "off",
     "no-eval": "error",
     "no-implied-eval": "error",
-    "no-new-func": "error"
+    "no-new-func": "error",
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": [
+          {
+            "name": "@clerk/nextjs/server",
+            "importNames": [
+              "auth"
+            ],
+            "message": "Derive the principal with getPrincipal/requirePrincipal/requirePagePrincipal from @/lib/auth. ADR 0001 makes that the only place identity enters the application, so a handler cannot invent its own notion of who is calling. Only lib/auth and proxy.ts may call Clerk directly."
+          }
+        ]
+      }
+    ]
   },
   "overrides": [
     {
-      "files": ["scripts/**/*.ts"],
+      "files": [
+        "lib/auth/**/*.ts",
+        "proxy.ts"
+      ],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    },
+    {
+      "files": [
+        "scripts/**/*.ts"
+      ],
       "rules": {
         "security/detect-non-literal-fs-filename": "off"
       }

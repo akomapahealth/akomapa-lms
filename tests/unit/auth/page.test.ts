@@ -19,8 +19,12 @@ vi.mock("@clerk/nextjs/server", () => ({ auth: clerkAuth }));
 vi.mock("next/navigation", () => nav);
 vi.mock("@/lib/db", async () => ({ db: (await import("../support/db")).dbMock }));
 
-const { getStaffCapabilities, requirePageCapability, requirePageCourse } =
-  await import("@/lib/auth/page");
+const {
+  getStaffCapabilities,
+  requirePageCapability,
+  requirePageCourse,
+  requirePagePrincipal,
+} = await import("@/lib/auth/page");
 
 /**
  * Page-level authorization.
@@ -37,6 +41,35 @@ function signedInAs(userId: string | null, role?: string) {
 
 beforeEach(() => {
   signedInAs("user_1", "FACULTY");
+});
+
+describe("requirePagePrincipal", () => {
+  it("returns the principal when there is a session", async () => {
+    await expect(requirePagePrincipal()).resolves.toEqual({
+      userId: "user_1",
+      role: "FACULTY",
+    });
+  });
+
+  it("sends an anonymous visitor to sign in by default", async () => {
+    signedInAs(null);
+
+    await expect(requirePagePrincipal()).rejects.toThrow("REDIRECT:/sign-in");
+  });
+
+  it("honours the destination the page's old guard used", async () => {
+    // Several pages sent an anonymous visitor to /dashboard rather than
+    // /sign-in. Preserving each destination keeps the seam behaviour-neutral.
+    signedInAs(null);
+
+    await expect(requirePagePrincipal("/dashboard")).rejects.toThrow("REDIRECT:/dashboard");
+  });
+
+  it("does not check any capability, so a learner passes", async () => {
+    signedInAs("user_1", "STUDENT");
+
+    await expect(requirePagePrincipal()).resolves.toMatchObject({ role: "STUDENT" });
+  });
 });
 
 describe("requirePageCapability", () => {

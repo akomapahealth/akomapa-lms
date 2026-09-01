@@ -30,12 +30,14 @@ export {
   authorizePost,
   authorizeQuestionInCourse,
   authorizeQuizInCourse,
+  authorizeTopicInCourse,
   requireCapability,
 } from "./guards";
 export {
   getStaffCapabilities,
   NO_STAFF_CAPABILITIES,
   requirePageCapability,
+  requirePagePrincipal,
   requirePageCourse,
   type StaffCapabilities,
 } from "./page";

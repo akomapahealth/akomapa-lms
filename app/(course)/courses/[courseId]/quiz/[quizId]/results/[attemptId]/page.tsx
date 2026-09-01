@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { requirePagePrincipal } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle2, XCircle, ArrowLeft, RotateCcw, Clock } from "lucide-react";
@@ -19,12 +19,7 @@ const QuizResultsPage = async ({
   params: Promise<{ courseId: string; quizId: string; attemptId: string }>;
 }) => {
   const { courseId, quizId, attemptId } = await params;
-  const { userId } = await auth();
-
-  if (!userId) {
-    return redirect("/sign-in");
-  }
-
+  const { userId } = await requirePagePrincipal("/sign-in");
   const attempt = await db.quizAttempt.findUnique({
     where: { id: attemptId },
     include: {

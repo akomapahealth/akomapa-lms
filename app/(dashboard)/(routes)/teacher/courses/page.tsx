@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { requirePagePrincipal } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
 import { db } from "@/lib/db";
@@ -9,12 +9,7 @@ import { PageContainer } from "@/components/shell/page-container";
 
 
 const CoursesPage = async () => {
-    const { userId } = await auth();
-
-    if (!userId) {
-        return redirect("/dashboard");
-    }
-
+    const { userId } = await requirePagePrincipal("/dashboard");
     const courses = await db.course.findMany({
         where: {
             userId,

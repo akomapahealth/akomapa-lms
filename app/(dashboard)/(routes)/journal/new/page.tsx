@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { requirePagePrincipal } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
 import { db } from "@/lib/db";
@@ -13,9 +13,7 @@ export default async function NewJournalEntryPage({
     prompt?: string;
   }>;
 }) {
-  const { userId } = await auth();
-  if (!userId) return redirect("/sign-in");
-
+  const { userId } = await requirePagePrincipal("/sign-in");
   const params = await searchParams;
 
   // Get user's enrolled courses for the course selector

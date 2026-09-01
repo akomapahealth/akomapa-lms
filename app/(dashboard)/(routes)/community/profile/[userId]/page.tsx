@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { requirePagePrincipal } from "@/lib/auth";
 import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
 import { ArrowLeft, Calendar } from "lucide-react";
@@ -12,8 +12,7 @@ const CommunityProfilePage = async ({
 }: {
   params: Promise<{ userId: string }>;
 }) => {
-  const { userId: currentUserId } = await auth();
-  if (!currentUserId) return redirect("/sign-in");
+  const { userId: currentUserId } = await requirePagePrincipal("/sign-in");
 
   const { userId: profileUserId } = await params;
 

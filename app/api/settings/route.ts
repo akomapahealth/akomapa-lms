@@ -1,16 +1,13 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
+import { requirePrincipal, toResponse } from "@/lib/auth";
 import { settingsUpdateSchema } from "@/lib/validations/settings";
 import { logError } from "@/lib/logger";
 
 export async function GET() {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
+    const { userId } = await requirePrincipal();
 
     const settings = await db.userSettings.findUnique({
       where: { userId },
@@ -25,6 +22,9 @@ export async function GET() {
 
     return NextResponse.json(settings);
   } catch (error) {
+    const denied = toResponse(error);
+    if (denied) return denied;
+
     logError("SETTINGS_GET", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
@@ -32,10 +32,7 @@ export async function GET() {
 
 export async function PATCH(req: Request) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
+    const { userId } = await requirePrincipal();
 
     const body = await req.json();
 
@@ -55,6 +52,9 @@ export async function PATCH(req: Request) {
 
     return NextResponse.json(settings);
   } catch (error) {
+    const denied = toResponse(error);
+    if (denied) return denied;
+
     logError("SETTINGS_PATCH", error);
     return new NextResponse("Internal Error", { status: 500 });
   }

@@ -1,7 +1,8 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
+import { requirePrincipal, toResponse } from "@/lib/auth";
+import { attemptInQuizAndCourse } from "@/lib/assessments/attempt-access";
 import { logError } from "@/lib/logger";
 
 export async function GET(
@@ -11,14 +12,17 @@ export async function GET(
   const routeParams = await params;
 
   try {
-    const { userId } = await auth();
+    const { userId } = await requirePrincipal();
 
-    if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
-
-    const attempt = await db.quizAttempt.findUnique({
-      where: { id: routeParams.attemptId },
+    // Bound to the route's Quiz and Course, not just to the caller. An attempt
+    // from one Quiz should not render through another Quiz's URL.
+    const attempt = await db.quizAttempt.findFirst({
+      where: attemptInQuizAndCourse(
+        userId,
+        routeParams.courseId,
+        routeParams.quizId,
+        routeParams.attemptId
+      ),
       include: {
         quiz: {
           select: {
@@ -55,8 +59,8 @@ export async function GET(
       },
     });
 
-    if (!attempt || attempt.userId !== userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
+    if (!attempt) {
+      return new NextResponse("Not Found", { status: 404 });
     }
 
     if (!attempt.completedAt) {
@@ -65,6 +69,9 @@ export async function GET(
 
     return NextResponse.json(attempt);
   } catch (error) {
+    const denied = toResponse(error);
+    if (denied) return denied;
+
     logError("QUIZ_RESULTS", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
