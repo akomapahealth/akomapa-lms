@@ -17,6 +17,7 @@ import {
 import { usePathname } from "next/navigation";
 
 import { useSidebar } from "@/components/shell/sidebar-context";
+import type { StaffCapabilities } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
 import { SidebarItem } from "./sidebar-item";
@@ -59,36 +60,56 @@ const studentRoutes = [
   },
 ];
 
-const adminRoutes = [
+/**
+ * Staff navigation.
+ *
+ * `visible` names the capability each destination needs. Every entry used to be
+ * shown to anyone on an /admin path, which meant a faculty member saw Students,
+ * Community, and Analytics -- all ADMIN-only -- and was redirected on click.
+ * The capabilities are computed on the server and passed down; nothing here
+ * decides anything.
+ */
+const adminRoutes: Array<{
+  icon: typeof LayoutDashboard;
+  label: string;
+  href: string;
+  visible: (capabilities: StaffCapabilities) => boolean;
+}> = [
   {
     icon: LayoutDashboard,
     label: "Dashboard",
     href: "/admin",
+    visible: (c) => c.canAccessStaffArea,
   },
   {
     icon: BookOpen,
     label: "Courses",
     href: "/admin/courses",
+    visible: (c) => c.canAccessStaffArea,
   },
   {
     icon: Users,
     label: "Students",
     href: "/admin/students",
+    visible: (c) => c.canAdministerLearners,
   },
   {
     icon: FileQuestion,
     label: "Quizzes",
     href: "/admin/quizzes",
+    visible: (c) => c.canAccessStaffArea,
   },
   {
     icon: MessageSquare,
     label: "Community",
     href: "/admin/community",
+    visible: (c) => c.canModerateCommunity,
   },
   {
     icon: BarChart,
     label: "Analytics",
     href: "/admin/analytics",
+    visible: (c) => c.canReadAnalytics,
   },
 ];
 
@@ -100,12 +121,18 @@ const bottomRoutes = [
   },
 ];
 
-export const SidebarRoutes = () => {
+export const SidebarRoutes = ({
+  capabilities,
+}: {
+  capabilities: StaffCapabilities;
+}) => {
   const pathname = usePathname();
 
   const isAdminPage = pathname?.startsWith("/admin");
 
-  const routes = isAdminPage ? adminRoutes : studentRoutes;
+  const routes = isAdminPage
+    ? adminRoutes.filter((route) => route.visible(capabilities))
+    : studentRoutes;
 
   return (
     <div className="flex w-full flex-col gap-y-1 px-3 py-4">

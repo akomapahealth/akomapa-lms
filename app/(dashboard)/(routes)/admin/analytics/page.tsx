@@ -1,7 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
-
-import { isAdmin } from "@/lib/roles";
+import { requirePageCapability } from "@/lib/auth";
 import { getAdminAnalytics } from "@/actions/get-admin-analytics";
 import { getAnalytics } from "@/actions/get-analytics";
 import { DataCard } from "@/components/admin/data-card";
@@ -15,15 +12,11 @@ import { StudentActivityChart } from "./_components/student-activity-chart";
 import { PageContainer } from "@/components/shell/page-container";
 
 const AdminAnalyticsPage = async () => {
-  const { userId } = await auth();
-
-  if (!userId || !(await isAdmin(userId))) {
-    return redirect("/dashboard");
-  }
+  const principal = await requirePageCapability("analytics:read");
 
   const [analytics, { totalRevenue, totalSales }] = await Promise.all([
     getAdminAnalytics(),
-    getAnalytics(userId),
+    getAnalytics(principal.userId),
   ]);
 
   return (

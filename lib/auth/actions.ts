@@ -55,6 +55,10 @@ export const ACTIONS = [
   "comment:update",
   "comment:delete",
 
+  // The staff area shell. The minimum capability to see any authoring or
+  // administration page; each page then declares what it specifically needs.
+  "staff:access",
+
   // Administration.
   "analytics:read",
   "learner:administer",

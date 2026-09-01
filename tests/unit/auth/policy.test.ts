@@ -43,7 +43,7 @@ const ADMIN_ONLY: Action[] = [
   "learner:administer",
   "role:manage",
 ];
-const FACULTY_GLOBAL: Action[] = ["course:create", "upload:courseAsset"];
+const FACULTY_GLOBAL: Action[] = ["course:create", "upload:courseAsset", "staff:access"];
 const AUTHOR_OR_MODERATOR: Action[] = [
   "post:update",
   "post:delete",
@@ -105,6 +105,24 @@ describe("faculty actions that need no resource", () => {
       expect(can(student, action)).toBe(false);
     });
   }
+});
+
+describe("staff area access", () => {
+  it("admits FACULTY and ADMIN and refuses STUDENT", () => {
+    expect(can(faculty, "staff:access")).toBe(true);
+    expect(can(admin, "staff:access")).toBe(true);
+    expect(can(student, "staff:access")).toBe(false);
+  });
+
+  it("is only a shell key, not a grant of anything inside it", () => {
+    // The bug this replaces: admin/layout.tsx gated on `isAdmin || isFaculty`,
+    // and every page under it relied on that gate, so any FACULTY reached every
+    // admin page. Holding the shell capability must imply nothing further.
+    expect(can(faculty, "staff:access")).toBe(true);
+    expect(can(faculty, "analytics:read")).toBe(false);
+    expect(can(faculty, "learner:administer")).toBe(false);
+    expect(can(faculty, "community:moderate")).toBe(false);
+  });
 });
 
 describe("authoring actions require ownership", () => {

@@ -96,6 +96,8 @@ const RULES: Record<Action, Rule> = {
   "comment:update": "authorOrModerator",
   "comment:delete": "authorOrModerator",
 
+  "staff:access": "facultyGlobal",
+
   "analytics:read": "adminOnly",
   "learner:administer": "adminOnly",
   "role:manage": "adminOnly",

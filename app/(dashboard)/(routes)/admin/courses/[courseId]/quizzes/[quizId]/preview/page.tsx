@@ -1,9 +1,9 @@
-import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 import { db } from "@/lib/db";
+import { requirePageCourse } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -15,11 +15,9 @@ const QuizPreviewPage = async ({
   params: Promise<{ courseId: string; quizId: string }>;
 }) => {
   const { courseId, quizId } = await params;
-  const { userId } = await auth();
 
-  if (!userId) {
-    return redirect("/sign-in");
-  }
+  // Same disclosure as the editor: the preview shows which option is correct.
+  await requirePageCourse("quiz:read", courseId);
 
   const quiz = await db.quiz.findUnique({
     where: { id: quizId, courseId },

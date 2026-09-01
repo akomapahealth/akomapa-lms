@@ -62,7 +62,7 @@ sweeping the repository, and thresholds are checked **per file**. A module joins
 the list in the same pull request that brings it under test. This keeps the
 numbers meaningful: a global average across hundreds of untested files says
 nothing, and adding one well-covered module must never be able to mask a bare
-one. `lib/roles.ts` and `lib/roles-client.ts` are held at 100%.
+one. The permission matrix in `lib/auth/policy.ts` is held at 100%.
 
 Adding a module to the list without tests will fail the build. That is the
 intent.

@@ -29,4 +29,11 @@ export {
   authorizePost,
   requireCapability,
 } from "./guards";
+export {
+  getStaffCapabilities,
+  NO_STAFF_CAPABILITIES,
+  requirePageCapability,
+  requirePageCourse,
+  type StaffCapabilities,
+} from "./page";
 export { assertAdminExists, countAdmins } from "./bootstrap";
