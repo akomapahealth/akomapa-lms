@@ -67,6 +67,14 @@ one. The permission matrix in `lib/auth/policy.ts` is held at 100%.
 Adding a module to the list without tests will fail the build. That is the
 intent.
 
+### Identity has one entrance
+
+`getPrincipal`, `requirePrincipal`, and `requirePagePrincipal` in `lib/auth` are
+the only places Clerk's session is read (ADR 0001 §1). An ESLint rule enforces
+it: importing `auth` from `@clerk/nextjs/server` anywhere except `lib/auth/` and
+`proxy.ts` fails the build. `currentUser` stays available for profile data such
+as an email address, but identity itself comes from the principal.
+
 ### Write the negative case first
 
 The failure that matters is rarely "the feature did not work"; it is "the guard

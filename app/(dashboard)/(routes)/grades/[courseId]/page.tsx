@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { requirePagePrincipal } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, CheckCircle2, Circle, Clock } from "lucide-react";
@@ -27,12 +27,7 @@ const GradesDetailPage = async ({
   params: Promise<{ courseId: string }>;
 }) => {
   const { courseId } = await params;
-  const { userId } = await auth();
-
-  if (!userId) {
-    return redirect("/sign-in");
-  }
-
+  const { userId } = await requirePagePrincipal("/sign-in");
   const [detail, certificate] = await Promise.all([
     getGradesDetail(userId, courseId),
     getCertificate(userId, courseId),

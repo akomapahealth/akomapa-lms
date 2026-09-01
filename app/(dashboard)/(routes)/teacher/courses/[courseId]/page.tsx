@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { requirePagePrincipal } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { CircleDollarSign, File, LayoutDashboard, ListChecks } from "lucide-react";
 
@@ -21,12 +21,7 @@ const CourseIdPage = async ({
     params: Promise<{courseId: string}>
 }) => {
     const { courseId } = await params;
-    const { userId } = await auth();
-
-    if (!userId) {
-        return redirect("/dashboard");
-    }
-
+    const { userId } = await requirePagePrincipal("/dashboard");
     const course = await db.course.findUnique({
         where: {
             id: courseId,

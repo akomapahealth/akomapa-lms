@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { requirePagePrincipal } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { Map } from "lucide-react";
 
@@ -9,12 +9,7 @@ import { LearningPathMap } from "./_components/learning-path-map";
 import { PageContainer } from "@/components/shell/page-container";
 
 const LearningPathPage = async () => {
-  const { userId } = await auth();
-
-  if (!userId) {
-    return redirect("/sign-in");
-  }
-
+  const { userId } = await requirePagePrincipal("/sign-in");
   const courses = await getLearningPath(userId);
 
   const completedCount = courses.filter((c) => c.status === "COMPLETED").length;

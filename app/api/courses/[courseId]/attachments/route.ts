@@ -1,7 +1,7 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server"
 
 import { db } from "@/lib/db";
+import { authorizeCourse, requirePrincipal, toResponse } from "@/lib/auth";
 import { logError } from "@/lib/logger";
 
 
@@ -12,23 +12,10 @@ export async function POST(
         const routeParams = await params;
 
     try {
-        const { userId } = await auth();
+        const principal = await requirePrincipal();
+        await authorizeCourse(principal, "attachment:create", routeParams.courseId);
+        const userId = principal.userId;
         const { url } = await req.json();
-
-        if (!userId) {
-            return new NextResponse("Unauthorized", { status: 401 });
-        }
-
-        const courseOwner = await db.course.findUnique({
-            where: {
-                id: routeParams.courseId,
-                userId: userId,
-            }
-        });
-
-        if (!courseOwner) {
-            return new NextResponse("Unauthorized", { status: 401 });
-        }
 
         const attachment = await db.attachment.create({
             data: {
@@ -41,6 +28,9 @@ export async function POST(
         return NextResponse.json(attachment);
 
     } catch (error) {
+        const denied = toResponse(error);
+        if (denied) return denied;
+
         logError("COURSE_ID_ATTACHMENTS", error);
         return new NextResponse("Internal Error", { status: 500 });
     }

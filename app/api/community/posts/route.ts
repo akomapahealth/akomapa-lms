@@ -1,16 +1,13 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
+import { requirePrincipal, toResponse } from "@/lib/auth";
 import { evaluateBadges } from "@/lib/badge-service";
 import { logError } from "@/lib/logger";
 
 export async function POST(req: Request) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
+    const { userId } = await requirePrincipal();
 
     const { title, content, categoryId, courseId } = await req.json();
 
@@ -43,6 +40,9 @@ export async function POST(req: Request) {
       })),
     });
   } catch (error) {
+    const denied = toResponse(error);
+    if (denied) return denied;
+
     logError("COMMUNITY_POSTS_POST", error);
     return new NextResponse("Internal Error", { status: 500 });
   }

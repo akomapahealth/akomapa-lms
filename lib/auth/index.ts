@@ -37,6 +37,7 @@ export {
   getStaffCapabilities,
   NO_STAFF_CAPABILITIES,
   requirePageCapability,
+  requirePagePrincipal,
   requirePageCourse,
   type StaffCapabilities,
 } from "./page";

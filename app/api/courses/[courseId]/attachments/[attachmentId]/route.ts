@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { auth } from "@clerk/nextjs/server";
+import { authorizeCourse, requirePrincipal, toResponse } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { logError } from "@/lib/logger";
 
@@ -10,22 +10,9 @@ export async function DELETE(
         const routeParams = await params;
 
     try {
-        const { userId } = await auth();
-
-        if (!userId) {
-            return new NextResponse("Unauthorized", { status: 401 });
-        }
-
-        const courseOwner = await db.course.findUnique({
-            where: {
-                id: routeParams.courseId,
-                userId: userId,
-            }
-        });
-
-        if (!courseOwner) {
-            return new NextResponse("Unauthorized", { status: 401 });
-        }
+        const principal = await requirePrincipal();
+        await authorizeCourse(principal, "attachment:delete", routeParams.courseId);
+        const userId = principal.userId;
 
         const attachment = await db.attachment.delete({
             where: {
@@ -36,6 +23,9 @@ export async function DELETE(
 
         return NextResponse.json(attachment);
     } catch (error) {
+        const denied = toResponse(error);
+        if (denied) return denied;
+
         logError("ATTACHMENT_ID", error);
         return new NextResponse("Internal Error", { status: 500 });
     }

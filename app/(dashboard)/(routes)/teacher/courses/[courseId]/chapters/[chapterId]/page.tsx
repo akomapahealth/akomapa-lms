@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { requirePagePrincipal } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Eye, LayoutDashboard, Video } from "lucide-react";
@@ -21,12 +21,7 @@ const ChapterIdPAge = async ({
     const { courseId, chapterId } = await params;
 
 
-    const { userId } = await auth();
-
-    if (!userId) {
-        return redirect("/dashboard");
-    }
-
+    const { userId } = await requirePagePrincipal("/dashboard");
     const chapter = await db.topic.findUnique({
         where: {
             id: chapterId,

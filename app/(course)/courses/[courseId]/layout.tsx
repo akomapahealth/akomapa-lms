@@ -1,6 +1,6 @@
+import { requirePagePrincipal } from "@/lib/auth";
 import { getProgress } from "@/actions/get-progress";
 import { db } from "@/lib/db";
-import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/shell/app-shell";
 import { CourseSidebar } from "./_components/course-sidebar";
@@ -14,12 +14,7 @@ const CourseLayout = async ({
 }) => {
     const { courseId } = await params;
 
-    const { userId } = await auth();
-
-    if (!userId) {
-        return redirect("/dashboard");
-    }
-
+    const { userId } = await requirePagePrincipal("/dashboard");
     const course = await db.course.findUnique({
         where: {
             id: courseId,

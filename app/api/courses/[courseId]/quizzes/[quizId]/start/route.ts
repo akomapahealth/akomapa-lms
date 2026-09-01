@@ -1,7 +1,7 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
+import { requirePrincipal, toResponse } from "@/lib/auth";
 import { isPostTestUnlocked } from "@/actions/check-post-test-lock";
 import { logError } from "@/lib/logger";
 
@@ -12,11 +12,7 @@ export async function POST(
   const routeParams = await params;
 
   try {
-    const { userId } = await auth();
-
-    if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
+    const { userId } = await requirePrincipal();
 
     // Verify enrollment
     const purchase = await db.purchase.findUnique({
@@ -94,6 +90,9 @@ export async function POST(
       questions: quiz.questions,
     });
   } catch (error) {
+    const denied = toResponse(error);
+    if (denied) return denied;
+
     logError("QUIZ_START", error);
     return new NextResponse("Internal Error", { status: 500 });
   }

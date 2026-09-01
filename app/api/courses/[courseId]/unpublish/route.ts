@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { auth } from "@clerk/nextjs/server";
+import { requirePrincipal, toResponse } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { logError } from "@/lib/logger";
 
@@ -10,11 +10,7 @@ export async function PATCH(
         const routeParams = await params;
 
     try {
-        const { userId } = await auth();
-
-        if (!userId) {
-            return new NextResponse("Unauthorized", { status: 401 });
-        }
+        const { userId } = await requirePrincipal();
 
         const course = await db.course.findUnique({
             where: {
@@ -38,6 +34,9 @@ export async function PATCH(
 
         return NextResponse.json(unpublishedCourse);
     } catch (error) {
+        const denied = toResponse(error);
+        if (denied) return denied;
+
         logError("COURSE_ID_UNPUBLISH", error);
         return new NextResponse("Internal Error", { status: 500 });
     }

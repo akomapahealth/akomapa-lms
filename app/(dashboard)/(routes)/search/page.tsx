@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { requirePagePrincipal } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
@@ -21,11 +21,7 @@ interface SearchPageProps {
 const SearchPage = async ({
     searchParams
 }: SearchPageProps) => {
-    const { userId } = await auth();
-
-    if (!userId) {
-        return redirect("/dashboard");
-    }
+    const { userId } = await requirePagePrincipal("/dashboard");
     const categories = await db.category.findMany({
         orderBy: {
             name: "asc",
