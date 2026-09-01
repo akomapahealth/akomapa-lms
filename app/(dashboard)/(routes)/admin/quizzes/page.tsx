@@ -1,10 +1,9 @@
 import Link from "next/link";
-import { FileQuestion, Plus } from "lucide-react";
+import { FileQuestion } from "lucide-react";
 
 import { db } from "@/lib/db";
 import { requirePageCapability } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { PageContainer } from "@/components/shell/page-container";
 import {
   Table,

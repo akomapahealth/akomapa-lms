@@ -39,7 +39,7 @@ const ChapterIdPAge = async ({
         chapter.title,
         chapter.description,
         chapter.videoUrl,
-    ]
+    ];
 
     const totalFields = requiredFields.length;
     const completedFields = requiredFields.filter(Boolean).length;
@@ -135,6 +135,6 @@ const ChapterIdPAge = async ({
             </div>
         </>
     );
-}
+};
  
 export default ChapterIdPAge;

@@ -19,7 +19,6 @@ import {
 import { Button } from "@/components/ui/button"; 
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Textarea } from "@/components/ui/textarea";
 import { Combobox } from "@/components/ui/combobox";
 
 
@@ -33,7 +32,6 @@ const formSchema = z.object({
     categoryId: z.string().min(1),
 });
 
-const testOptions = [{ label: "Option 1", value: "1" }, { label: "Option 2", value: "2" }];
 
 export const CategoryForm = ({
     initialData,

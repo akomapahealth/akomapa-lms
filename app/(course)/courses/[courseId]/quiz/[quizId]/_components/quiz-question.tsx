@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuizStore, QuizQuestion as QuizQuestionType } from "@/hooks/use-quiz-store";
+import { useQuizStore } from "@/hooks/use-quiz-store";
 import { cn } from "@/lib/utils";
 
 export const QuizQuestion = () => {

@@ -57,6 +57,6 @@ export async function POST(
         if (denied) return denied;
 
         logError("CHAPTERS", error);
-        return new NextResponse("Internal Server Error", { status: 500 })
+        return new NextResponse("Internal Server Error", { status: 500 });
     }
 }

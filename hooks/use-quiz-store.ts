@@ -168,13 +168,12 @@ export const useQuizStore = create<QuizState>((set, get) => ({
   tick: () => {
     const state = get();
     if (state.startedAt) {
-      // Use actual elapsed time for accuracy
-      const elapsed = Math.floor((Date.now() - state.startedAt) / 1000);
-      const totalTime =
-        state.timeRemaining + elapsed - (state.timeRemaining > 0 ? 0 : 0);
-      // Simpler approach: just decrement
-      const newTime = Math.max(0, state.timeRemaining - 1);
-      set({ timeRemaining: newTime });
+      // Decrement by one tick. An abandoned attempt at computing elapsed time
+      // from `startedAt` was left here unused; the server is the authority on
+      // the time limit either way (the submit route rejects a late submission),
+      // so this only drives the countdown the learner sees. #64 owns making
+      // the client clock survive a reconnection.
+      set({ timeRemaining: Math.max(0, state.timeRemaining - 1) });
     }
   },
 

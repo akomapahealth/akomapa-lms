@@ -7,7 +7,6 @@ import { Pencil, PlusCircle, VideoIcon } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { Topic, MuxData } from "@prisma/client";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 

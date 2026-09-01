@@ -1,7 +1,6 @@
 import { requirePagePrincipal } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft, CheckCircle2, Circle, Clock } from "lucide-react";
+import { CheckCircle2, Circle, Clock } from "lucide-react";
 
 import { getGradesDetail } from "@/actions/get-grades-detail";
 import { getCertificate } from "@/actions/get-certificate";

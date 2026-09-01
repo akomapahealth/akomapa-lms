@@ -4,7 +4,6 @@ import { BookOpen, Layers, FileQuestion } from "lucide-react";
 
 import { StatusBadge } from "@/components/status-badge";
 import { CourseProgress } from "@/components/course-progress";
-import { IconBadge } from "@/components/icon-badge";
 import { type CourseStatus } from "@/actions/get-enrolled-courses";
 
 interface EnrolledCourseCardProps {

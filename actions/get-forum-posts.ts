@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { excerpt } from "@/lib/text/strip-html";
 
 export interface ForumPostPreview {
   id: string;
@@ -104,7 +105,7 @@ export const getForumPosts = async (
     const mapPost = (post: PostWithIncludes): ForumPostPreview => ({
       id: post.id,
       title: post.title,
-      excerpt: stripHtml(post.content).slice(0, 150),
+      excerpt: excerpt(post.content, 150),
       author: post.user,
       category: post.category,
       course: post.course,
@@ -152,6 +153,3 @@ export const getForumPosts = async (
   }
 };
 
-function stripHtml(html: string): string {
-  return html.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim();
-}
