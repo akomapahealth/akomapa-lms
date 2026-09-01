@@ -68,7 +68,7 @@ Every Faculty capability plus learner administration, moderation, and
 analytics.
 
 **Role.** Exactly one of `STUDENT`, `FACULTY`, `ADMIN`, persisted on
-`User.role` and always resolved on the server through `lib/roles.ts`. A role
+`User.role` and always resolved on the server through `lib/auth/`. A role
 never arrives from the browser. `ADMIN` implies `FACULTY`; `FACULTY` does not
 imply `ADMIN`. See
 [ADR 0001](docs/adr/0001-identity-authentication-and-rbac.md).
@@ -190,7 +190,7 @@ everything new, and do not extend the legacy surface.
 | `chapterId` (column) | `UserProgress.topicId @map("chapterId")`, plus the index names `UserProgress_userId_chapterId_key` and `UserProgress_chapterId_idx` | Topic id | [#52](https://github.com/akomapahealth/akomapa-lms/issues/52) |
 | `/chapters` (route) | `app/(course)/courses/[courseId]/chapters/`, `app/api/courses/[courseId]/chapters/` | Topic routes | [#52](https://github.com/akomapahealth/akomapa-lms/issues/52) |
 | `teacher` (route group) | `app/(dashboard)/(routes)/teacher/` | Faculty | [#86](https://github.com/akomapahealth/akomapa-lms/issues/86) |
-| `TEACHER_ID` (env var) | `lib/roles.ts`, grants `ADMIN` by environment variable | Role on `User` | [#42](https://github.com/akomapahealth/akomapa-lms/issues/42) |
+| `TEACHER_ID` (env var) | Granted `ADMIN` by environment variable. Removed in [#42](https://github.com/akomapahealth/akomapa-lms/issues/42); privilege now comes only from `User.role`, resolved through `lib/auth/` | Role on `User` | [#42](https://github.com/akomapahealth/akomapa-lms/issues/42) |
 | `StripCustomer` (model) | `prisma/schema.prisma`, a misspelling of Stripe | Stripe customer | [#51](https://github.com/akomapahealth/akomapa-lms/issues/51) |
 
 **Chapter is never learner-facing.** No new UI copy, no new route segment, no

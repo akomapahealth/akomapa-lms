@@ -1,9 +1,8 @@
 import Mux from "@mux/mux-node";
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
-import { isFaculty } from "@/lib/roles";
+import { authorizeCourse, requirePrincipal, toResponse } from "@/lib/auth";
 import { courseUpdateSchema } from "@/lib/validations/course";
 import { logError } from "@/lib/logger";
 
@@ -21,16 +20,13 @@ export async function DELETE(
         const routeParams = await params;
 
     try {
-        const { userId } = await auth();
-
-        if (!userId || !(await isFaculty(userId))) {
-            return new NextResponse("Unauthorized", { status: 401 });
-        }
+        const principal = await requirePrincipal();
+        await authorizeCourse(principal, "course:delete", routeParams.courseId);
 
         const course = await db.course.findUnique({
             where: {
                 id: routeParams.courseId,
-                userId: userId,
+                userId: principal.userId,
             },
             include: {
                 modules: {
@@ -65,6 +61,9 @@ export async function DELETE(
 
         return NextResponse.json(deletedCourse);
     } catch (error) {
+        const denied = toResponse(error);
+        if (denied) return denied;
+
         logError("COURSE_ID_DELETE", error);
         return new NextResponse("Internal Error", { status: 500 });
     }
@@ -75,14 +74,12 @@ export async function PATCH(
     { params }: { params: Promise<{ courseId: string }> }
 ) {
     try {
-        const { userId } = await auth();
         const { courseId } = await params;
+
+        const principal = await requirePrincipal();
+        await authorizeCourse(principal, "course:update", courseId);
+
         const body = await req.json();
-
-        if (!userId || !(await isFaculty(userId))) {
-            return new NextResponse("Unauthorized", { status: 401 });
-        }
-
         const parsed = courseUpdateSchema.safeParse(body);
         if (!parsed.success) {
             return new NextResponse("Invalid data", { status: 400 });
@@ -91,13 +88,16 @@ export async function PATCH(
         const course = await db.course.update({
             where: {
                 id: courseId,
-                userId
+                userId: principal.userId
             },
             data: parsed.data,
         });
 
         return NextResponse.json(course);
     } catch (error) {
+        const denied = toResponse(error);
+        if (denied) return denied;
+
         logError("COURSE_ID", error);
         return new NextResponse("Internal Error", { status: 500 });
     }

@@ -1,8 +1,7 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
-import { isAdmin } from "@/lib/roles";
+import { requireCapability, requirePrincipal, toResponse } from "@/lib/auth";
 import { logError } from "@/lib/logger";
 
 export async function PATCH(
@@ -10,11 +9,8 @@ export async function PATCH(
   { params }: { params: Promise<{ categoryId: string }> }
 ) {
   try {
-    const { userId } = await auth();
-    if (!userId) return new NextResponse("Unauthorized", { status: 401 });
-
-    const admin = await isAdmin(userId);
-    if (!admin) return new NextResponse("Forbidden", { status: 403 });
+    const principal = await requirePrincipal();
+    requireCapability(principal, "community:moderate");
 
     const { categoryId } = await params;
     const { name, description, color } = await req.json();
@@ -30,6 +26,9 @@ export async function PATCH(
 
     return NextResponse.json(updated);
   } catch (error) {
+    const denied = toResponse(error);
+    if (denied) return denied;
+
     logError("COMMUNITY_CATEGORY_PATCH", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
@@ -40,11 +39,8 @@ export async function DELETE(
   { params }: { params: Promise<{ categoryId: string }> }
 ) {
   try {
-    const { userId } = await auth();
-    if (!userId) return new NextResponse("Unauthorized", { status: 401 });
-
-    const admin = await isAdmin(userId);
-    if (!admin) return new NextResponse("Forbidden", { status: 403 });
+    const principal = await requirePrincipal();
+    requireCapability(principal, "community:moderate");
 
     const { categoryId } = await params;
 
@@ -64,6 +60,9 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    const denied = toResponse(error);
+    if (denied) return denied;
+
     logError("COMMUNITY_CATEGORY_DELETE", error);
     return new NextResponse("Internal Error", { status: 500 });
   }

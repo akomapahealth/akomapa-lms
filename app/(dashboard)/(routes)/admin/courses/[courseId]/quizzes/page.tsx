@@ -1,9 +1,8 @@
-import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
 import Link from "next/link";
 import { FileQuestion } from "lucide-react";
 
 import { db } from "@/lib/db";
+import { requirePageCourse } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -22,16 +21,10 @@ const CourseQuizzesPage = async ({
   params: Promise<{ courseId: string }>;
 }) => {
   const { courseId } = await params;
-  const { userId } = await auth();
 
-  if (!userId) {
-    return redirect("/sign-in");
-  }
-
-  const course = await db.course.findUnique({
-    where: { id: courseId },
-    select: { title: true },
-  });
+  // Asserts the Course belongs to the principal. Loading it by id alone let any
+  // staff member read another author's Quizzes.
+  const { course } = await requirePageCourse("quiz:read", courseId);
 
   const quizzes = await db.quiz.findMany({
     where: { courseId },

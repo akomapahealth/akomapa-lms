@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { requirePagePrincipal } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
 import { getUserSettings } from "@/actions/get-user-settings";
@@ -7,12 +7,7 @@ import { SettingsForm } from "./_components/settings-form";
 import { PageContainer } from "@/components/shell/page-container";
 
 const SettingsPage = async () => {
-  const { userId } = await auth();
-
-  if (!userId) {
-    return redirect("/sign-in");
-  }
-
+  const { userId } = await requirePagePrincipal("/sign-in");
   const settings = await getUserSettings(userId);
 
   return (

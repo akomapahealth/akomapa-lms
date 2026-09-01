@@ -58,7 +58,6 @@ export const CourseSidebar = ({
 
   const preTest = quizzes.find((q) => q.type === "PRE_TEST");
   const postTest = quizzes.find((q) => q.type === "POST_TEST");
-  const moduleQuizzes = quizzes.filter((q) => q.type === "MODULE_QUIZ");
 
   return (
     <div className="h-full flex flex-col overflow-hidden border-r border-border/60 bg-card">

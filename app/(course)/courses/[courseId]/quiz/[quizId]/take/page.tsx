@@ -23,10 +23,8 @@ const QuizTakePage = () => {
     setQuiz,
     tick,
     submit,
-    reset,
     timeRemaining,
     isSubmitted,
-    questions,
     answers,
     attemptId,
   } = useQuizStore();

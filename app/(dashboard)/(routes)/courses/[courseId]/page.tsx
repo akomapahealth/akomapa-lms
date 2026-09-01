@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { requirePagePrincipal } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -19,9 +19,7 @@ const CourseDetailPage = async ({
   params: Promise<{ courseId: string }>;
 }) => {
   const { courseId } = await params;
-  const { userId } = await auth();
-  if (!userId) return redirect("/sign-in");
-
+  const { userId } = await requirePagePrincipal("/sign-in");
   const course = await getCourseDetail(userId, courseId);
   if (!course) return redirect("/courses");
 

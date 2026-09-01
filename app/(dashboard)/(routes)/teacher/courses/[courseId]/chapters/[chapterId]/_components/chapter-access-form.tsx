@@ -9,19 +9,10 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { Topic } from "@prisma/client";
 
-import {
-    Form,
-    FormControl,
-    FormDescription,
-    FormField,
-    FormItem,
-    FormMessage
-} from "@/components/ui/form";
+import { Form, FormControl, FormDescription, FormField, FormItem } from "@/components/ui/form";
 import { Button } from "@/components/ui/button"; 
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Editor } from "@/components/editor";
-import { Preview } from "@/components/preview";
 import { Checkbox } from "@/components/ui/checkbox";
 
 

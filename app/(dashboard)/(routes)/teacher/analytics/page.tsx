@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { requirePagePrincipal } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
 import { getAnalytics } from "@/actions/get-analytics";
@@ -7,12 +7,7 @@ import { Chart } from "./_components/chart";
 import { PageContainer } from "@/components/shell/page-container";
 
 const AnalyticsPage = async () => {
-    const { userId } = await auth();
-
-    if (!userId) {
-        return redirect("/dashboard");
-    }
-
+    const { userId } = await requirePagePrincipal("/dashboard");
     const {
         data,
         totalRevenue,

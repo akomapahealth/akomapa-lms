@@ -1,17 +1,10 @@
-import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
-
 import { db } from "@/lib/db";
-import { isAdmin } from "@/lib/roles";
+import { requirePageCapability } from "@/lib/auth";
 import { StudentTable } from "./_components/student-table";
 import { PageContainer } from "@/components/shell/page-container";
 
 const AdminStudentsPage = async () => {
-  const { userId } = await auth();
-  if (!userId) return redirect("/sign-in");
-
-  const admin = await isAdmin(userId);
-  if (!admin) return redirect("/dashboard");
+  await requirePageCapability("learner:administer");
 
   const students = await db.user.findMany({
     where: { role: "STUDENT" },

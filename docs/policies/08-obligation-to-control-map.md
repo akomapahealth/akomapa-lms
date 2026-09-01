@@ -15,7 +15,7 @@ awaiting review.
 
 | Obligation | Type | Control |
 | --- | --- | --- |
-| Only the account owner and authorised staff may read a learner's records | Code | Server-derived principal, [ADR 0001](../adr/0001-identity-authentication-and-rbac.md); `proxy.ts`, `lib/roles.ts` |
+| Only the account owner and authorised staff may read a learner's records | Code | Server-derived principal, [ADR 0001](../adr/0001-identity-authentication-and-rbac.md); `proxy.ts`, `lib/auth/` |
 | Access decisions cannot be forged from the browser | Code | ADR 0001 invariants; [CONTEXT.md](../../CONTEXT.md) |
 | A missing authorization check must not disclose data | Issue | RLS second layer, [ADR 0003](../adr/0003-rls-and-transaction-scoped-principal.md), [#43](https://github.com/akomapahealth/akomapa-lms/issues/43) |
 | Course access is granted only by entitlement | Code, Issue | [ADR 0002](../adr/0002-enrollment-as-canonical-entitlement.md); [#48](https://github.com/akomapahealth/akomapa-lms/issues/48) |

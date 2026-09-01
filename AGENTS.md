@@ -20,9 +20,14 @@ This repository uses a single-context domain documentation layout. See `docs/age
 - `DESIGN.md`: approved tokens, navigation, responsive floors, accessibility baseline, exception process.
 - `CONTEXT.md`: canonical domain terms, legacy terminology, invariants.
 - `docs/adr/`: approved architectural seams. Start at `docs/adr/README.md`.
+- `docs/permission-matrix.md`: who may perform which action on which resource. Binding on every route handler, server action, and page.
 - `docs/policies/`: data protection, retention, AI safety, educational scope, support, incident response, moderation, and the obligation-to-control map. Start at `docs/policies/README.md`.
 - `docs/release/`: the Phase 1 to 5 implementation matrix and the v1 release checklist. Start at `docs/release/implementation-matrix.md`.
 
 ### Delivery order
 
 Implement release work in dependency waves and keep tests inside each vertical slice. See `docs/agents/implementation-order.md`.
+
+### Testing
+
+Four suites with distinct jobs, and the rules the unit harness enforces. See `docs/agents/testing.md`. Run `npm run validate` before opening a pull request.

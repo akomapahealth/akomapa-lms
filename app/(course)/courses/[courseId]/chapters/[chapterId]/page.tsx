@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { requirePagePrincipal } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { File, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
@@ -23,12 +23,7 @@ const ChapterIdPage = async ({
 }) => {
     const { courseId, chapterId } = await params;
 
-    const { userId } = await auth();
-
-    if (!userId) {
-        return redirect("/dashboard");
-    }
-
+    const { userId } = await requirePagePrincipal("/dashboard");
     const {
         topic,
         course,

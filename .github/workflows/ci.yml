@@ -85,6 +85,85 @@ jobs:
 
       - run: npm run typecheck
 
+  unit:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      # Domain unit suite: entitlement, RBAC, completion, grading, badges,
+      # streaks, and certificate eligibility. Runs with coverage because the
+      # per-file thresholds in vitest.config.mts are the gate -- a module in the
+      # allow-list that loses coverage fails the build rather than quietly
+      # lowering an average. No database, no network: the suite stubs `fetch` to
+      # throw. Route, RLS, and transaction coverage is #107; browser journeys
+      # are #108.
+      - run: npm run test:unit:coverage
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: unit-coverage
+          path: coverage/unit
+          retention-days: 7
+
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+
+    # A real PostgreSQL, because the behaviour this job exists to prove -- row
+    # level security, constraints, cascades, transaction and concurrency
+    # semantics -- is invisible to a test double by construction (ADR 0003).
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      # The suite applies the committed migrations to a template database and
+      # clones it per worker, so a migration that does not apply cleanly fails
+      # here rather than in production.
+      - name: Run integration tests
+        run: npm run test:integration
+        env:
+          TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+
+      - name: Report migration state on failure
+        if: failure()
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -d akomapa_integration_template \
+            -c 'SELECT migration_name, finished_at FROM _prisma_migrations ORDER BY started_at' \
+            || echo "template database unavailable"
+
   evals:
     name: AI Evaluation Dataset
     runs-on: ubuntu-latest
@@ -100,9 +179,10 @@ jobs:
 
       # Structural validation of evals/dataset.v1.jsonl against the safety
       # rubric and thresholds. Does not call a model: the harness that executes
-      # these cases against a provider is #79. Uses the Node built-in test
-      # runner, so it adds no dependency; #106 may replace it with the shared
-      # unit-test runner when that lands.
+      # these cases against a provider is #79. Stays on the Node built-in test
+      # runner: #106 chose Vitest for the TypeScript domain suite and
+      # deliberately left these plain-JavaScript document checks alone, since
+      # porting them would add risk without adding coverage.
       - run: npm run test:evals
 
   checks:

@@ -1,8 +1,9 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
+import { authorizeCourse, requirePrincipal, toResponse } from "@/lib/auth";
 import { logError } from "@/lib/logger";
+
 export async function POST(
     req: Request,
     { params }: { params: Promise<{ courseId: string }> }
@@ -10,23 +11,10 @@ export async function POST(
         const routeParams = await params;
 
     try {
-        const { userId } = await auth();
+        const principal = await requirePrincipal();
+        await authorizeCourse(principal, "topic:create", routeParams.courseId);
+
         const { title } = await req.json();
-
-        if (!userId) {
-            return new NextResponse("Unauthorized", { status: 401 });
-        }
-
-        const courseOwner = await db.course.findUnique({
-            where: {
-                id: routeParams.courseId,
-                userId: userId,
-            }
-        });
-
-        if (!courseOwner) {
-            return new NextResponse("Unauthorized", { status: 401 });
-        }
 
         // Find or create a default module for the course
         let defaultModule = await db.module.findFirst({
@@ -65,7 +53,10 @@ export async function POST(
         return NextResponse.json(topic);
 
     } catch (error) {
+        const denied = toResponse(error);
+        if (denied) return denied;
+
         logError("CHAPTERS", error);
-        return new NextResponse("Internal Server Error", { status: 500 })
+        return new NextResponse("Internal Server Error", { status: 500 });
     }
 }

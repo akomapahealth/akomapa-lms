@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { stripHtml } from "@/lib/text/strip-html";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { ArrowLeft, Save, Trash2 } from "lucide-react";
@@ -60,11 +61,7 @@ export const JournalEditor = ({
   const selectedCourse = courses.find((c) => c.id === courseId);
   const modules = selectedCourse?.modules ?? [];
 
-  const wordCount = content
-    .replace(/<[^>]*>/g, "")
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean).length;
+  const wordCount = stripHtml(content).split(/\s+/).filter(Boolean).length;
 
   const save = useCallback(async () => {
     if (!title.trim() || !content.trim()) return;

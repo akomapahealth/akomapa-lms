@@ -1,7 +1,7 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
+import { requirePrincipal, toResponse } from "@/lib/auth";
 import { logError } from "@/lib/logger";
 
 export async function POST(
@@ -9,10 +9,7 @@ export async function POST(
   { params }: { params: Promise<{ caseStudyId: string }> }
 ) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
+    const { userId } = await requirePrincipal();
 
     const { caseStudyId } = await params;
     const { choices, completed } = await req.json();
@@ -28,6 +25,9 @@ export async function POST(
 
     return NextResponse.json(attempt);
   } catch (error) {
+    const denied = toResponse(error);
+    if (denied) return denied;
+
     logError("CASE_STUDY_ATTEMPT", error);
     return new NextResponse("Internal Error", { status: 500 });
   }

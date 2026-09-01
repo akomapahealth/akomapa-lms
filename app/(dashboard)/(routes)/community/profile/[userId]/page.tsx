@@ -1,9 +1,10 @@
-import { auth } from "@clerk/nextjs/server";
+import { requirePagePrincipal } from "@/lib/auth";
 import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
 import { ArrowLeft, Calendar } from "lucide-react";
 
 import { db } from "@/lib/db";
+import { excerpt } from "@/lib/text/strip-html";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PostCard } from "../../_components/post-card";
 
@@ -12,8 +13,7 @@ const CommunityProfilePage = async ({
 }: {
   params: Promise<{ userId: string }>;
 }) => {
-  const { userId: currentUserId } = await auth();
-  if (!currentUserId) return redirect("/sign-in");
+  const { userId: currentUserId } = await requirePagePrincipal("/sign-in");
 
   const { userId: profileUserId } = await params;
 
@@ -63,7 +63,7 @@ const CommunityProfilePage = async ({
   const postPreviews = posts.map((post) => ({
     id: post.id,
     title: post.title,
-    excerpt: post.content.replace(/<[^>]*>/g, "").slice(0, 150),
+    excerpt: excerpt(post.content, 150),
     author: post.user,
     category: post.category,
     course: post.course,

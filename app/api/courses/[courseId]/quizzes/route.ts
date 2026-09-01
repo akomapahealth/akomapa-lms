@@ -1,8 +1,7 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
-import { isFaculty } from "@/lib/roles";
+import { authorizeCourse, requirePrincipal, toResponse } from "@/lib/auth";
 import { logError } from "@/lib/logger";
 
 export async function POST(
@@ -12,16 +11,8 @@ export async function POST(
   const routeParams = await params;
 
   try {
-    const { userId } = await auth();
-
-    if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
-
-    const faculty = await isFaculty(userId);
-    if (!faculty) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
+    const principal = await requirePrincipal();
+    await authorizeCourse(principal, "quiz:create", routeParams.courseId);
 
     const { title, type, moduleId } = await req.json();
 
@@ -40,6 +31,9 @@ export async function POST(
 
     return NextResponse.json(quiz);
   } catch (error) {
+    const denied = toResponse(error);
+    if (denied) return denied;
+
     logError("QUIZZES", error);
     return new NextResponse("Internal Error", { status: 500 });
   }

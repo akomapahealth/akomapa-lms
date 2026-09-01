@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { requirePagePrincipal } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowUp, ArrowDown, GraduationCap } from "lucide-react";
@@ -18,12 +18,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const GradesPage = async () => {
-  const { userId } = await auth();
-
-  if (!userId) {
-    return redirect("/sign-in");
-  }
-
+  const { userId } = await requirePagePrincipal("/sign-in");
   const grades = await getGradesOverview(userId);
 
   // Calculate overall average

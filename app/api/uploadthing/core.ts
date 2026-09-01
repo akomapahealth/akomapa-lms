@@ -1,22 +1,24 @@
-import { isFaculty } from "@/lib/roles";
-import { auth as clerkAuth } from "@clerk/nextjs/server";
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { UploadThingError } from "uploadthing/server";
 
+import { can, getPrincipal } from "@/lib/auth";
+
 const f = createUploadthing();
 
+// This route sits on the public matcher in proxy.ts, so it authenticates
+// itself. UploadThing surfaces its own error type rather than a NextResponse,
+// which is why it calls `can` directly instead of using the `authorize*` guards.
 const handleAuth = async () => {
-    const { userId } = await clerkAuth();
+    const principal = await getPrincipal();
 
-    if (!userId) throw new UploadThingError("Unauthorized");
+    if (!principal) throw new UploadThingError("Unauthorized");
+    if (!can(principal, "upload:courseAsset")) {
+        throw new UploadThingError("Forbidden");
+    }
 
-    const isAuthorized = await isFaculty(userId);
-    if (!isAuthorized) throw new UploadThingError("Unauthorized");
-
-    return { userId };
+    return { userId: principal.userId };
 }
  
-const auth = (req: Request) => ({ id: "fakeId" });
  
 export const ourFileRouter = {
     courseImage: f({ image: { maxFileSize: "4MB", maxFileCount: 1 } })

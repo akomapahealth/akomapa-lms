@@ -1,15 +1,14 @@
-import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
-
 import { db } from "@/lib/db";
+import { requirePageCapability } from "@/lib/auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PostModerationTable } from "./_components/post-moderation-table";
 import { CategoryManager } from "./_components/category-manager";
 import { PageContainer } from "@/components/shell/page-container";
 
 const AdminCommunityPage = async () => {
-  const { userId } = await auth();
-  if (!userId) return redirect("/sign-in");
+  // Moderation is a global power over content the principal did not write, so
+  // it is ADMIN-only. Before #42 this page was reachable by any faculty member.
+  await requirePageCapability("community:moderate");
 
   const [posts, categories] = await Promise.all([
     db.forumPost.findMany({

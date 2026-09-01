@@ -1,23 +1,9 @@
-import { isFaculty } from "@/lib/roles";
-import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
+import { requirePageCapability } from "@/lib/auth";
 
-const TeacherLayout = async ({
-    children
-}: {
-    children: React.ReactNode;
-}) => {
-    const { userId } = await auth();
+const TeacherLayout = async ({ children }: { children: React.ReactNode }) => {
+  await requirePageCapability("staff:access");
 
-    if (!userId) {
-        return redirect("/sign-in");
-    }
-
-    if (!(await isFaculty(userId))) {
-        return redirect("/dashboard");
-    }
-
-    return <>{children}</>;
-}
+  return <>{children}</>;
+};
 
 export default TeacherLayout;

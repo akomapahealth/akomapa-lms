@@ -11,11 +11,20 @@
     "typecheck": "tsc --noEmit",
     "test:evals": "node --test evals/*.test.mjs",
     "test:checks": "node --test checks/*.test.mjs",
-    "validate": "npm run lint && npm run typecheck && npm run test:evals && npm run test:checks",
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest",
+    "test:unit:coverage": "vitest run --coverage",
+    "test:integration": "vitest run --config vitest.integration.config.mts",
+    "test:integration:watch": "vitest --config vitest.integration.config.mts",
+    "validate": "npm run lint && npm run typecheck && npm run test:unit && npm run test:evals && npm run test:checks",
     "postinstall": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "seed": "tsx scripts/seed.ts",
+    "role:grant": "tsx scripts/manage-roles.ts grant",
+    "role:find": "tsx scripts/manage-roles.ts find",
+    "role:list": "tsx scripts/manage-roles.ts list",
+    "role:check": "tsx scripts/manage-roles.ts check",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "prepare": "husky"
@@ -89,6 +98,7 @@
     "@types/react-dom": "^18",
     "@typescript-eslint/eslint-plugin": "^8.67.0",
     "@typescript-eslint/parser": "^8.61.0",
+    "@vitest/coverage-v8": "^4.1.11",
     "autoprefixer": "^10.5.4",
     "conventional-changelog-conventionalcommits": "^8.0.0",
     "eslint": "^8",
@@ -101,7 +111,8 @@
     "semantic-release": "^24.2.9",
     "tailwindcss": "^3.4.1",
     "tsx": "^4.23.12",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.11"
   },
   "lint-staged": {
     "*.{ts,tsx}": [

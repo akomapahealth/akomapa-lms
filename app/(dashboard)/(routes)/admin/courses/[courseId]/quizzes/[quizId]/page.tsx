@@ -1,9 +1,9 @@
-import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, LayoutDashboard, ListChecks } from "lucide-react";
 
 import { db } from "@/lib/db";
+import { requirePageCourse } from "@/lib/auth";
 import { IconBadge } from "@/components/icon-badge";
 import { Banner } from "@/components/banner";
 
@@ -18,11 +18,10 @@ const QuizEditorPage = async ({
   params: Promise<{ courseId: string; quizId: string }>;
 }) => {
   const { courseId, quizId } = await params;
-  const { userId } = await auth();
 
-  if (!userId) {
-    return redirect("/sign-in");
-  }
+  // This page renders answer keys, so reading it without owning the Course was
+  // a cross-course disclosure of every correct answer.
+  await requirePageCourse("quiz:read", courseId);
 
   const quiz = await db.quiz.findUnique({
     where: { id: quizId, courseId },

@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { requirePagePrincipal } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
 import { getEnrolledCourses } from "@/actions/get-enrolled-courses";
@@ -13,9 +13,7 @@ const CoursesPage = async ({
 }: {
   searchParams: Promise<{ search?: string; status?: string; view?: string }>;
 }) => {
-  const { userId } = await auth();
-  if (!userId) return redirect("/sign-in");
-
+  const { userId } = await requirePagePrincipal("/sign-in");
   const params = await searchParams;
   const filter = (params.status as "all" | "in_progress" | "completed" | "not_started") || "all";
   const search = params.search || undefined;

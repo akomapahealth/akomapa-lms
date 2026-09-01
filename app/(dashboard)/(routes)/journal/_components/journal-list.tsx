@@ -3,6 +3,8 @@
 import { Lock, Globe, BookOpen, Calendar } from "lucide-react";
 import Link from "next/link";
 
+import { stripHtml } from "@/lib/text/strip-html";
+
 interface JournalEntry {
   id: string;
   title: string;
@@ -16,10 +18,6 @@ interface JournalEntry {
 
 interface JournalListProps {
   entries: JournalEntry[];
-}
-
-function stripHtml(html: string): string {
-  return html.replace(/<[^>]*>/g, "").trim();
 }
 
 export const JournalList = ({ entries }: JournalListProps) => {

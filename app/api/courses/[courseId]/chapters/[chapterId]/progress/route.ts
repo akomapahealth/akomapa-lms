@@ -1,11 +1,24 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
+import { z } from "zod";
+
 import { db } from "@/lib/db";
+import { requirePrincipal, toResponse } from "@/lib/auth";
+import { findPublishedTopicInCourse } from "@/lib/courses/topic-access";
+import {
+    isCourseComplete as courseIsComplete,
+    isModuleComplete as moduleIsComplete,
+} from "@/lib/courses/completion";
 import { evaluateBadges, type BadgeEvent } from "@/lib/badge-service";
 import { updateStreak } from "@/lib/streak-service";
 import { generateCertificate } from "@/lib/certificate-service";
 import { logError } from "@/lib/logger";
+
+const progressSchema = z.object({
+    // Runtime-validated: the value drives Enrollment status and certificate
+    // issuance, and JSON will happily deliver a string, a number, or an object.
+    isCompleted: z.boolean(),
+});
 
 export async function PUT(
     req: Request,
@@ -14,12 +27,41 @@ export async function PUT(
         const routeParams = await params;
 
     try {
-        const { userId } = await auth();
-        const { isCompleted } = await req.json();
+        const { userId } = await requirePrincipal();
 
-        if (!userId) {
-            return new NextResponse("Unauthorized", { status: 401 });
+        // Published, and in this Course. Without the binding a progress write
+        // could be aimed at any Topic in the product by id, and the cascade
+        // below -- badges, streaks, Enrollment status, certificate issuance --
+        // would run for a Course the learner is not on.
+        const topic = await findPublishedTopicInCourse(
+            routeParams.courseId,
+            routeParams.chapterId
+        );
+
+        if (!topic) {
+            return new NextResponse("Not Found", { status: 404 });
         }
+
+        // Entitlement. A free-preview Topic is progressable without a purchase;
+        // anything else requires one. Enrollment becomes the canonical record
+        // in #48, at which point this reads from there instead.
+        if (!topic.isFree) {
+            const purchase = await db.purchase.findUnique({
+                where: {
+                    userId_courseId: { userId, courseId: routeParams.courseId },
+                },
+            });
+
+            if (!purchase) {
+                return new NextResponse("Not Found", { status: 404 });
+            }
+        }
+
+        const parsed = progressSchema.safeParse(await req.json());
+        if (!parsed.success) {
+            return new NextResponse("Invalid data", { status: 400 });
+        }
+        const { isCompleted } = parsed.data;
 
         const userProgress = await db.userProgress.upsert({
             where: {
@@ -43,34 +85,35 @@ export async function PUT(
         let moduleName = "";
 
         if (isCompleted) {
-            const topic = await db.topic.findUnique({
-                where: { id: routeParams.chapterId },
+            const owningModule = await db.module.findUnique({
+                where: { id: topic.moduleId },
                 select: {
-                    moduleId: true,
-                    module: {
+                    title: true,
+                    topics: {
+                        where: { isPublished: true },
                         select: {
-                            title: true,
-                            topics: {
-                                where: { isPublished: true },
-                                select: {
-                                    id: true,
-                                    userProgress: {
-                                        where: { userId },
-                                        select: { isCompleted: true },
-                                    },
-                                },
+                            id: true,
+                            userProgress: {
+                                where: { userId },
+                                select: { isCompleted: true },
                             },
                         },
                     },
                 },
             });
 
-            if (topic?.module) {
-                moduleName = topic.module.title;
-                isModuleComplete = topic.module.topics.every((t) =>
-                    t.id === routeParams.chapterId
-                        ? true // just completed this one
-                        : t.userProgress.some((p) => p.isCompleted)
+            if (owningModule) {
+                moduleName = owningModule.title;
+                // A Module with no published Topics is not complete. `[].every()`
+                // is true, so the previous check treated emptiness as success.
+                isModuleComplete = moduleIsComplete(
+                    {
+                        topics: owningModule.topics.map((t) => ({
+                            id: t.id,
+                            completed: t.userProgress.some((p) => p.isCompleted),
+                        })),
+                    },
+                    routeParams.chapterId
                 );
             }
 
@@ -82,7 +125,7 @@ export async function PUT(
                 { type: "streak_updated", currentStreak },
             ];
 
-            if (isModuleComplete && topic?.moduleId) {
+            if (isModuleComplete) {
                 badgeEvents.push({ type: "module_completed", moduleId: topic.moduleId });
             }
 
@@ -104,12 +147,17 @@ export async function PUT(
                     },
                 });
 
-                const isCourseComplete = allModules.every((mod) =>
-                    mod.topics.every((t) =>
-                        t.id === routeParams.chapterId
-                            ? true
-                            : t.userProgress.some((p) => p.isCompleted)
-                    )
+                // Non-vacuous: a Course with no published Topics at all cannot
+                // be complete. Otherwise a draft Course issued a certificate for
+                // finishing nothing.
+                const isCourseComplete = courseIsComplete(
+                    allModules.map((mod) => ({
+                        topics: mod.topics.map((t) => ({
+                            id: t.id,
+                            completed: t.userProgress.some((p) => p.isCompleted),
+                        })),
+                    })),
+                    routeParams.chapterId
                 );
 
                 if (isCourseComplete) {
@@ -158,6 +206,9 @@ export async function PUT(
         });
 
     } catch (error) {
+        const denied = toResponse(error);
+        if (denied) return denied;
+
         logError("CHAPTER_ID_PROGRESS", error);
         return new NextResponse("Internal Error", { status: 500 });
     }

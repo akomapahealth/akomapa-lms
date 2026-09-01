@@ -1,8 +1,7 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
-import { isAdmin } from "@/lib/roles";
+import { requireCapability, requirePrincipal, toResponse } from "@/lib/auth";
 import { logError } from "@/lib/logger";
 
 export async function PATCH(
@@ -10,15 +9,8 @@ export async function PATCH(
   { params }: { params: Promise<{ postId: string }> }
 ) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
-    }
-
-    const admin = await isAdmin(userId);
-    if (!admin) {
-      return new NextResponse("Forbidden", { status: 403 });
-    }
+    const principal = await requirePrincipal();
+    requireCapability(principal, "community:moderate");
 
     const { postId } = await params;
 
@@ -38,6 +30,9 @@ export async function PATCH(
 
     return NextResponse.json(updated);
   } catch (error) {
+    const denied = toResponse(error);
+    if (denied) return denied;
+
     logError("COMMUNITY_POST_PIN", error);
     return new NextResponse("Internal Error", { status: 500 });
   }

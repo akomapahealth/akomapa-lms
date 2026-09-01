@@ -106,7 +106,10 @@ test("npm scripts named in documents exist", () => {
   const errors = [];
   for (const doc of docs) {
     const src = fs.readFileSync(path.join(root, doc), "utf8");
-    for (const m of src.matchAll(/npm run ([a-z:]+)/g)) {
+    // Script names may contain digits, hyphens, and underscores. A narrower
+    // pattern silently truncates a real name (`test:e2e` -> `test:e`) and then
+    // reports the truncation as a missing script.
+    for (const m of src.matchAll(/npm run ([a-z0-9:_-]+)/g)) {
       if (!scripts.has(m[1])) errors.push(`${doc}: unknown npm script -> ${m[1]}`);
     }
   }

@@ -20,8 +20,10 @@ consequences follow. The check can be forgotten entirely. The check can be
 present but the ownership filter absent, which is the cross-course Topic access
 defect in
 [#39](https://github.com/akomapahealth/akomapa-lms/issues/39). And
-`lib/roles.ts` still grants `ADMIN` to whoever matches the `TEACHER_ID`
+the role helpers granted `ADMIN` to whoever matched the `TEACHER_ID`
 environment variable, which is authorization by deployment configuration.
+(Both the helpers and the variable were removed when this ADR was
+implemented; `lib/auth/` replaces them.)
 
 Nothing about identity may be taken from the browser, and today nothing
 structurally prevents it.
@@ -52,7 +54,7 @@ authorization decision reads.
    completion, and entitlement are never accepted from a request body, query
    string, header, or client component prop.
 6. **`TEACHER_ID` is retired.** Role comes from `User.role` only. The
-   environment fallback in `lib/roles.ts` is removed, not merely deprecated.
+   environment fallback in the role helpers is removed, not merely deprecated.
 
 Out of scope: how roles are granted and revoked in the administration UI
 ([#88](https://github.com/akomapahealth/akomapa-lms/issues/88)), and the
@@ -92,5 +94,5 @@ require re-deriving the whole Course graph before the handler runs.
 
 - [ADR 0002](0002-enrollment-as-canonical-entitlement.md), [ADR 0003](0003-rls-and-transaction-scoped-principal.md)
 - [CONTEXT.md](../../CONTEXT.md) invariants
-- `proxy.ts`, `lib/roles.ts`, `prisma/schema.prisma`
+- `proxy.ts`, `lib/auth/`, `prisma/schema.prisma`, [permission matrix](../permission-matrix.md)
 - Issues [#39](https://github.com/akomapahealth/akomapa-lms/issues/39), [#42](https://github.com/akomapahealth/akomapa-lms/issues/42), [#86](https://github.com/akomapahealth/akomapa-lms/issues/86)

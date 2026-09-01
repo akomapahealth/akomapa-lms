@@ -1,15 +1,21 @@
+import type { StaffCapabilities } from "@/lib/auth";
+
 import { Logo } from "./logo";
 import { SidebarRoutes, SidebarBottomRoutes } from "./sidebar-routes";
 import { SidebarUserInfo } from "./sidebar-user-info";
 
-export const Sidebar = () => {
+export const Sidebar = ({
+  capabilities,
+}: {
+  capabilities: StaffCapabilities;
+}) => {
   return (
     <div className="h-full flex flex-col overflow-y-auto bg-sidebar text-sidebar-foreground">
       <div className="border-b border-sidebar-border">
         <Logo />
       </div>
       <div className="flex flex-col w-full flex-1">
-        <SidebarRoutes />
+        <SidebarRoutes capabilities={capabilities} />
       </div>
       <div className="border-t border-sidebar-border">
         <SidebarBottomRoutes />
