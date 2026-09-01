@@ -19,6 +19,9 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "seed": "tsx scripts/seed.ts",
+    "role:grant": "tsx scripts/manage-roles.ts grant",
+    "role:list": "tsx scripts/manage-roles.ts list",
+    "role:check": "tsx scripts/manage-roles.ts check",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "prepare": "husky"

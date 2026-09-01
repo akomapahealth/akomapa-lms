@@ -1,171 +1,115 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { dbMock } from "./support/db";
-import { aRoleRow } from "./support/builders";
 
-vi.mock("@/lib/db", async () => ({
-  db: (await import("./support/db")).dbMock,
-}));
+const clerkAuth = vi.hoisted(() => vi.fn());
+vi.mock("@clerk/nextjs/server", () => ({ auth: clerkAuth }));
+vi.mock("@/lib/db", async () => ({ db: (await import("./support/db")).dbMock }));
 
 const { getUserRole, isAdmin, isFaculty, isStudent } = await import("@/lib/roles");
 
 /**
- * Authorization is the invariant with the worst failure mode in the product: a
- * wrong answer here exposes another learner's data or hands out privilege. The
- * tests below therefore assert the *deny* direction as carefully as the grant
- * direction, and cover the boundaries between the three roles exhaustively.
+ * `lib/roles.ts` is now a deprecated adapter over `lib/auth`, kept only so call
+ * sites can migrate incrementally. These tests pin the two properties that
+ * matter while it still exists:
  *
- * Related work: #42 replaces this module with a centralized RBAC and ownership
- * module. These tests describe the behaviour that must survive that move.
+ *   1. It answers the same questions it always did, so migrating a call site is
+ *      a refactor rather than a behaviour change.
+ *   2. TEACHER_ID grants nothing. That is the regression proving ADR 0001
+ *      section 6 -- the environment backdoor is removed, not deprecated.
+ *
+ * The exhaustive matrix lives in tests/unit/auth/policy.test.ts. This file is
+ * deleted along with the adapter when the last call site moves.
  */
-describe("getUserRole", () => {
-  beforeEach(() => {
-    delete process.env.TEACHER_ID;
+beforeEach(() => {
+  clerkAuth.mockResolvedValue({ userId: "user_1" });
+});
+
+describe("the deprecated role adapter", () => {
+  it.each([
+    ["ADMIN", true, true, false],
+    ["FACULTY", false, true, false],
+    ["STUDENT", false, false, true],
+  ])("resolves %s consistently", async (role, admin, faculty, studentOnly) => {
+    dbMock.user.findUnique.mockResolvedValue({ role });
+
+    await expect(getUserRole("user_1")).resolves.toBe(role);
+    await expect(isAdmin("user_1")).resolves.toBe(admin);
+    await expect(isFaculty("user_1")).resolves.toBe(faculty);
+    await expect(isStudent("user_1")).resolves.toBe(studentOnly);
   });
 
-  it("returns the role persisted on the User row", async () => {
-    dbMock.user.findUnique.mockResolvedValue(aRoleRow("FACULTY"));
-
-    await expect(getUserRole("user_1")).resolves.toBe("FACULTY");
-  });
-
-  it("reads the role for the requested user and selects nothing else", async () => {
-    dbMock.user.findUnique.mockResolvedValue(aRoleRow("ADMIN"));
-
-    await getUserRole("user_42");
-
-    expect(dbMock.user.findUnique).toHaveBeenCalledWith({
-      where: { id: "user_42" },
-      select: { role: true },
-    });
-  });
-
-  it("defaults an unknown user to STUDENT rather than throwing", async () => {
+  it("defaults an unknown user to STUDENT", async () => {
     dbMock.user.findUnique.mockResolvedValue(null);
 
-    await expect(getUserRole("ghost")).resolves.toBe("STUDENT");
+    await expect(getUserRole("user_1")).resolves.toBe("STUDENT");
+    await expect(isAdmin("user_1")).resolves.toBe(false);
+    await expect(isFaculty("user_1")).resolves.toBe(false);
   });
 
-  it("defaults to STUDENT when the row exists but the role is null", async () => {
-    dbMock.user.findUnique.mockResolvedValue({ role: null });
+  it("grants nothing for a role the domain does not define", async () => {
+    for (const corrupt of ["admin", "Admin", "SUPERUSER", "", 1, true, {}, []]) {
+      dbMock.user.findUnique.mockResolvedValue({ role: corrupt });
 
+      await expect(isAdmin("user_1")).resolves.toBe(false);
+      await expect(isFaculty("user_1")).resolves.toBe(false);
+    }
+  });
+
+  it("grants nothing when there is no session", async () => {
+    clerkAuth.mockResolvedValue({ userId: null });
+
+    await expect(isAdmin("user_1")).resolves.toBe(false);
+    await expect(isFaculty("user_1")).resolves.toBe(false);
+    await expect(isStudent("user_1")).resolves.toBe(false);
     await expect(getUserRole("user_1")).resolves.toBe("STUDENT");
   });
 
-  describe("the TEACHER_ID environment backdoor", () => {
-    /**
-     * `lib/roles.ts` grants ADMIN to whoever matches `process.env.TEACHER_ID`,
-     * bypassing the database entirely. The matrix flags this as the reason row
-     * 1.7 is `partial`, and #42 removes it. Until then it is real production
-     * behaviour and is pinned here so its removal is a deliberate, visible
-     * change rather than an accident.
-     */
-    it("grants ADMIN on an exact match without consulting the database", async () => {
-      vi.stubEnv("TEACHER_ID", "teacher_1");
+  it("ignores a userId that is not the session's own", async () => {
+    // The old signature accepted any userId. A caller passing someone else's id
+    // must not receive an answer derived from the session's role.
+    dbMock.user.findUnique.mockResolvedValue({ role: "ADMIN" });
 
-      await expect(getUserRole("teacher_1")).resolves.toBe("ADMIN");
-      expect(dbMock.user.findUnique).not.toHaveBeenCalled();
-    });
-
-    it("does not grant ADMIN on a near match", async () => {
-      vi.stubEnv("TEACHER_ID", "teacher_1");
-      dbMock.user.findUnique.mockResolvedValue(aRoleRow("STUDENT"));
-
-      await expect(getUserRole("teacher_10")).resolves.toBe("STUDENT");
-      await expect(getUserRole("Teacher_1")).resolves.toBe("STUDENT");
-      await expect(getUserRole(" teacher_1")).resolves.toBe("STUDENT");
-    });
-
-    it("does not grant ADMIN to an empty user id when TEACHER_ID is unset", async () => {
-      // `undefined === ""` is false, so this must fall through to the database.
-      // If the comparison were ever loosened, an anonymous caller would become
-      // an administrator on any deployment that forgot to set TEACHER_ID.
-      dbMock.user.findUnique.mockResolvedValue(null);
-
-      await expect(getUserRole("")).resolves.toBe("STUDENT");
-      expect(dbMock.user.findUnique).toHaveBeenCalled();
-    });
-  });
-});
-
-describe("role predicates", () => {
-  const cases: Array<{
-    persisted: string | null;
-    admin: boolean;
-    faculty: boolean;
-    student: boolean;
-  }> = [
-    { persisted: "ADMIN", admin: true, faculty: true, student: false },
-    { persisted: "FACULTY", admin: false, faculty: true, student: false },
-    { persisted: "STUDENT", admin: false, faculty: false, student: true },
-    // Absent or unrecognised state must resolve to the least privilege.
-    { persisted: null, admin: false, faculty: false, student: true },
-  ];
-
-  for (const { persisted, admin, faculty, student } of cases) {
-    it(`resolves ${persisted ?? "an absent user"} to admin=${admin} faculty=${faculty} student=${student}`, async () => {
-      dbMock.user.findUnique.mockResolvedValue(aRoleRow(persisted));
-
-      await expect(isAdmin("user_1")).resolves.toBe(admin);
-      await expect(isFaculty("user_1")).resolves.toBe(faculty);
-      await expect(isStudent("user_1")).resolves.toBe(student);
-    });
-  }
-
-  it("treats ADMIN as a superset of FACULTY but never of STUDENT", async () => {
-    dbMock.user.findUnique.mockResolvedValue(aRoleRow("ADMIN"));
-
-    await expect(isFaculty("user_1")).resolves.toBe(true);
-    await expect(isStudent("user_1")).resolves.toBe(false);
-  });
-});
-
-/**
- * Deliberate fault injection.
- *
- * Coverage percentages prove a line ran, not that it was checked. These cases
- * corrupt the module's only dependency and assert the deny-by-default contract
- * still holds — the property that actually protects learner data.
- */
-describe("fault injection at the persistence boundary", () => {
-  it("denies privilege for role values the domain does not define", async () => {
-    for (const corrupt of ["admin", "Admin", "SUPERUSER", "", "  ADMIN  "]) {
-      dbMock.user.findUnique.mockResolvedValue({ role: corrupt });
-
-      await expect(isAdmin("user_1")).resolves.toBe(false);
-      await expect(isFaculty("user_1")).resolves.toBe(false);
-    }
+    await expect(isAdmin("someone_else")).resolves.toBe(false);
+    await expect(getUserRole("someone_else")).resolves.toBe("STUDENT");
   });
 
-  it("denies privilege when the role arrives as a non-string", async () => {
-    for (const corrupt of [0, 1, true, {}, []]) {
-      dbMock.user.findUnique.mockResolvedValue({ role: corrupt });
-
-      await expect(isAdmin("user_1")).resolves.toBe(false);
-      await expect(isFaculty("user_1")).resolves.toBe(false);
-    }
-  });
-
-  it("does not grant ADMIN through type coercion at an untyped call site", async () => {
-    // TypeScript types `userId` as a string, but route handlers receive values
-    // that TypeScript never checked. If the identity comparison were ever
-    // loosened from `===` to `==`, an empty TEACHER_ID plus a coercible caller
-    // value (`[]`, `""`) would loosely compare equal and mint an administrator.
-    vi.stubEnv("TEACHER_ID", "");
-    dbMock.user.findUnique.mockResolvedValue(aRoleRow("STUDENT"));
-
-    for (const coercible of [[], "", 0, false, null, undefined]) {
-      await expect(
-        isAdmin(coercible as unknown as string)
-      ).resolves.toBe(false);
-    }
-  });
-
-  it("fails closed by propagating a database error instead of granting access", async () => {
+  it("propagates a database failure instead of granting access", async () => {
     dbMock.user.findUnique.mockRejectedValue(new Error("connection reset"));
 
-    // The caller must see the failure. Swallowing it and returning a default
-    // role would turn an outage into a silent authorization decision.
     await expect(isAdmin("user_1")).rejects.toThrow("connection reset");
+  });
+
+  describe("TEACHER_ID is retired", () => {
+    it("grants nothing when the environment variable matches the caller", async () => {
+      // The regression for ADR 0001 section 6. Before #42 this returned ADMIN
+      // without consulting the database at all.
+      vi.stubEnv("TEACHER_ID", "user_1");
+      dbMock.user.findUnique.mockResolvedValue({ role: "STUDENT" });
+
+      await expect(getUserRole("user_1")).resolves.toBe("STUDENT");
+      await expect(isAdmin("user_1")).resolves.toBe(false);
+      await expect(isFaculty("user_1")).resolves.toBe(false);
+    });
+
+    it("consults the database rather than the environment", async () => {
+      vi.stubEnv("TEACHER_ID", "user_1");
+      dbMock.user.findUnique.mockResolvedValue({ role: "STUDENT" });
+
+      await isAdmin("user_1");
+
+      expect(dbMock.user.findUnique).toHaveBeenCalledWith({
+        where: { id: "user_1" },
+        select: { role: true },
+      });
+    });
+
+    it("cannot be exploited with an empty variable and an empty caller", async () => {
+      vi.stubEnv("TEACHER_ID", "");
+      clerkAuth.mockResolvedValue({ userId: "" });
+
+      await expect(isAdmin("")).resolves.toBe(false);
+      await expect(isFaculty("")).resolves.toBe(false);
+    });
   });
 });

@@ -1,39 +1,47 @@
-import { db } from "@/lib/db";
+import { can, type Principal, type Role } from "@/lib/auth/policy";
+import { getPrincipal } from "@/lib/auth/principal";
 
-export type UserRole = "STUDENT" | "FACULTY" | "ADMIN";
+/**
+ * @deprecated Use `@/lib/auth` directly.
+ *
+ * These helpers remain only so that call sites can migrate to the centralized
+ * permission module incrementally rather than in one flag-day change. They now
+ * delegate to `lib/auth/policy.ts` and no longer read `process.env.TEACHER_ID`:
+ * privilege comes from `User.role` and nothing else (ADR 0001 section 6).
+ *
+ * Each helper answers "does this role clear the bar", which is exactly the
+ * question that is not sufficient on its own -- it cannot see the resource. New
+ * code must call `requirePrincipal()` and one of the `authorize*` guards so
+ * ownership is asserted in the query. Deleted once every call site has moved.
+ */
+
+export type UserRole = Role;
+
+async function principalFor(userId: string): Promise<Principal | null> {
+  const principal = await getPrincipal();
+  // Defends against a caller passing an id other than the session's. The old
+  // helpers took a userId parameter, so a mismatched value must resolve to no
+  // principal rather than silently authorizing the session's own role.
+  if (!principal || principal.userId !== userId) return null;
+  return principal;
+}
 
 export async function getUserRole(userId: string): Promise<UserRole> {
-  // Fallback: check server-only env var for backward compatibility.
-  // Both sides must be non-empty. `TEACHER_ID` is `z.string().optional()`, so a
-  // blank value is valid configuration, and a blank `userId` is what an
-  // unauthenticated caller produces — comparing them would grant ADMIN to
-  // anonymous requests on any deployment that defines the variable but leaves
-  // it empty. Callers guard with `if (!userId)` today; this makes the grant
-  // safe regardless of whether a future caller remembers to.
-  const teacherId = process.env.TEACHER_ID;
-  if (teacherId && userId && userId === teacherId) {
-    return "ADMIN";
-  }
-
-  const user = await db.user.findUnique({
-    where: { id: userId },
-    select: { role: true },
-  });
-
-  return (user?.role as UserRole) ?? "STUDENT";
+  const principal = await principalFor(userId);
+  return principal?.role ?? "STUDENT";
 }
 
 export async function isAdmin(userId: string): Promise<boolean> {
-  const role = await getUserRole(userId);
-  return role === "ADMIN";
+  const principal = await principalFor(userId);
+  return can(principal, "analytics:read");
 }
 
 export async function isFaculty(userId: string): Promise<boolean> {
-  const role = await getUserRole(userId);
-  return role === "FACULTY" || role === "ADMIN";
+  const principal = await principalFor(userId);
+  return can(principal, "course:create");
 }
 
 export async function isStudent(userId: string): Promise<boolean> {
-  const role = await getUserRole(userId);
-  return role === "STUDENT";
+  const principal = await principalFor(userId);
+  return principal?.role === "STUDENT";
 }
