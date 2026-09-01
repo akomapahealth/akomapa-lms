@@ -1,9 +1,27 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 import { db } from "@/lib/db";
+import { requirePrincipal, toResponse } from "@/lib/auth";
+import { findLearnerAttempt } from "@/lib/assessments/attempt-access";
+import { gradeSubmission, validateSubmission } from "@/lib/assessments/grading";
 import { evaluateBadges } from "@/lib/badge-service";
 import { logError } from "@/lib/logger";
+
+const submissionSchema = z.object({
+  attemptId: z.string().min(1),
+  answers: z
+    .array(
+      z.object({
+        questionId: z.string().min(1),
+        selectedOptionId: z.string().min(1),
+      })
+    )
+    // Bounded so a submission cannot be used to write an unlimited number of
+    // rows. A Quiz with more questions than this cannot be graded here, which
+    // is a deliberate ceiling rather than an accident.
+    .max(500),
+});
 
 export async function POST(
   req: Request,
@@ -12,33 +30,32 @@ export async function POST(
   const routeParams = await params;
 
   try {
-    const { userId } = await auth();
+    const { userId } = await requirePrincipal();
 
-    if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
+    const parsed = submissionSchema.safeParse(await req.json());
+    if (!parsed.success) {
+      return new NextResponse("Invalid data", { status: 400 });
     }
+    const { attemptId, answers } = parsed.data;
 
-    const { attemptId, answers } = await req.json() as {
-      attemptId: string;
-      answers: { questionId: string; selectedOptionId: string }[];
-    };
+    // The attempt must be this learner's, on this Quiz, in this Course. It was
+    // previously loaded by id and checked only for ownership, while grading ran
+    // against the route's Quiz -- so an attempt started on one Quiz could be
+    // submitted through another Quiz's URL and scored against questions it was
+    // never issued.
+    const attempt = await findLearnerAttempt(
+      userId,
+      routeParams.courseId,
+      routeParams.quizId,
+      attemptId
+    );
 
-    // Verify attempt belongs to user and is not completed
-    const attempt = await db.quizAttempt.findUnique({
-      where: { id: attemptId },
-      include: {
-        quiz: {
-          select: { timeLimitMinutes: true, passingScore: true },
-        },
-      },
-    });
-
-    if (!attempt || attempt.userId !== userId) {
-      return new NextResponse("Unauthorized", { status: 401 });
+    if (!attempt) {
+      return new NextResponse("Not Found", { status: 404 });
     }
 
     if (attempt.completedAt) {
-      return new NextResponse("Quiz already submitted", { status: 400 });
+      return new NextResponse("Quiz already submitted", { status: 409 });
     }
 
     // Server-side time validation (30s grace period)
@@ -51,8 +68,9 @@ export async function POST(
     }
 
     // Fetch all questions with correct answers
+    // The attempt's own Quiz, which the binding above has proven is the route's.
     const questions = await db.question.findMany({
-      where: { quizId: routeParams.quizId },
+      where: { quizId: attempt.quizId },
       include: {
         options: {
           select: { id: true, isCorrect: true },
@@ -60,70 +78,58 @@ export async function POST(
       },
     });
 
-    // Grade each answer
-    let totalScore = 0;
-    let totalPoints = 0;
-    const results: {
-      questionId: string;
-      correct: boolean;
-      selectedOptionId: string | null;
-      correctOptionId: string;
-    }[] = [];
-
-    for (const question of questions) {
-      const correctOption = question.options.find((o) => o.isCorrect);
-      const userAnswer = answers.find((a) => a.questionId === question.id);
-
-      totalPoints += question.points;
-
-      const isCorrect =
-        userAnswer?.selectedOptionId === correctOption?.id;
-
-      if (isCorrect) {
-        totalScore += question.points;
-      }
-
-      results.push({
-        questionId: question.id,
-        correct: isCorrect,
-        selectedOptionId: userAnswer?.selectedOptionId ?? null,
-        correctOptionId: correctOption?.id ?? "",
-      });
+    // Every submitted Question must belong to this Quiz, every selected option
+    // to that Question, and no Question may be answered twice. Foreign-but-real
+    // ids satisfy the database's foreign keys, so nothing else rejected them.
+    const invalid = validateSubmission(questions, answers);
+    if (invalid) {
+      return new NextResponse("Invalid submission", { status: 400 });
     }
 
-    // Save answers
-    await db.quizAnswer.createMany({
-      data: answers.map((a) => ({
-        attemptId,
-        questionId: a.questionId,
-        selectedOptionId: a.selectedOptionId,
-      })),
+    const { totalScore, totalPoints, percentage, results } = gradeSubmission(
+      questions,
+      answers
+    );
+
+    // Answers and finalisation commit together. The conditional update is what
+    // makes submission idempotent under a double-click or a retry: two
+    // concurrent submissions both pass the completedAt check above, and only
+    // the one that actually flips the row from null commits. #63 replaces this
+    // with a full attempt state machine.
+    const finalised = await db.$transaction(async (tx) => {
+      const claimed = await tx.quizAttempt.updateMany({
+        where: { id: attemptId, completedAt: null },
+        data: {
+          score: totalScore,
+          totalPoints,
+          completedAt: new Date(),
+        },
+      });
+
+      if (claimed.count === 0) return false;
+
+      await tx.quizAnswer.createMany({
+        data: answers.map((a) => ({
+          attemptId,
+          questionId: a.questionId,
+          selectedOptionId: a.selectedOptionId,
+        })),
+      });
+
+      return true;
     });
 
-    // Update attempt
-    await db.quizAttempt.update({
-      where: { id: attemptId },
-      data: {
-        score: totalScore,
-        totalPoints,
-        completedAt: new Date(),
-      },
-    });
-
-    const percentage = totalPoints > 0 ? Math.round((totalScore / totalPoints) * 100) : 0;
+    if (!finalised) {
+      return new NextResponse("Quiz already submitted", { status: 409 });
+    }
 
     // Gamification: evaluate badges on quiz completion
     let preTestScore: number | undefined;
 
     // If this is a post-test, find the pre-test score for growth comparison
-    const quiz = await db.quiz.findUnique({
-      where: { id: routeParams.quizId },
-      select: { type: true, courseId: true },
-    });
-
-    if (quiz?.type === "POST_TEST" && quiz.courseId) {
+    if (attempt.quiz.type === "POST_TEST" && attempt.quiz.courseId) {
       const preTest = await db.quiz.findFirst({
-        where: { courseId: quiz.courseId, type: "PRE_TEST" },
+        where: { courseId: attempt.quiz.courseId, type: "PRE_TEST" },
         select: { id: true },
       });
       if (preTest) {
@@ -162,6 +168,9 @@ export async function POST(
       })),
     });
   } catch (error) {
+    const denied = toResponse(error);
+    if (denied) return denied;
+
     logError("QUIZ_SUBMIT", error);
     return new NextResponse("Internal Error", { status: 500 });
   }

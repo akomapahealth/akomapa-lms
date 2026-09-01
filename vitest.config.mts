@@ -48,6 +48,7 @@ export default defineConfig({
       include: [
         "lib/auth/*.ts",
         "lib/courses/*.ts",
+        "lib/assessments/*.ts",
         "lib/streak-service.ts",
         "lib/badge-service.ts",
         "lib/certificate-service.ts",
@@ -70,6 +71,8 @@ export default defineConfig({
         "lib/courses/topic-access.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
         // Completion decides certificate issuance.
         "lib/courses/completion.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
+        // Grading feeds certificates and analytics.
+        "lib/assessments/grading.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
       },
     },
   },
