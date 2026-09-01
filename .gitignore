@@ -66,6 +66,9 @@ CHANGELOG.md
 !/docs/ai/**
 !/docs/release/
 !/docs/release/**
+# The permission matrix: the authorization rules every contributor and agent
+# must implement against, asserted by tests/unit/auth/policy.test.ts.
+!/docs/permission-matrix.md
 # Phase specifications: the historical record the release matrix audits
 # against. Committed so that audit is reproducible by anyone.
 !/docs/phase-1.md
