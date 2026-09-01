@@ -24,5 +24,5 @@ export const FileUpload = ({
                 toast.error(`${error?.message}`);
             }}
         />
-    )
-}
+    );
+};

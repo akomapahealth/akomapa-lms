@@ -12,7 +12,6 @@ export async function PATCH(
     try {
         const principal = await requirePrincipal();
         await authorizeTopicInCourse(principal, "topic:update", routeParams.courseId, routeParams.chapterId);
-        const userId = principal.userId;
 
         const unpublishedTopic = await db.topic.update({
             where: {

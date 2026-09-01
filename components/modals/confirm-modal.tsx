@@ -43,5 +43,5 @@ export const ConfirmModal = ({
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
-    )
-}
+    );
+};

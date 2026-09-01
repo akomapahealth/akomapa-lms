@@ -17,7 +17,7 @@ const handleAuth = async () => {
     }
 
     return { userId: principal.userId };
-}
+};
  
  
 export const ourFileRouter = {

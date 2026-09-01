@@ -54,7 +54,7 @@ export const VideoPlayer = ({
         } catch {
             toast.error("Something went wrong");
         }
-    }
+    };
 
     return (
         <div className="relative aspect-video">
@@ -84,5 +84,5 @@ export const VideoPlayer = ({
                 />
             )}
         </div>
-    )
-}
+    );
+};

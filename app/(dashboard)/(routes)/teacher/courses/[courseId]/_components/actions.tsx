@@ -46,7 +46,7 @@ export const Actions = ({
         } finally {
             setIsLoading(false);
         }
-    }
+    };
 
     const onDelete = async () => {
         try {
@@ -62,7 +62,7 @@ export const Actions = ({
         } finally {
             setIsLoading(false);
         }
-    }
+    };
 
 
     return (
@@ -83,5 +83,5 @@ export const Actions = ({
                 </Button>
             </ConfirmModal>
         </div>
-    )
-}
+    );
+};

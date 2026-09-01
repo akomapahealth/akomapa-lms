@@ -12,7 +12,6 @@ export async function PUT(
     try {
         const principal = await requirePrincipal();
         await authorizeCourse(principal, "topic:reorder", routeParams.courseId);
-        const userId = principal.userId;
 
         const { list } = await req.json();
 

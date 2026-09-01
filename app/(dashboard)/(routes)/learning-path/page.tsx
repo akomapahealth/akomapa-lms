@@ -1,5 +1,4 @@
 import { requirePagePrincipal } from "@/lib/auth";
-import { redirect } from "next/navigation";
 import { Map } from "lucide-react";
 
 import { getLearningPath } from "@/actions/get-learning-path";

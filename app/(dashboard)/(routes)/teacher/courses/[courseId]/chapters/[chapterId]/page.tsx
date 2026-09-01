@@ -21,7 +21,7 @@ const ChapterIdPAge = async ({
     const { courseId, chapterId } = await params;
 
 
-    const { userId } = await requirePagePrincipal("/dashboard");
+    await requirePagePrincipal("/dashboard");
     const chapter = await db.topic.findUnique({
         where: {
             id: chapterId,

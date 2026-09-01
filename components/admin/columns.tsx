@@ -1,19 +1,19 @@
-"use client"
+"use client";
 
-import { Course } from "@prisma/client"
-import { ColumnDef } from "@tanstack/react-table"
-import { ArrowUpDown, MoreHorizontal, Pencil } from "lucide-react"
+import { Course } from "@prisma/client";
+import { ColumnDef } from "@tanstack/react-table";
+import { ArrowUpDown, MoreHorizontal, Pencil } from "lucide-react";
 
-import { Button } from "@/components/ui/button" 
+import { Button } from "@/components/ui/button"; 
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu"
-import Link from "next/link"
-import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/dropdown-menu";
+import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 export const columns: ColumnDef<Course>[] = [
   {
@@ -27,7 +27,7 @@ export const columns: ColumnDef<Course>[] = [
             Title
             <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
-      )
+      );
     },
   },
   {
@@ -41,7 +41,7 @@ export const columns: ColumnDef<Course>[] = [
               Price
               <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
-        )
+        );
     },
     cell: ({ row }) => {
         const price = parseFloat(row.getValue("price") || "0");
@@ -50,7 +50,7 @@ export const columns: ColumnDef<Course>[] = [
             currency: "USD",
         }).format(price);
 
-        return <div>{formatted}</div>
+        return <div>{formatted}</div>;
     }
   },
   {
@@ -64,7 +64,7 @@ export const columns: ColumnDef<Course>[] = [
               Published
               <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
-        )
+        );
     },
     cell: ({ row }) => {
         const isPublished = row.getValue("isPublished") || false;
@@ -76,7 +76,7 @@ export const columns: ColumnDef<Course>[] = [
             )}>
                 {isPublished ? "Published" : "Draft"}
             </Badge>
-        )
+        );
     }
   },
   {
@@ -101,7 +101,7 @@ export const columns: ColumnDef<Course>[] = [
                     </Link>
                 </DropdownMenuContent>
             </DropdownMenu>
-        )
+        );
     }
   }
-]
+];

@@ -83,7 +83,7 @@ export const CourseProgressButton = ({
         } finally {
             setIsLoading(false);
         }
-    }
+    };
 
     const Icon = isCompleted ? XCircle : CheckCircle;
     return (
@@ -109,5 +109,5 @@ export const CourseProgressButton = ({
                 />
             )}
         </>
-    )
-}
+    );
+};

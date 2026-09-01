@@ -1,5 +1,4 @@
 import { requirePagePrincipal } from "@/lib/auth";
-import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
 import { db } from "@/lib/db";
@@ -55,6 +54,6 @@ const SearchPage = async ({
             </PageContainer>
         </>
      );
-}
+};
  
 export default SearchPage;

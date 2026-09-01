@@ -60,7 +60,7 @@ export const PriceForm = ({
         } catch {
             toast.error("Something went wrong");
         }
-    }
+    };
 
     return (
         <div className="mt-6 border bg-muted rounded-md p-4">
@@ -125,4 +125,4 @@ export const PriceForm = ({
             )}
         </div>
     );
-}
+};

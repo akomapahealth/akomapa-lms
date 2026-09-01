@@ -47,7 +47,7 @@ const CreatePage = () => {
         } catch {
             toast.error("Something went wrong");
         }
-    }
+    };
 
     return ( 
         <div className="max-w-5xl mx-auto flex md:items-center md:justify-center h-full px-4 py-6 sm:p-6">
@@ -103,6 +103,6 @@ const CreatePage = () => {
             </div>
         </div>
      );
-}
+};
  
 export default CreatePage;

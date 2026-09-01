@@ -1,6 +1,5 @@
 import { requirePagePrincipal } from "@/lib/auth";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
 import { db } from "@/lib/db";

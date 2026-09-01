@@ -63,7 +63,7 @@ export const getCourses = async ({
                     return {
                         ...course,
                         progress: null,
-                    }
+                    };
                 }
 
                 const progressPercentage = await getProgress(userId, course.id);
@@ -71,7 +71,7 @@ export const getCourses = async ({
                 return {
                     ...course,
                     progress: progressPercentage,
-                }
+                };
             })
         );
 
@@ -80,4 +80,4 @@ export const getCourses = async ({
         console.log("[GET_COURSES]", error);
         return [];
     }
-}
+};

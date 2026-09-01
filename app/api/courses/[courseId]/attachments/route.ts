@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server"
+import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { authorizeCourse, requirePrincipal, toResponse } from "@/lib/auth";
@@ -14,7 +14,6 @@ export async function POST(
     try {
         const principal = await requirePrincipal();
         await authorizeCourse(principal, "attachment:create", routeParams.courseId);
-        const userId = principal.userId;
         const { url } = await req.json();
 
         const attachment = await db.attachment.create({

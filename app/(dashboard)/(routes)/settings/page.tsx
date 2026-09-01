@@ -1,5 +1,4 @@
 import { requirePagePrincipal } from "@/lib/auth";
-import { redirect } from "next/navigation";
 
 import { getUserSettings } from "@/actions/get-user-settings";
 

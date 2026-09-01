@@ -68,7 +68,7 @@ const CourseLayout = async ({
                 },
             },
         },
-    })
+    });
 
     if (!course) {
         return redirect("/dashboard");
@@ -116,6 +116,6 @@ const CourseLayout = async ({
             {children}
         </AppShell>
     );
-}
+};
 
 export default CourseLayout;

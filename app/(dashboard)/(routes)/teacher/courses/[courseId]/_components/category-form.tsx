@@ -62,7 +62,7 @@ export const CategoryForm = ({
         } catch {
             toast.error("Something went wrong");
         }
-    }
+    };
 
     const selectedOption = options.find((option) => option.value === initialData.categoryId);
 
@@ -123,4 +123,4 @@ export const CategoryForm = ({
             )}
         </div>
     );
-}
+};
