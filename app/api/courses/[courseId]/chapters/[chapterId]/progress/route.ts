@@ -1,7 +1,8 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
+import { requirePrincipal, toResponse } from "@/lib/auth";
+import { topicBelongsToCourse } from "@/lib/courses/topic-access";
 import { evaluateBadges, type BadgeEvent } from "@/lib/badge-service";
 import { updateStreak } from "@/lib/streak-service";
 import { generateCertificate } from "@/lib/certificate-service";
@@ -14,12 +15,18 @@ export async function PUT(
         const routeParams = await params;
 
     try {
-        const { userId } = await auth();
-        const { isCompleted } = await req.json();
+        const { userId } = await requirePrincipal();
 
-        if (!userId) {
-            return new NextResponse("Unauthorized", { status: 401 });
+        // The Topic must actually be in this Course. Without this, a progress
+        // write could be aimed at any Topic in the product by id, and the
+        // completion cascade below -- badges, streaks, Enrollment status, and
+        // certificate issuance -- would run for a Course the learner is not on.
+        // Entitlement itself (must the learner be enrolled?) is #40.
+        if (!(await topicBelongsToCourse(routeParams.courseId, routeParams.chapterId))) {
+            return new NextResponse("Not Found", { status: 404 });
         }
+
+        const { isCompleted } = await req.json();
 
         const userProgress = await db.userProgress.upsert({
             where: {
@@ -158,6 +165,9 @@ export async function PUT(
         });
 
     } catch (error) {
+        const denied = toResponse(error);
+        if (denied) return denied;
+
         logError("CHAPTER_ID_PROGRESS", error);
         return new NextResponse("Internal Error", { status: 500 });
     }

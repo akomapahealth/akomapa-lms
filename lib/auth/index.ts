@@ -30,6 +30,7 @@ export {
   authorizePost,
   authorizeQuestionInCourse,
   authorizeQuizInCourse,
+  authorizeTopicInCourse,
   requireCapability,
 } from "./guards";
 export {

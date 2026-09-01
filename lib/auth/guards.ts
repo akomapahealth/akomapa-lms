@@ -1,6 +1,7 @@
 import "server-only";
 
 import { db } from "@/lib/db";
+import { topicInCourse } from "@/lib/courses/topic-access";
 
 import type { Action } from "./actions";
 import { Denied } from "./errors";
@@ -132,6 +133,30 @@ export async function authorizeQuestionInCourse(
 
   if (!question) throw new Denied("not_found", action);
   return question;
+}
+
+/**
+ * Loads a Topic for authoring, asserting Course -> Module -> Topic.
+ *
+ * Publication is not filtered here: staff work on unpublished content. The
+ * Course binding is what matters -- the authoring routes previously confirmed
+ * Course ownership and then loaded the Topic by id alone, so an owner of one
+ * Course could edit, publish, or delete a Topic in another.
+ */
+export async function authorizeTopicInCourse(
+  principal: Principal,
+  action: Action,
+  courseId: string,
+  topicId: string
+) {
+  await authorizeCourse(principal, action, courseId);
+
+  const topic = await db.topic.findFirst({
+    where: topicInCourse(courseId, topicId),
+  });
+
+  if (!topic) throw new Denied("not_found", action);
+  return topic;
 }
 
 /**

@@ -1,4 +1,6 @@
 import { db } from "@/lib/db";
+import { logError } from "@/lib/logger";
+import { publishedTopicInCourse } from "@/lib/courses/topic-access";
 import { Attachment, Topic } from "@prisma/client";
 
 interface GetTopicProps {
@@ -32,11 +34,12 @@ export const getTopic = async ({
             }
         });
 
-        const topic = await db.topic.findUnique({
-            where: {
-                id: topicId,
-                isPublished: true,
-            },
+        // Bound to the Course through its Module. Loading by id alone meant a
+        // Topic id from any Course resolved here, and the entitlement check
+        // below looks at the *route's* Course -- so a purchase of one Course
+        // unlocked video and attachments in another.
+        const topic = await db.topic.findFirst({
+            where: publishedTopicInCourse(courseId, topicId),
             include: {
                 module: true,
             }
@@ -176,7 +179,8 @@ export const getTopic = async ({
             purchase,
         };
     } catch (error) {
-        console.log("[GET_TOPIC]", error);
+        // Redacted in production; console.log printed the whole error object.
+        logError("GET_TOPIC", error);
         return {
             topic: null,
             course: null,
