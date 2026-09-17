@@ -50,6 +50,7 @@ export default defineConfig({
         "lib/courses/*.ts",
         "lib/assessments/*.ts",
         "lib/text/*.ts",
+        "lib/db/roles.ts",
         "lib/case-study-sanitize.ts",
         "lib/streak-service.ts",
         "lib/badge-service.ts",
@@ -81,6 +82,8 @@ export default defineConfig({
         // The stored-XSS boundary for author-written rich text.
         "lib/text/sanitize-html.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
         "lib/case-study-sanitize.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
+        // The guard that keeps row-level security from being silently absent.
+        "lib/db/roles.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
       },
     },
   },

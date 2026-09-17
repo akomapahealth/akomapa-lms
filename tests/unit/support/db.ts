@@ -56,9 +56,20 @@ function createDelegate(model: string): Delegate {
 
 function createDbMock() {
   const models = new Map<string, Delegate>();
+  const clientMethods = new Map<string, ReturnType<typeof vi.fn>>();
 
   return new Proxy({} as Record<string, Delegate>, {
     get(_target, prop: string) {
+      // Client-level methods are functions, not model delegates. Without this
+      // they would be handed back as an object named `$queryRaw`, and a test
+      // configuring one would fail on a missing `mockResolvedValue`.
+      if (prop === "$queryRaw" || prop === "$queryRawUnsafe" ||
+          prop === "$executeRaw" || prop === "$executeRawUnsafe") {
+        if (!clientMethods.has(prop)) {
+          clientMethods.set(prop, vi.fn().mockResolvedValue([]));
+        }
+        return clientMethods.get(prop)!;
+      }
       if (prop === "$transaction") {
         // Callback form runs inline against the same mock; array form resolves
         // each promise. Real transactional guarantees are #107's job.
