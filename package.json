@@ -28,6 +28,7 @@
     "db:roles": "tsx scripts/check-database-roles.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
+    "issues:next": "node scripts/next-issues.mjs",
     "prepare": "husky"
   },
   "dependencies": {
