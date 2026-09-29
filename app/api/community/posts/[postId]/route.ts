@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
-import { authorizePost, requirePrincipal, toResponse } from "@/lib/auth";
-import { logError } from "@/lib/logger";
+import { authorizePost, requirePrincipal } from "@/lib/auth";
+import { BODY_BYTES, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
+import { postParams } from "@/lib/validations/ids";
+import { postUpdateSchema } from "@/lib/validations/community";
 
 export async function GET(
   req: Request,
@@ -11,7 +13,7 @@ export async function GET(
   try {
     const { userId } = await requirePrincipal();
 
-    const { postId } = await params;
+    const { postId } = parseParams(postParams, await params);
 
     const post = await db.forumPost.findUnique({
       where: { id: postId },
@@ -70,16 +72,12 @@ export async function GET(
     });
 
     if (!post) {
-      return new NextResponse("Not Found", { status: 404 });
+      return problem("not_found");
     }
 
     return NextResponse.json(post);
   } catch (error) {
-    const denied = toResponse(error);
-    if (denied) return denied;
-
-    logError("COMMUNITY_POST_GET", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return handleRouteError("COMMUNITY_POST_GET", error);
   }
 }
 
@@ -88,31 +86,25 @@ export async function PATCH(
   { params }: { params: Promise<{ postId: string }> }
 ) {
   try {
-    const { postId } = await params;
+    const { postId } = parseParams(postParams, await params);
 
     // Author or moderator. The rule lives in lib/auth/policy.ts rather than
     // being re-derived at each of the call sites that used to inline it.
     const principal = await requirePrincipal();
     await authorizePost(principal, "post:update", postId);
 
-    const { title, content, categoryId } = await req.json();
+    // Strict: the body used to be spread field by field with no bounds, and a
+    // `categoryId` naming a category that does not exist failed as a 500.
+    const body = await parseBody(postUpdateSchema, req, BODY_BYTES.richText);
 
     const updated = await db.forumPost.update({
       where: { id: postId },
-      data: {
-        ...(title !== undefined && { title }),
-        ...(content !== undefined && { content }),
-        ...(categoryId !== undefined && { categoryId }),
-      },
+      data: body,
     });
 
     return NextResponse.json(updated);
   } catch (error) {
-    const denied = toResponse(error);
-    if (denied) return denied;
-
-    logError("COMMUNITY_POST_PATCH", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return handleRouteError("COMMUNITY_POST_PATCH", error);
   }
 }
 
@@ -121,7 +113,7 @@ export async function DELETE(
   { params }: { params: Promise<{ postId: string }> }
 ) {
   try {
-    const { postId } = await params;
+    const { postId } = parseParams(postParams, await params);
 
     const principal = await requirePrincipal();
     await authorizePost(principal, "post:delete", postId);
@@ -130,10 +122,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    const denied = toResponse(error);
-    if (denied) return denied;
-
-    logError("COMMUNITY_POST_DELETE", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return handleRouteError("COMMUNITY_POST_DELETE", error);
   }
 }

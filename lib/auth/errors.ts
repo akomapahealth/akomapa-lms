@@ -1,4 +1,6 @@
-import { NextResponse } from "next/server";
+import type { NextResponse } from "next/server";
+
+import { problem } from "@/lib/http/problem";
 
 /**
  * Why a request was denied.
@@ -35,18 +37,6 @@ export class Denied extends Error {
   }
 }
 
-const STATUS: Record<DenialReason, number> = {
-  unauthenticated: 401,
-  forbidden: 403,
-  not_found: 404,
-};
-
-const BODY: Record<DenialReason, string> = {
-  unauthenticated: "Unauthorized",
-  forbidden: "Forbidden",
-  not_found: "Not Found",
-};
-
 export function isDenied(error: unknown): error is Denied {
   return error instanceof Denied;
 }
@@ -55,8 +45,14 @@ export function isDenied(error: unknown): error is Denied {
  * Converts a denial into a response. Returns null for anything else, so a
  * handler's catch block can re-raise genuine faults instead of reporting an
  * internal error as a permission problem.
+ *
+ * The body is the shared problem shape from `@/lib/http` (#44), not a bare
+ * string: a client needs to tell "you are not signed in" from "you may not do
+ * this" from "that does not exist" without matching on prose. The three denial
+ * reasons are already exactly the codes that shape defines, so the mapping is
+ * an identity.
  */
 export function toResponse(error: unknown): NextResponse | null {
   if (!isDenied(error)) return null;
-  return new NextResponse(BODY[error.reason], { status: STATUS[error.reason] });
+  return problem(error.reason);
 }

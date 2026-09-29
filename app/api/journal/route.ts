@@ -1,40 +1,33 @@
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
-import { requirePrincipal, toResponse } from "@/lib/auth";
-import { logError } from "@/lib/logger";
+import { requirePrincipal } from "@/lib/auth";
+import { BODY_BYTES, handleRouteError, parseBody } from "@/lib/http";
+import { journalCreateSchema } from "@/lib/validations/journal";
 
 export async function POST(req: Request) {
   try {
     const { userId } = await requirePrincipal();
 
-    const { title, content, isPrivate, prompt, moduleId, courseId } =
-      await req.json();
-
-    if (!title || !content) {
-      return new NextResponse("Title and content are required", {
-        status: 400,
-      });
-    }
+    const body = await parseBody(journalCreateSchema, req, BODY_BYTES.richText);
 
     const entry = await db.journalEntry.create({
       data: {
-        title,
-        content,
-        isPrivate: isPrivate ?? true,
-        prompt: prompt || null,
-        moduleId: moduleId || null,
-        courseId: courseId || null,
+        title: body.title,
+        content: body.content,
+        // Private unless the learner says otherwise, and only a real boolean
+        // can say otherwise: `isPrivate ?? true` treated the string "false" as
+        // a value and stored a public entry.
+        isPrivate: body.isPrivate ?? true,
+        prompt: body.prompt ?? null,
+        moduleId: body.moduleId ?? null,
+        courseId: body.courseId ?? null,
         userId,
       },
     });
 
     return NextResponse.json(entry);
   } catch (error) {
-    const denied = toResponse(error);
-    if (denied) return denied;
-
-    logError("JOURNAL_POST", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return handleRouteError("JOURNAL_POST", error);
   }
 }

@@ -1,17 +1,19 @@
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
-import { requireCapability, requirePrincipal, toResponse } from "@/lib/auth";
-import { logError } from "@/lib/logger";
+import { requireCapability, requirePrincipal } from "@/lib/auth";
+import { handleRouteError, parseBody } from "@/lib/http";
+import { courseCreateSchema } from "@/lib/validations/course";
 
-export async function POST(
-    req: Request,
-) {
+export async function POST(req: Request) {
     try {
         const principal = await requirePrincipal();
         requireCapability(principal, "course:create");
 
-        const { title } = await req.json();
+        // `title` was read off the body unvalidated, so a Course could be created
+        // with a title of any type or length -- including `undefined`, which the
+        // non-null column rejected as a 500.
+        const { title } = await parseBody(courseCreateSchema, req);
 
         const course = await db.course.create({
             data: {
@@ -23,10 +25,6 @@ export async function POST(
 
         return NextResponse.json(course);
     } catch (error) {
-        const denied = toResponse(error);
-        if (denied) return denied;
-
-        logError("COURSES", error);
-        return new NextResponse("Internal Error", { status: 500 });
+        return handleRouteError("COURSES", error);
     }
 }

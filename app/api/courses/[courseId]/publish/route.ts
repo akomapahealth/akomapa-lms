@@ -1,15 +1,16 @@
 import { db } from "@/lib/db";
-import { requirePrincipal, toResponse } from "@/lib/auth";
+import { requirePrincipal } from "@/lib/auth";
 import { NextResponse } from "next/server";
-import { logError } from "@/lib/logger";
+import { handleRouteError, parseParams, problem } from "@/lib/http";
+import { courseParams } from "@/lib/validations/ids";
 
 export async function PATCH(
     req: Request,
     { params }: { params: Promise<{ courseId: string }> }
 ) {
-        const routeParams = await params;
-
     try {
+        const routeParams = parseParams(courseParams, await params);
+
         const { userId } = await requirePrincipal();
 
         const course = await db.course.findUnique({
@@ -20,7 +21,7 @@ export async function PATCH(
         });
 
         if (!course) {
-            return new NextResponse("Course not found", { status: 404 });
+            return problem("not_found");
         }
 
         const publishedTopics = await db.topic.findMany({
@@ -30,7 +31,13 @@ export async function PATCH(
         const hasPublishedChapter = publishedTopics.length > 0;
 
         if (!course.title || !course.description || !course.imageUrl || !course.categoryId || !hasPublishedChapter) {
-            return new NextResponse("Missing required fields", { status: 401 });
+            // Was 401, which made the web app redirect a signed-in author to the
+            // sign-in page for an incomplete Course. It is a state conflict: the
+            // Course is not publishable yet.
+            return problem("conflict", {
+                message:
+                    "Add a title, description, image, category, and at least one published topic before publishing.",
+            });
         }
 
         const publishedCourse = await db.course.update({
@@ -44,10 +51,6 @@ export async function PATCH(
 
         return NextResponse.json(publishedCourse);
     } catch (error) {
-        const denied = toResponse(error);
-        if (denied) return denied;
-
-        logError("COURSE_ID_PUBLISH", error);
-        return new NextResponse("Internal Error", { status: 500 });
+        return handleRouteError("COURSE_ID_PUBLISH", error);
     }
 }

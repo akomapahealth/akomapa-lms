@@ -1,26 +1,28 @@
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
-import { requirePrincipal, toResponse } from "@/lib/auth";
+import { requirePrincipal } from "@/lib/auth";
+import { BODY_BYTES, handleRouteError, parseBody } from "@/lib/http";
+import { postCreateSchema } from "@/lib/validations/community";
 import { evaluateBadges } from "@/lib/badge-service";
-import { logError } from "@/lib/logger";
 
 export async function POST(req: Request) {
   try {
     const { userId } = await requirePrincipal();
 
-    const { title, content, categoryId, courseId } = await req.json();
-
-    if (!title || !content || !categoryId) {
-      return new NextResponse("Missing required fields", { status: 400 });
-    }
+    // Rich text, so the larger body ceiling. The previous check was
+    // `if (!title || !content || !categoryId)`, which accepted a title of any
+    // length, content of any size, and a `categoryId` that was any non-empty
+    // string -- including one naming a category that does not exist, which then
+    // failed as a 500 on the foreign key.
+    const body = await parseBody(postCreateSchema, req, BODY_BYTES.richText);
 
     const post = await db.forumPost.create({
       data: {
-        title,
-        content,
-        categoryId,
-        courseId: courseId || null,
+        title: body.title,
+        content: body.content,
+        categoryId: body.categoryId,
+        courseId: body.courseId ?? null,
         userId,
       },
     });
@@ -40,10 +42,6 @@ export async function POST(req: Request) {
       })),
     });
   } catch (error) {
-    const denied = toResponse(error);
-    if (denied) return denied;
-
-    logError("COMMUNITY_POSTS_POST", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return handleRouteError("COMMUNITY_POSTS_POST", error);
   }
 }

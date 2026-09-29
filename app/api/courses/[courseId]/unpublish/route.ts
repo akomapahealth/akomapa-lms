@@ -1,15 +1,16 @@
 import { db } from "@/lib/db";
-import { requirePrincipal, toResponse } from "@/lib/auth";
+import { requirePrincipal } from "@/lib/auth";
 import { NextResponse } from "next/server";
-import { logError } from "@/lib/logger";
+import { handleRouteError, parseParams, problem } from "@/lib/http";
+import { courseParams } from "@/lib/validations/ids";
 
 export async function PATCH(
     req: Request,
     { params }: { params: Promise<{ courseId: string }> }
 ) {
-        const routeParams = await params;
-
     try {
+        const routeParams = parseParams(courseParams, await params);
+
         const { userId } = await requirePrincipal();
 
         const course = await db.course.findUnique({
@@ -20,7 +21,7 @@ export async function PATCH(
         });
 
         if (!course) {
-            return new NextResponse("Course not found", { status: 404 });
+            return problem("not_found");
         }
 
         const unpublishedCourse = await db.course.update({
@@ -34,10 +35,6 @@ export async function PATCH(
 
         return NextResponse.json(unpublishedCourse);
     } catch (error) {
-        const denied = toResponse(error);
-        if (denied) return denied;
-
-        logError("COURSE_ID_UNPUBLISH", error);
-        return new NextResponse("Internal Error", { status: 500 });
+        return handleRouteError("COURSE_ID_UNPUBLISH", error);
     }
 }

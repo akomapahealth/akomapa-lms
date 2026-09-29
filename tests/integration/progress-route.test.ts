@@ -114,7 +114,14 @@ describe("PUT progress", () => {
       const response = await PUT(request(value), {
         params: params(owned.course.id, owned.topic.id),
       });
-      expect(response.status).toBe(400);
+
+      // 422, not 400: the body parsed and then failed the schema. #44 reserves
+      // 400 for a request that could not be understood at all -- unparseable
+      // JSON, or a bad path parameter. See docs/api-errors.md.
+      expect(response.status).toBe(422);
+      await expect(response.json()).resolves.toMatchObject({
+        error: { code: "validation_failed", fields: [{ path: "isCompleted" }] },
+      });
     }
 
     expect(await testDb().userProgress.count()).toBe(0);

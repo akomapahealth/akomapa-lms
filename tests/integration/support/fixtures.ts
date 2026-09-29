@@ -8,10 +8,26 @@ import { testDb } from "./db";
  * policies all apply. A fixture that a constraint rejects is itself a finding.
  */
 let sequence = 0;
-const unique = (prefix: string) => `${prefix}_${++sequence}`;
+
+/**
+ * A Clerk-shaped user id. `User.id` is the Clerk subject, not a uuid.
+ */
+const uniqueUser = (prefix: string) => `${prefix}_${++sequence}`;
+
+/**
+ * A real uuid for every other model.
+ *
+ * Every model except `User` declares `@default(uuid())`, so production ids are
+ * uuids. These fixtures used to mint `course_1`-style ids, which meant the suite
+ * exercised shapes the application never actually sees -- and once #44 began
+ * validating path params as uuids, those ids were rejected before any handler
+ * logic ran. Matching production is both more honest and what keeps the strict
+ * parameter validation testable.
+ */
+const unique = () => globalThis.crypto.randomUUID();
 
 export async function aUserRow(overrides: { id?: string; role?: string } = {}) {
-  const id = overrides.id ?? unique("user");
+  const id = overrides.id ?? uniqueUser("user");
   return testDb().user.create({
     data: { id, email: `${id}@example.test`, role: overrides.role ?? "STUDENT" },
   });
@@ -24,7 +40,7 @@ export async function aCourseWithTopic(
 ) {
   const course = await testDb().course.create({
     data: {
-      id: unique("course"),
+      id: unique(),
       userId: ownerId,
       title: "Research Ethics",
       isPublished: overrides.isPublished ?? true,
@@ -33,7 +49,7 @@ export async function aCourseWithTopic(
 
   const courseModule = await testDb().module.create({
     data: {
-      id: unique("module"),
+      id: unique(),
       courseId: course.id,
       title: "Foundations",
       position: 1,
@@ -43,7 +59,7 @@ export async function aCourseWithTopic(
 
   const topic = await testDb().topic.create({
     data: {
-      id: unique("topic"),
+      id: unique(),
       moduleId: courseModule.id,
       title: "Consent",
       position: 1,
@@ -63,7 +79,7 @@ export async function aPurchaseRow(userId: string, courseId: string) {
 export async function aQuizWithQuestion(courseId: string) {
   const quiz = await testDb().quiz.create({
     data: {
-      id: unique("quiz"),
+      id: unique(),
       courseId,
       title: "Module check",
       type: "MODULE_QUIZ",
@@ -73,15 +89,15 @@ export async function aQuizWithQuestion(courseId: string) {
   });
 
   const question = await testDb().question.create({
-    data: { id: unique("question"), quizId: quiz.id, text: "Which?", position: 1, points: 10 },
+    data: { id: unique(), quizId: quiz.id, text: "Which?", position: 1, points: 10 },
   });
 
   const [correct, wrong] = await Promise.all([
     testDb().questionOption.create({
-      data: { id: unique("option"), questionId: question.id, text: "Right", isCorrect: true, position: 1 },
+      data: { id: unique(), questionId: question.id, text: "Right", isCorrect: true, position: 1 },
     }),
     testDb().questionOption.create({
-      data: { id: unique("option"), questionId: question.id, text: "Wrong", isCorrect: false, position: 2 },
+      data: { id: unique(), questionId: question.id, text: "Wrong", isCorrect: false, position: 2 },
     }),
   ]);
 
@@ -96,7 +112,7 @@ export async function anAttemptRow(userId: string, quizId: string) {
 export async function aCaseStudyRow(topicId: string, scenario: unknown) {
   return testDb().caseStudy.create({
     data: {
-      id: unique("case_study"),
+      id: unique(),
       topicId,
       title: "Consent in the field",
       description: "A scenario",

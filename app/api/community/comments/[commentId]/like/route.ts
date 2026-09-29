@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
-import { requirePrincipal, toResponse } from "@/lib/auth";
-import { logError } from "@/lib/logger";
+import { requirePrincipal } from "@/lib/auth";
+import { handleRouteError, parseParams } from "@/lib/http";
+import { commentParams } from "@/lib/validations/ids";
 
 export async function POST(
   req: Request,
@@ -11,7 +12,7 @@ export async function POST(
   try {
     const { userId } = await requirePrincipal();
 
-    const { commentId } = await params;
+    const { commentId } = parseParams(commentParams, await params);
 
     const existing = await db.commentLike.findUnique({
       where: { userId_commentId: { userId, commentId } },
@@ -34,10 +35,6 @@ export async function POST(
       count,
     });
   } catch (error) {
-    const denied = toResponse(error);
-    if (denied) return denied;
-
-    logError("COMMUNITY_COMMENT_LIKE", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return handleRouteError("COMMUNITY_COMMENT_LIKE", error);
   }
 }

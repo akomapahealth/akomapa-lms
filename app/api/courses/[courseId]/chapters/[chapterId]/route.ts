@@ -2,9 +2,10 @@ import { Mux } from "@mux/mux-node";
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
-import { authorizeTopicInCourse, requirePrincipal, toResponse } from "@/lib/auth";
+import { authorizeTopicInCourse, requirePrincipal } from "@/lib/auth";
+import { BODY_BYTES, handleRouteError, parseBody, parseParams } from "@/lib/http";
+import { topicParams } from "@/lib/validations/ids";
 import { topicUpdateSchema } from "@/lib/validations/topic";
-import { logError } from "@/lib/logger";
 
 const mux  = new Mux({
     tokenId: process.env.MUX_TOKEN_ID!,
@@ -17,9 +18,9 @@ export async function DELETE(
     req: Request,
     { params }: { params: Promise<{ courseId: string; chapterId: string }> }
 ) {
-        const routeParams = await params;
-
     try {
+        const routeParams = parseParams(topicParams, await params);
+
         const principal = await requirePrincipal();
 
         // Asserts Course ownership AND that the Topic is in that Course. The
@@ -75,12 +76,7 @@ export async function DELETE(
 
         return NextResponse.json(deletedTopic);
     } catch (error) {
-        const denied = toResponse(error);
-        if (denied) return denied;
-
-        logError("CHAPTER_ID_DELETE", error);
-
-        return new NextResponse("Internal Error", { status: 500 });
+        return handleRouteError("CHAPTER_ID_DELETE", error);
     }
 }
 
@@ -88,9 +84,9 @@ export async function PATCH(
     req: Request,
     { params }: { params: Promise<{ courseId: string; chapterId: string }> }
 ) {
-        const routeParams = await params;
-
     try {
+        const routeParams = parseParams(topicParams, await params);
+
         const principal = await requirePrincipal();
 
         // Course ownership and Topic membership together. Previously the Topic
@@ -103,20 +99,19 @@ export async function PATCH(
             routeParams.chapterId
         );
 
-        const body = await req.json();
-        const parsed = topicUpdateSchema.safeParse(body);
-        if (!parsed.success) {
-            return new NextResponse("Invalid data", { status: 400 });
-        }
+        // `textContent` is rich text, so the larger ceiling. `videoUrl` is now
+        // required to be an http(s) URL because it is handed to Mux as an asset
+        // input below.
+        const values = await parseBody(topicUpdateSchema, req, BODY_BYTES.richText);
 
         const updatedTopic = await db.topic.update({
             where: {
                 id: routeParams.chapterId,
             },
-            data: parsed.data,
+            data: values,
         });
 
-        if (parsed.data.videoUrl) {
+        if (values.videoUrl) {
             const existingMuxData = await db.muxData.findFirst({
                 where: {
                     topicId: routeParams.chapterId,
@@ -133,7 +128,7 @@ export async function PATCH(
             }
 
             const asset = await Video.assets.create({
-                input: [{ url: parsed.data.videoUrl! }],
+                input: [{ url: values.videoUrl }],
                 playback_policy: ['public'],
                 test: false,
             });
@@ -150,11 +145,6 @@ export async function PATCH(
         return NextResponse.json(updatedTopic);
 
     } catch (error) {
-        const denied = toResponse(error);
-        if (denied) return denied;
-
-        logError("COURSES_CHAPTER_ID", error);
-
-        return new NextResponse("Internal Error", { status: 500 });
+        return handleRouteError("COURSES_CHAPTER_ID", error);
     }
 }

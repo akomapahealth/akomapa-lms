@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
-import { requireCapability, requirePrincipal, toResponse } from "@/lib/auth";
-import { logError } from "@/lib/logger";
+import { requireCapability, requirePrincipal } from "@/lib/auth";
+import { handleRouteError, parseParams, problem } from "@/lib/http";
+import { postParams } from "@/lib/validations/ids";
 
 export async function PATCH(
   req: Request,
@@ -12,7 +13,7 @@ export async function PATCH(
     const principal = await requirePrincipal();
     requireCapability(principal, "community:moderate");
 
-    const { postId } = await params;
+    const { postId } = parseParams(postParams, await params);
 
     const post = await db.forumPost.findUnique({
       where: { id: postId },
@@ -20,7 +21,7 @@ export async function PATCH(
     });
 
     if (!post) {
-      return new NextResponse("Not Found", { status: 404 });
+      return problem("not_found");
     }
 
     const updated = await db.forumPost.update({
@@ -30,10 +31,6 @@ export async function PATCH(
 
     return NextResponse.json(updated);
   } catch (error) {
-    const denied = toResponse(error);
-    if (denied) return denied;
-
-    logError("COMMUNITY_POST_LOCK", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return handleRouteError("COMMUNITY_POST_LOCK", error);
   }
 }

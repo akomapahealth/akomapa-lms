@@ -15,6 +15,10 @@ import { defineConfig } from "vitest/config";
  * always describe real, enforced coverage rather than an aspiration diluted by
  * hundreds of untested files. Issues #48, #49, #63, #73, #83, and #84 each add
  * their own entries as they land.
+ *
+ * `lib/http/*` and `lib/validations/*` joined the list with #44. They are the
+ * boundary every route handler shares, so they are held at 100% where the module
+ * makes a decision.
  */
 export default defineConfig({
   resolve: {
@@ -47,6 +51,8 @@ export default defineConfig({
       reportsDirectory: "coverage/unit",
       include: [
         "lib/auth/*.ts",
+        "lib/http/*.ts",
+        "lib/validations/*.ts",
         "lib/courses/*.ts",
         "lib/assessments/*.ts",
         "lib/text/*.ts",
@@ -84,6 +90,12 @@ export default defineConfig({
         "lib/case-study-sanitize.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
         // The guard that keeps row-level security from being silently absent.
         "lib/db/roles.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
+        // The request boundary (#44). Every route handler funnels its failures
+        // through these three, so a gap here is a gap in all forty at once.
+        "lib/http/problem.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
+        "lib/http/body.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
+        "lib/http/validate.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
+        "lib/http/route.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
       },
     },
   },

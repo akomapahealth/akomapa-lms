@@ -2,9 +2,10 @@ import Mux from "@mux/mux-node";
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
-import { authorizeCourse, requirePrincipal, toResponse } from "@/lib/auth";
+import { authorizeCourse, requirePrincipal } from "@/lib/auth";
+import { handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
+import { courseParams } from "@/lib/validations/ids";
 import { courseUpdateSchema } from "@/lib/validations/course";
-import { logError } from "@/lib/logger";
 
 const mux = new Mux({
     tokenId: process.env.MUX_TOKEN_ID,
@@ -17,9 +18,9 @@ export async function DELETE(
     req: Request,
     { params }: { params: Promise<{ courseId: string }> }
 ) {
-        const routeParams = await params;
-
     try {
+        const routeParams = parseParams(courseParams, await params);
+
         const principal = await requirePrincipal();
         await authorizeCourse(principal, "course:delete", routeParams.courseId);
 
@@ -42,7 +43,7 @@ export async function DELETE(
         });
 
         if (!course) {
-            return new NextResponse("Course not found", { status: 404 });
+            return problem("not_found");
         }
 
         for (const courseModule of course.modules) {
@@ -61,11 +62,7 @@ export async function DELETE(
 
         return NextResponse.json(deletedCourse);
     } catch (error) {
-        const denied = toResponse(error);
-        if (denied) return denied;
-
-        logError("COURSE_ID_DELETE", error);
-        return new NextResponse("Internal Error", { status: 500 });
+        return handleRouteError("COURSE_ID_DELETE", error);
     }
 }
 
@@ -74,31 +71,23 @@ export async function PATCH(
     { params }: { params: Promise<{ courseId: string }> }
 ) {
     try {
-        const { courseId } = await params;
+        const { courseId } = parseParams(courseParams, await params);
 
         const principal = await requirePrincipal();
         await authorizeCourse(principal, "course:update", courseId);
 
-        const body = await req.json();
-        const parsed = courseUpdateSchema.safeParse(body);
-        if (!parsed.success) {
-            return new NextResponse("Invalid data", { status: 400 });
-        }
+        const values = await parseBody(courseUpdateSchema, req);
 
         const course = await db.course.update({
             where: {
                 id: courseId,
                 userId: principal.userId
             },
-            data: parsed.data,
+            data: values,
         });
 
         return NextResponse.json(course);
     } catch (error) {
-        const denied = toResponse(error);
-        if (denied) return denied;
-
-        logError("COURSE_ID", error);
-        return new NextResponse("Internal Error", { status: 500 });
+        return handleRouteError("COURSE_ID", error);
     }
 }

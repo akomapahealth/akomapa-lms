@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
-import { requireCapability, requirePrincipal, toResponse } from "@/lib/auth";
-import { logError } from "@/lib/logger";
+import { requireCapability, requirePrincipal } from "@/lib/auth";
+import { handleRouteError, parseBody } from "@/lib/http";
+import { categoryCreateSchema } from "@/lib/validations/community";
 
 export async function GET() {
   try {
@@ -12,11 +13,7 @@ export async function GET() {
 
     return NextResponse.json(categories);
   } catch (error) {
-    const denied = toResponse(error);
-    if (denied) return denied;
-
-    logError("COMMUNITY_CATEGORIES_GET", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return handleRouteError("COMMUNITY_CATEGORIES_GET", error);
   }
 }
 
@@ -25,20 +22,22 @@ export async function POST(req: Request) {
     const principal = await requirePrincipal();
     requireCapability(principal, "community:moderate");
 
-    const { name, description, color, position } = await req.json();
-
-    if (!name) return new NextResponse("Name is required", { status: 400 });
+    // Bounded and strict before the write. The body used to be destructured
+    // straight into `create`, so `name` could be any type or length and
+    // `position` any number.
+    const body = await parseBody(categoryCreateSchema, req);
 
     const category = await db.forumCategory.create({
-      data: { name, description, color, position: position ?? 0 },
+      data: {
+        name: body.name,
+        description: body.description,
+        color: body.color,
+        position: body.position ?? 0,
+      },
     });
 
     return NextResponse.json(category);
   } catch (error) {
-    const denied = toResponse(error);
-    if (denied) return denied;
-
-    logError("COMMUNITY_CATEGORIES_POST", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return handleRouteError("COMMUNITY_CATEGORIES_POST", error);
   }
 }

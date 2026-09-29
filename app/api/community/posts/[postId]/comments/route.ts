@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
-import { requirePrincipal, toResponse } from "@/lib/auth";
+import { requirePrincipal } from "@/lib/auth";
+import { BODY_BYTES, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
+import { postParams } from "@/lib/validations/ids";
+import { commentCreateSchema } from "@/lib/validations/community";
 import { evaluateBadges } from "@/lib/badge-service";
-import { logError } from "@/lib/logger";
 
 export async function POST(
   req: Request,
@@ -12,51 +14,52 @@ export async function POST(
   try {
     const { userId } = await requirePrincipal();
 
-    const { postId } = await params;
-    const { content, parentId } = await req.json();
+    const { postId } = parseParams(postParams, await params);
+    const body = await parseBody(commentCreateSchema, req, BODY_BYTES.richText);
 
-    if (!content) {
-      return new NextResponse("Content is required", { status: 400 });
-    }
-
-    // Check post exists and isn't locked
     const post = await db.forumPost.findUnique({
       where: { id: postId },
       select: { isLocked: true },
     });
 
     if (!post) {
-      return new NextResponse("Post not found", { status: 404 });
+      return problem("not_found");
     }
 
     if (post.isLocked) {
-      return new NextResponse("Post is locked", { status: 403 });
+      return problem("conflict", {
+        message: "This discussion is locked and is not accepting new comments.",
+      });
     }
 
-    // Enforce max 2 levels of nesting
-    if (parentId) {
+    // At most two levels: a comment, and replies to it.
+    if (body.parentId) {
       const parent = await db.forumComment.findUnique({
-        where: { id: parentId },
+        where: { id: body.parentId },
         select: { postId: true, parentId: true },
       });
 
+      // A parent on another post is indistinguishable from one that does not
+      // exist, so both answer the same way.
       if (!parent || parent.postId !== postId) {
-        return new NextResponse("Invalid parent comment", { status: 400 });
+        return problem("validation_failed", {
+          fields: [{ path: "parentId", code: "not_in_post" }],
+        });
       }
 
       if (parent.parentId) {
-        return new NextResponse("Maximum nesting depth reached", {
-          status: 400,
+        return problem("validation_failed", {
+          fields: [{ path: "parentId", code: "max_depth" }],
         });
       }
     }
 
     const comment = await db.forumComment.create({
       data: {
-        content,
+        content: body.content,
         userId,
         postId,
-        parentId: parentId || null,
+        parentId: body.parentId ?? null,
       },
       include: {
         user: {
@@ -86,10 +89,6 @@ export async function POST(
       })),
     });
   } catch (error) {
-    const denied = toResponse(error);
-    if (denied) return denied;
-
-    logError("COMMUNITY_COMMENT_POST", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return handleRouteError("COMMUNITY_COMMENT_POST", error);
   }
 }

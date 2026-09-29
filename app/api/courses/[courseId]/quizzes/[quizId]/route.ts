@@ -1,17 +1,18 @@
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
-import { authorizeQuizInCourse, requirePrincipal, toResponse } from "@/lib/auth";
+import { authorizeQuizInCourse, requirePrincipal } from "@/lib/auth";
+import { handleRouteError, parseBody, parseParams } from "@/lib/http";
+import { quizParams } from "@/lib/validations/ids";
 import { quizUpdateSchema } from "@/lib/validations/quiz";
-import { logError } from "@/lib/logger";
 
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ courseId: string; quizId: string }> }
 ) {
-  const routeParams = await params;
-
   try {
+    const routeParams = parseParams(quizParams, await params);
+
     const principal = await requirePrincipal();
     await authorizeQuizInCourse(
       principal,
@@ -20,28 +21,19 @@ export async function PATCH(
       routeParams.quizId
     );
 
-    const body = await req.json();
-
-    const parsed = quizUpdateSchema.safeParse(body);
-    if (!parsed.success) {
-      return new NextResponse("Invalid data", { status: 400 });
-    }
+    const values = await parseBody(quizUpdateSchema, req);
 
     const quiz = await db.quiz.update({
       where: {
         id: routeParams.quizId,
         courseId: routeParams.courseId,
       },
-      data: parsed.data,
+      data: values,
     });
 
     return NextResponse.json(quiz);
   } catch (error) {
-    const denied = toResponse(error);
-    if (denied) return denied;
-
-    logError("QUIZ_ID", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return handleRouteError("QUIZ_ID", error);
   }
 }
 
@@ -49,9 +41,9 @@ export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ courseId: string; quizId: string }> }
 ) {
-  const routeParams = await params;
-
   try {
+    const routeParams = parseParams(quizParams, await params);
+
     const principal = await requirePrincipal();
     await authorizeQuizInCourse(
       principal,
@@ -69,10 +61,6 @@ export async function DELETE(
 
     return NextResponse.json(quiz);
   } catch (error) {
-    const denied = toResponse(error);
-    if (denied) return denied;
-
-    logError("QUIZ_ID_DELETE", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return handleRouteError("QUIZ_ID_DELETE", error);
   }
 }
