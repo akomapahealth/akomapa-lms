@@ -85,7 +85,14 @@ const db = new PrismaClient({ adapter: new PrismaPg(new Pool({ connectionString 
 const FIX = process.argv.includes("--fix");
 
 async function main() {
-  const [purchases, enrollments] = await Promise.all([
+  // Context counts. "Purchase is empty" and "this database is empty" look
+  // identical in a report and mean opposite things: the first is nothing to
+  // reconcile, the second is the wrong connection. Users and Courses tell them
+  // apart, and both tables existing at all is already proved by these reads not
+  // raising 42P01.
+  const [users, courses, purchases, enrollments] = await Promise.all([
+    db.user.count(),
+    db.course.count(),
     db.purchase.findMany({
       select: { userId: true, courseId: true, createdAt: true },
       orderBy: { createdAt: "asc" },
@@ -121,14 +128,8 @@ async function main() {
   console.log("Entitlement reconciliation (ADR 0002)");
   console.log(`Connection: ${describeConnection()}\n`);
 
-  // A totally empty database is far more likely to mean "pointed at the wrong
-  // one" than "nothing to reconcile", and silently reporting all-clear for that
-  // would be the worst possible outcome of a pre-cutover check.
-  if (purchases.length === 0 && enrollments.length === 0) {
-    console.log("  No Purchase or Enrollment rows at all.");
-    console.log("  Check the connection above is the database you meant.\n");
-  }
-
+  console.log(`  Users                      ${users}`);
+  console.log(`  Courses                    ${courses}`);
   console.log(`  Purchases                  ${purchases.length}`);
   console.log(`  Enrollments                ${enrollments.length}`);
   console.log(
@@ -154,6 +155,30 @@ async function main() {
       console.log(`  user=${row.userId} course=${row.courseId}`);
     }
     if (rows.length > 50) console.log(`  ... and ${rows.length - 50} more`);
+  }
+
+  // The verdict, stated rather than left for the reader to infer from six zeros.
+  if (users === 0 && courses === 0) {
+    console.log(
+      "\nThis database has no Users and no Courses either, so it is almost" +
+        "\ncertainly not the one you meant. Check the connection above."
+    );
+    // Non-zero, so a CI or scripted caller cannot mistake this for a clean bill.
+    process.exitCode = 1;
+    return;
+  }
+
+  if (purchases.length === 0 && enrollments.length === 0) {
+    console.log(
+      `\nNothing to reconcile. This database holds ${users} user(s) and ` +
+        `${courses} course(s)\nbut no Purchase or Enrollment rows at all, so the ` +
+        "ADR 0002 cutover cannot\ncost anyone access here."
+    );
+    return;
+  }
+
+  if (missing.length === 0 && unknownStatus.length === 0) {
+    console.log("\nNothing to reconcile: every Purchase has an Enrollment.");
   }
 
   if (!FIX) {
