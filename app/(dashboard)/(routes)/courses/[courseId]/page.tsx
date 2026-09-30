@@ -19,8 +19,8 @@ const CourseDetailPage = async ({
   params: Promise<{ courseId: string }>;
 }) => {
   const { courseId } = await params;
-  const { userId } = await requirePagePrincipal("/sign-in");
-  const course = await getCourseDetail(userId, courseId);
+  const principal = await requirePagePrincipal("/sign-in");
+  const course = await getCourseDetail(principal, courseId);
   if (!course) return redirect("/courses");
 
   const status =
@@ -77,14 +77,14 @@ const CourseDetailPage = async ({
             totalQuizzes={course.totalQuizzes}
           />
 
-          {course.isPurchased && course.percentComplete > 0 && (
+          {course.canLearn && course.percentComplete > 0 && (
             <CourseProgress
               value={course.percentComplete}
               variant={course.percentComplete === 100 ? "success" : "default"}
             />
           )}
 
-          {course.resumeTopicId && course.isPurchased && (
+          {course.resumeTopicId && course.canLearn && (
             <Link
               href={`/courses/${courseId}/chapters/${course.resumeTopicId}`}
             >
@@ -113,7 +113,7 @@ const CourseDetailPage = async ({
           <ModuleAccordion
             modules={course.modules}
             courseId={courseId}
-            isPurchased={course.isPurchased}
+            canLearn={course.canLearn}
           />
         </div>
       </div>

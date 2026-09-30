@@ -12,7 +12,7 @@ const CoursesPage = async ({
 }: {
   searchParams: Promise<{ search?: string; status?: string; view?: string }>;
 }) => {
-  const { userId } = await requirePagePrincipal("/sign-in");
+  const principal = await requirePagePrincipal("/sign-in");
   const params = await searchParams;
   const filter = (params.status as "all" | "in_progress" | "completed" | "not_started") || "all";
   const search = params.search || undefined;
@@ -20,8 +20,8 @@ const CoursesPage = async ({
 
   const isModulesView = view === "modules";
 
-  const courses = isModulesView ? [] : await getEnrolledCourses(userId, filter, search);
-  const modules = isModulesView ? await getEnrolledModules(userId, filter, search) : [];
+  const courses = isModulesView ? [] : await getEnrolledCourses(principal, filter, search);
+  const modules = isModulesView ? await getEnrolledModules(principal, filter, search) : [];
 
   const items = isModulesView ? modules : courses;
   const label = isModulesView ? "Modules" : "Courses";

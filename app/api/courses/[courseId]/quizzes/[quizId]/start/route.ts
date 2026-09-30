@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { requirePrincipal } from "@/lib/auth";
+import { courseEntitlement, LOCKED_STATE_MESSAGE } from "@/lib/entitlement";
 import { isPostTestUnlocked } from "@/actions/check-post-test-lock";
 import { handleRouteError, parseParams, problem } from "@/lib/http";
 import { quizParams } from "@/lib/validations/ids";
@@ -13,21 +14,17 @@ export async function POST(
   try {
     const routeParams = parseParams(quizParams, await params);
 
-    const { userId } = await requirePrincipal();
+    const principal = await requirePrincipal();
+    const { userId } = principal;
 
-    // Verify enrollment
-    const purchase = await db.purchase.findUnique({
-      where: {
-        userId_courseId: {
-          userId,
-          courseId: routeParams.courseId,
-        },
-      },
-    });
+    // Entitlement, not payment history. Reading `Purchase` here let a suspended
+    // learner start a quiz, because the Purchase row survives a suspension.
+    const entitlement = await courseEntitlement(principal, routeParams.courseId);
 
-    if (!purchase) {
+    if (!entitlement.canLearn) {
       return problem("forbidden", {
-        message: "Enroll in this course to take its quizzes.",
+        message: LOCKED_STATE_MESSAGE[entitlement.reason] ||
+          "Enroll in this course to take its quizzes.",
       });
     }
 

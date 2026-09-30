@@ -19,6 +19,16 @@ const groupByCourse = (purchases: PurchaseWithCourse[]) => {
     return grouped;
 };
 
+/**
+ * Faculty revenue reporting.
+ *
+ * Reads `Purchase` deliberately, and correctly: ADR 0002 makes `Purchase`
+ * evidence that a payment happened, which is exactly what a revenue figure is
+ * counting. It is not an access decision, so it is exempt from the entitlement
+ * seam (see the `no-restricted-syntax` override in .eslintrc.json). Counting
+ * Enrollments here would be wrong -- a scholarship or staff enrolment is not
+ * revenue.
+ */
 export const getAnalytics = async (userId: string) => {
     try {
         const purchases = await db.purchase.findMany({

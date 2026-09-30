@@ -1,4 +1,6 @@
+import type { Principal } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { entitledCourseIds } from "@/lib/entitlement";
 
 export type ModuleStatus = "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED";
 
@@ -17,28 +19,19 @@ export interface EnrolledModule {
 }
 
 export const getEnrolledModules = async (
-  userId: string,
+  principal: Principal,
   filter?: "all" | "in_progress" | "completed" | "not_started",
   search?: string
 ): Promise<EnrolledModule[]> => {
   try {
-    // Get all courses the user is enrolled in (purchased or enrolled)
-    const purchases = await db.purchase.findMany({
-      where: { userId },
-      select: { courseId: true },
-    });
+    const userId = principal.userId;
 
-    const enrollments = await db.enrollment.findMany({
-      where: { userId, status: "ACTIVE" },
-      select: { courseId: true },
-    });
-
-    const courseIds = [
-      ...new Set([
-        ...purchases.map((p) => p.courseId),
-        ...enrollments.map((e) => e.courseId),
-      ]),
-    ];
+    // One source (ADR 0002). This used to be the union of purchases and ACTIVE
+    // enrollments, which is exactly the "OR" the ADR rejects: the weaker
+    // condition wins, so a suspended learner kept every Module they had paid for.
+    // It also dropped COMPLETED enrollments, so finishing a Course made its
+    // Modules disappear from this list.
+    const courseIds = await entitledCourseIds(principal);
 
     if (courseIds.length === 0) return [];
 

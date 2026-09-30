@@ -1,0 +1,121 @@
+/**
+ * Reports disagreements between Purchase and Enrollment (#48, ADR 0002).
+ *
+ * Read-only by default. ADR 0002 requires that existing purchases are reconciled
+ * to Enrollment idempotently and that discrepancies are reportable before
+ * cutover; this is the reporting half. The backfill itself is the migration
+ * `20260930000000_backfill_enrollments_from_purchases`, which runs with the
+ * deploy. This script is how an operator checks the result, and how they find the
+ * cases a blanket backfill deliberately does not touch.
+ *
+ *   npm run entitlement:reconcile          # report only
+ *   npm run entitlement:reconcile -- --fix # create the missing Enrollments
+ *
+ * `--fix` is idempotent and only ever creates an Enrollment for a Purchase that
+ * has none. It never changes an existing status: a SUSPENDED or COMPLETED learner
+ * must not be reset to ACTIVE by a reconciliation run. Access removal is a status
+ * change, never a deletion.
+ */
+import { db } from "../lib/db";
+import { ENROLLMENT_STATUSES } from "../lib/entitlement/types";
+
+const FIX = process.argv.includes("--fix");
+
+async function main() {
+  const [purchases, enrollments] = await Promise.all([
+    db.purchase.findMany({
+      select: { userId: true, courseId: true, createdAt: true },
+      orderBy: { createdAt: "asc" },
+    }),
+    db.enrollment.findMany({ select: { userId: true, courseId: true, status: true } }),
+  ]);
+
+  const key = (row: { userId: string; courseId: string }) => `${row.userId} ${row.courseId}`;
+  const byKey = new Map(enrollments.map((e) => [key(e), e]));
+  const purchaseKeys = new Set(purchases.map(key));
+
+  // 1. Paid, but no Enrollment. These are the learners who would be locked out of
+  //    a Course they bought, once Enrollment became canonical.
+  const missing = purchases.filter((p) => !byKey.has(key(p)));
+
+  // 2. Paid, and suspended. Not a fault -- a refund or a moderation action looks
+  //    exactly like this -- but an operator should see it, because before #48 the
+  //    Purchase was still granting access and now it is not.
+  const suspended = purchases.filter((p) => byKey.get(key(p))?.status === "SUSPENDED");
+
+  // 3. Enrolled without a Purchase. Legitimate for a free Course, a scholarship,
+  //    or a staff account; worth listing so an unexplained one is visible.
+  const unpaid = enrollments.filter((e) => !purchaseKeys.has(key(e)));
+
+  // 4. A status this code does not recognise, which `normalizeEnrollmentStatus`
+  //    treats as no entitlement at all. Always a data fault.
+  const unknownStatus = enrollments.filter(
+    (e) => !(ENROLLMENT_STATUSES as readonly string[]).includes(e.status)
+  );
+
+  const flag = (n: number, note: string) => (n > 0 ? `  ${note}` : "");
+
+  console.log("Entitlement reconciliation (ADR 0002)\n");
+  console.log(`  Purchases                  ${purchases.length}`);
+  console.log(`  Enrollments                ${enrollments.length}`);
+  console.log(
+    `  Paid with no Enrollment    ${missing.length}${flag(missing.length, "these would lose access")}`
+  );
+  console.log(`  Paid and SUSPENDED         ${suspended.length}`);
+  console.log(
+    `  Enrolled with no Purchase  ${unpaid.length}  (free, scholarship, or staff)`
+  );
+  console.log(
+    `  Unrecognised status        ${unknownStatus.length}${flag(unknownStatus.length, "data fault")}`
+  );
+
+  // Ids are printed because an operator has to act on specific rows. This is an
+  // operator tool run against a database they already administer, not a log line.
+  for (const [label, rows] of [
+    ["Paid with no Enrollment", missing],
+    ["Unrecognised status", unknownStatus],
+  ] as const) {
+    if (rows.length === 0) continue;
+    console.log(`\n${label}:`);
+    for (const row of rows.slice(0, 50)) {
+      console.log(`  user=${row.userId} course=${row.courseId}`);
+    }
+    if (rows.length > 50) console.log(`  ... and ${rows.length - 50} more`);
+  }
+
+  if (!FIX) {
+    if (missing.length > 0) {
+      console.log("\nRe-run with --fix to create the missing Enrollments.");
+    }
+    return;
+  }
+
+  if (missing.length === 0) {
+    console.log("\nNothing to fix.");
+    return;
+  }
+
+  // createMany with skipDuplicates rather than a loop of upserts: it is one
+  // statement, and the unique index makes a concurrent run harmless.
+  const created = await db.enrollment.createMany({
+    data: missing.map((p) => ({
+      userId: p.userId,
+      courseId: p.courseId,
+      status: "ACTIVE",
+      // The date the learner actually gained access, not this run's clock.
+      enrolledAt: p.createdAt,
+    })),
+    skipDuplicates: true,
+  });
+
+  console.log(`\nCreated ${created.count} Enrollment(s). Existing statuses were not modified.`);
+}
+
+main()
+  .catch((error) => {
+    console.error("Reconciliation failed:", error instanceof Error ? error.message : error);
+    process.exitCode = 1;
+  })
+  .finally(async () => {
+    await db.$disconnect();
+  });

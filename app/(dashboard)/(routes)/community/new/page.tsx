@@ -1,4 +1,5 @@
 import { requirePagePrincipal } from "@/lib/auth";
+import { entitledCourseIds } from "@/lib/entitlement";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
@@ -6,18 +7,23 @@ import { db } from "@/lib/db";
 import { CreatePostForm } from "./_components/create-post-form";
 
 const NewPostPage = async () => {
-  const { userId } = await requirePagePrincipal("/sign-in");
-  const [categories, enrolledCourses] = await Promise.all([
-    db.forumCategory.findMany({ orderBy: { position: "asc" } }),
-    db.purchase.findMany({
-      where: { userId },
-      select: {
-        course: { select: { id: true, title: true } },
-      },
-    }),
-  ]);
+  const principal = await requirePagePrincipal("/sign-in");
 
-  const courses = enrolledCourses.map((p) => p.course);
+  // The Courses they may actually learn, not the ones they have ever paid for. A
+  // suspended learner should not be able to associate a new post with the Course
+  // they are suspended from.
+  const courseIds = await entitledCourseIds(principal);
+
+  const [categories, courses] = await Promise.all([
+    db.forumCategory.findMany({ orderBy: { position: "asc" } }),
+    courseIds.length === 0
+      ? Promise.resolve([])
+      : db.course.findMany({
+          where: { id: { in: courseIds } },
+          select: { id: true, title: true },
+          orderBy: { title: "asc" },
+        }),
+  ]);
 
   return (
     <div className="px-4 py-6 sm:p-6 max-w-3xl mx-auto space-y-6">

@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { stripe } from "@/lib/stripe";
-import { db } from "@/lib/db";
+import { recordPaidEnrollment } from "@/lib/entitlement";
 import { requireEnv } from "@/lib/env";
 import { problem } from "@/lib/http";
 import { logError } from "@/lib/logger";
@@ -18,7 +18,8 @@ import { checkoutMetadataSchema } from "@/lib/validations/webhooks";
  * ids this handler is about to write a Purchase row from.
  *
  * Delivery semantics -- duplicate events, reordering, retry-safety -- are #54's
- * and #69's. This route deliberately does not change them.
+ * and #69's. This route deliberately does not change them beyond making the
+ * Purchase/Enrollment pair idempotent, which #48 requires.
  */
 export async function POST(req: Request) {
     const body = await req.text();
@@ -66,12 +67,11 @@ export async function POST(req: Request) {
         });
     }
 
-    await db.purchase.create({
-        data: {
-            courseId: metadata.data.courseId,
-            userId: metadata.data.userId,
-        }
-    });
+    // The Purchase and the Enrollment together, in one transaction. Writing only
+    // the Purchase was enough while access was read from it; now that Enrollment
+    // is the entitlement (ADR 0002), a payment that records no Enrollment buys
+    // nothing. Idempotent, because a webhook is delivered at least once.
+    await recordPaidEnrollment(metadata.data.userId, metadata.data.courseId);
 
     return new NextResponse(null, { status: 200 });
 }

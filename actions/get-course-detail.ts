@@ -1,4 +1,6 @@
+import type { Principal } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { courseEntitlement, type EntitlementReason } from "@/lib/entitlement";
 
 export interface TopicDetail {
   id: string;
@@ -32,15 +34,20 @@ export interface CourseDetailData {
   totalQuizzes: number;
   percentComplete: number;
   resumeTopicId: string | null;
-  isPurchased: boolean;
+  /** Whether paid content is readable. Was `isPurchased`, which a suspension did
+   * not affect. */
+  canLearn: boolean;
+  /** Why, for the locked state. */
+  entitlementReason: EntitlementReason;
   price: number | null;
 }
 
 export const getCourseDetail = async (
-  userId: string,
+  principal: Principal,
   courseId: string
 ): Promise<CourseDetailData | null> => {
   try {
+    const userId = principal.userId;
     const course = await db.course.findUnique({
       where: { id: courseId, isPublished: true },
       include: {
@@ -67,11 +74,8 @@ export const getCourseDetail = async (
 
     if (!course) return null;
 
-    const purchase = await db.purchase.findUnique({
-      where: {
-        userId_courseId: { userId, courseId },
-      },
-    });
+    // Entitlement, not payment history (ADR 0002).
+    const entitlement = await courseEntitlement(principal, courseId);
 
     let totalTopics = 0;
     let completedTopics = 0;
@@ -132,7 +136,8 @@ export const getCourseDetail = async (
           ? Math.round((completedTopics / totalTopics) * 100)
           : 0,
       resumeTopicId,
-      isPurchased: !!purchase,
+      canLearn: entitlement.canLearn,
+      entitlementReason: entitlement.reason,
       price: course.price,
     };
   } catch (error) {

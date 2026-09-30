@@ -76,9 +76,12 @@ imply `ADMIN`. See
 **User.** The persisted account. Its `id` is the Clerk user id, so Clerk is the
 only identity authority and there is no local password. Prisma: `User`.
 
-**Enrollment.** The canonical entitlement to a Course. If an Enrollment exists
-and is `ACTIVE`, the learner has access; if it does not, they do not. Status is
-one of `ACTIVE`, `COMPLETED`, `SUSPENDED`. Unique per learner and Course.
+**Enrollment.** The canonical entitlement to a Course. `ACTIVE` grants access;
+`COMPLETED` keeps read access to the Course and its Certificate; `SUSPENDED`
+denies access whatever the Purchase says. Status is one of `ACTIVE`,
+`COMPLETED`, `SUSPENDED`, and a value outside that set is not a status and
+grants nothing. Unique per learner and Course. Decided by `lib/entitlement`,
+which is the only place that answers the question.
 Prisma: `Enrollment`. See
 [ADR 0002](docs/adr/0002-enrollment-as-canonical-entitlement.md).
 
@@ -227,8 +230,10 @@ feature.
 - The principal and role are derived on the server from the Clerk session. No
   `userId`, role, ownership, price, score, completion, or entitlement value
   from the browser is ever trusted.
-- Access to a Course is granted by an `ACTIVE` Enrollment, or by a Topic being
-  `isFree`. Nothing else grants access, and a Purchase alone does not.
+- Access to a Course is granted by an `ACTIVE` or `COMPLETED` Enrollment, by a
+  Topic being `isFree`, or by staff reaching a Course they author or administer.
+  Nothing else grants access, and a Purchase alone does not. A `SUSPENDED`
+  Enrollment denies access to all of the above, staff included.
 - A Topic is reachable only through a Module of the Course the learner is
   entitled to. Reaching a Topic through any other Course is a cross-course
   access defect.

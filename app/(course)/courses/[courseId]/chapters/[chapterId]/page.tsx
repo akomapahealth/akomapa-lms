@@ -24,7 +24,7 @@ const ChapterIdPage = async ({
 }) => {
     const { courseId, chapterId } = await params;
 
-    const { userId } = await requirePagePrincipal("/dashboard");
+    const principal = await requirePagePrincipal("/dashboard");
     const {
         topic,
         course,
@@ -33,9 +33,9 @@ const ChapterIdPage = async ({
         nextTopic,
         previousTopic,
         userProgress,
-        purchase,
+        entitlement,
     } = await getTopic({
-        userId,
+        principal,
         topicId: chapterId,
         courseId: courseId,
     });
@@ -44,8 +44,11 @@ const ChapterIdPage = async ({
         return redirect("/dashboard");
     }
 
-    const isLocked = !topic.isFree && !purchase;
-    const completeOnEnd = !!purchase && !userProgress?.isCompleted;
+    // One entitlement decision (ADR 0002), so the lock, the progress button, and
+    // the enrol button can no longer disagree with each other.
+    const canLearn = entitlement?.canLearn ?? false;
+    const isLocked = !(entitlement?.canReadTopic ?? false);
+    const completeOnEnd = canLearn && !userProgress?.isCompleted;
 
     // Check for case study content
     let caseStudy = null;
@@ -110,7 +113,7 @@ const ChapterIdPage = async ({
                                 {topic.title}
                             </h2>
                         </div>
-                        {purchase ? (
+                        {canLearn ? (
                             <CourseProgressButton
                                 topicId={chapterId}
                                 courseId={courseId}

@@ -42,9 +42,31 @@ function foreignTopicExists() {
   );
 }
 
-function courseExists(price: number | null = 0) {
-  dbMock.course.findUnique.mockResolvedValue({ price });
+/**
+ * The Course row. One mock serves two readers: `getTopic` wants `price`, and
+ * `courseEntitlement` wants `userId` and `isPublished`. The owner is deliberately
+ * not the learner, so the staff branch of entitlement stays out of the way.
+ */
+function courseExists(price: number | null = 0, overrides: Record<string, unknown> = {}) {
+  dbMock.course.findUnique.mockResolvedValue({
+    price,
+    userId: "faculty_1",
+    isPublished: true,
+    ...overrides,
+  });
 }
+
+/** A learner on the Course, at the given Enrollment status. */
+function enrolled(status: "ACTIVE" | "COMPLETED" | "SUSPENDED" = "ACTIVE") {
+  dbMock.enrollment.findUnique.mockResolvedValue({ status });
+}
+
+/** No Enrollment at all: free Topics only. */
+function notEnrolled() {
+  dbMock.enrollment.findUnique.mockResolvedValue(null);
+}
+
+const LEARNER = { userId: "user_1", role: "STUDENT" } as const;
 
 function topicResolves(overrides: Record<string, unknown> = {}) {
   dbMock.topic.findFirst.mockResolvedValue({
@@ -67,13 +89,13 @@ beforeEach(() => {
 describe("a Topic from another Course", () => {
   beforeEach(() => {
     foreignTopicExists();
-    // The learner legitimately owns the Course named in the URL.
-    dbMock.purchase.findUnique.mockResolvedValue({ id: "purchase_1" });
+    // The learner is legitimately enrolled on the Course named in the URL.
+    enrolled();
   });
 
   it("cannot be loaded by substituting its id into a purchased Course URL", async () => {
     const result = await getTopic({
-      userId: "user_1",
+      principal: LEARNER,
       courseId: "course_1",
       topicId: FOREIGN_TOPIC.id,
     });
@@ -85,7 +107,7 @@ describe("a Topic from another Course", () => {
     // The heart of the defect: the purchase was for course_1, the content was
     // from course_2, and the entitlement check never noticed the difference.
     const result = await getTopic({
-      userId: "user_1",
+      principal: LEARNER,
       courseId: "course_1",
       topicId: FOREIGN_TOPIC.id,
     });
@@ -96,7 +118,7 @@ describe("a Topic from another Course", () => {
 
   it("returns no navigation derived from the foreign Topic", async () => {
     const result = await getTopic({
-      userId: "user_1",
+      principal: LEARNER,
       courseId: "course_1",
       topicId: FOREIGN_TOPIC.id,
     });
@@ -107,7 +129,7 @@ describe("a Topic from another Course", () => {
 
   it("is still reachable from its own Course, so the binding is not simply blocking everything", async () => {
     const result = await getTopic({
-      userId: "user_1",
+      principal: LEARNER,
       courseId: "course_2",
       topicId: FOREIGN_TOPIC.id,
     });
@@ -119,9 +141,9 @@ describe("a Topic from another Course", () => {
 describe("the query that enforces it", () => {
   it("asks for the Topic through its Module and Course", async () => {
     topicResolves();
-    dbMock.purchase.findUnique.mockResolvedValue(null);
+    notEnrolled();
 
-    await getTopic({ userId: "user_1", courseId: "course_1", topicId: "topic_1" });
+    await getTopic({ principal: LEARNER, courseId: "course_1", topicId: "topic_1" });
 
     expect(dbMock.topic.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -136,9 +158,9 @@ describe("the query that enforces it", () => {
 
   it("requires the Course itself to be published", async () => {
     topicResolves();
-    dbMock.purchase.findUnique.mockResolvedValue(null);
+    notEnrolled();
 
-    await getTopic({ userId: "user_1", courseId: "course_1", topicId: "topic_1" });
+    await getTopic({ principal: LEARNER, courseId: "course_1", topicId: "topic_1" });
 
     expect(dbMock.course.findUnique).toHaveBeenCalledWith({
       where: { isPublished: true, id: "course_1" },
@@ -160,10 +182,10 @@ describe("entitlement within the correct Course", () => {
   });
 
   it("withholds video and attachments from a learner who has not purchased", async () => {
-    dbMock.purchase.findUnique.mockResolvedValue(null);
+    notEnrolled();
 
     const result = await getTopic({
-      userId: "user_1",
+      principal: LEARNER,
       courseId: "course_1",
       topicId: "topic_1",
     });
@@ -174,10 +196,10 @@ describe("entitlement within the correct Course", () => {
   });
 
   it("releases video to a purchaser", async () => {
-    dbMock.purchase.findUnique.mockResolvedValue({ id: "purchase_1" });
+    enrolled();
 
     const result = await getTopic({
-      userId: "user_1",
+      principal: LEARNER,
       courseId: "course_1",
       topicId: "topic_1",
     });
@@ -195,10 +217,10 @@ describe("entitlement within the correct Course", () => {
       isPublished: true,
       module: { id: "module_1", courseId: "course_1", position: 1 },
     });
-    dbMock.purchase.findUnique.mockResolvedValue(null);
+    notEnrolled();
 
     const result = await getTopic({
-      userId: "user_1",
+      principal: LEARNER,
       courseId: "course_1",
       topicId: "topic_1",
     });
@@ -208,20 +230,31 @@ describe("entitlement within the correct Course", () => {
     expect(result.attachments).toEqual([]);
   });
 
-  it("scopes the purchase lookup to this learner and this Course", async () => {
-    dbMock.purchase.findUnique.mockResolvedValue(null);
+  it("scopes the entitlement lookup to this learner and this Course", async () => {
+    notEnrolled();
 
-    await getTopic({ userId: "user_7", courseId: "course_1", topicId: "topic_1" });
-
-    expect(dbMock.purchase.findUnique).toHaveBeenCalledWith({
-      where: { userId_courseId: { userId: "user_7", courseId: "course_1" } },
+    await getTopic({
+      principal: { userId: "user_7", role: "STUDENT" },
+      courseId: "course_1",
+      topicId: "topic_1",
     });
+
+    // Entitlement now comes from Enrollment, not Purchase (ADR 0002).
+    expect(dbMock.enrollment.findUnique).toHaveBeenCalledWith({
+      where: { userId_courseId: { userId: "user_7", courseId: "course_1" } },
+      select: { status: true },
+    });
+    expect(dbMock.purchase.findUnique).not.toHaveBeenCalled();
   });
 
   it("scopes progress to this learner and this Topic", async () => {
-    dbMock.purchase.findUnique.mockResolvedValue(null);
+    notEnrolled();
 
-    await getTopic({ userId: "user_7", courseId: "course_1", topicId: "topic_1" });
+    await getTopic({
+      principal: { userId: "user_7", role: "STUDENT" },
+      courseId: "course_1",
+      topicId: "topic_1",
+    });
 
     expect(dbMock.userProgress.findUnique).toHaveBeenCalledWith({
       where: { userId_topicId: { userId: "user_7", topicId: "topic_1" } },
@@ -233,10 +266,10 @@ describe("an unpublished or missing Course", () => {
   it("returns nothing when the Course is unpublished", async () => {
     topicResolves();
     dbMock.course.findUnique.mockResolvedValue(null);
-    dbMock.purchase.findUnique.mockResolvedValue({ id: "purchase_1" });
+    enrolled();
 
     const result = await getTopic({
-      userId: "user_1",
+      principal: LEARNER,
       courseId: "course_1",
       topicId: "topic_1",
     });

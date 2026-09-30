@@ -1,7 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { testDb } from "./support/db";
-import { aCourseWithTopic, aPurchaseRow, aUserRow } from "./support/fixtures";
+import {
+  aCourseWithTopic,
+  aPaidEnrollment,
+  anEnrollmentRow,
+  aPurchaseRow,
+  aUserRow,
+} from "./support/fixtures";
 
 const clerkAuth = vi.hoisted(() => vi.fn());
 vi.mock("@clerk/nextjs/server", () => ({ auth: clerkAuth }));
@@ -50,8 +56,8 @@ describe("PUT progress", () => {
     clerkAuth.mockResolvedValue({ userId: learner.id });
   });
 
-  it("records completion for a Topic the learner has bought", async () => {
-    await aPurchaseRow(learner.id, owned.course.id);
+  it("records completion for a Topic the learner is enrolled on", async () => {
+    await aPaidEnrollment(learner.id, owned.course.id);
 
     const response = await PUT(request(true), {
       params: params(owned.course.id, owned.topic.id),
@@ -65,7 +71,7 @@ describe("PUT progress", () => {
   });
 
   it("refuses a Topic belonging to a different Course", async () => {
-    await aPurchaseRow(learner.id, owned.course.id);
+    await aPaidEnrollment(learner.id, owned.course.id);
 
     const response = await PUT(request(true), {
       params: params(owned.course.id, foreign.topic.id),
@@ -73,6 +79,47 @@ describe("PUT progress", () => {
 
     expect(response.status).toBe(404);
     expect(await testDb().userProgress.count()).toBe(0);
+  });
+
+  it("refuses a Purchase with no Enrollment", async () => {
+    // The ADR 0002 cutover, at the layer where it matters. A Purchase is evidence
+    // that a payment happened; it is not entitlement. The backfill migration
+    // exists so that no real learner is in this state, and this test is what
+    // stops the old behaviour from creeping back.
+    await aPurchaseRow(learner.id, owned.course.id);
+
+    const response = await PUT(request(true), {
+      params: params(owned.course.id, owned.topic.id),
+    });
+
+    expect(response.status).toBe(404);
+    expect(await testDb().userProgress.count()).toBe(0);
+  });
+
+  it("refuses a suspended learner who has paid", async () => {
+    // The case that motivated the ADR: reading Purchase meant a suspension did
+    // nothing, so a suspended learner kept completing Topics -- and therefore kept
+    // earning badges, streaks, and a Certificate.
+    await aPurchaseRow(learner.id, owned.course.id);
+    await anEnrollmentRow(learner.id, owned.course.id, "SUSPENDED");
+
+    const response = await PUT(request(true), {
+      params: params(owned.course.id, owned.topic.id),
+    });
+
+    expect(response.status).toBe(404);
+    expect(await testDb().userProgress.count()).toBe(0);
+  });
+
+  it("serves a learner whose Enrollment is COMPLETED", async () => {
+    // COMPLETED keeps read access to the Course and its Certificate (ADR 0002).
+    await aPaidEnrollment(learner.id, owned.course.id, "COMPLETED");
+
+    const response = await PUT(request(true), {
+      params: params(owned.course.id, owned.topic.id),
+    });
+
+    expect(response.status).toBe(200);
   });
 
   it("refuses a learner who has not bought the Course", async () => {
@@ -98,7 +145,7 @@ describe("PUT progress", () => {
 
   it("refuses an unauthenticated request", async () => {
     clerkAuth.mockResolvedValue({ userId: null });
-    await aPurchaseRow(learner.id, owned.course.id);
+    await aPaidEnrollment(learner.id, owned.course.id);
 
     const response = await PUT(request(true), {
       params: params(owned.course.id, owned.topic.id),
@@ -108,7 +155,7 @@ describe("PUT progress", () => {
   });
 
   it("rejects a non-boolean isCompleted", async () => {
-    await aPurchaseRow(learner.id, owned.course.id);
+    await aPaidEnrollment(learner.id, owned.course.id);
 
     for (const value of ["true", 1, {}, null]) {
       const response = await PUT(request(value), {

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { testDb } from "./support/db";
-import { aCourseWithTopic, aPurchaseRow, aUserRow } from "./support/fixtures";
+import { aCourseWithTopic, aPaidEnrollment, aUserRow } from "./support/fixtures";
 
 // The guards import `@/lib/db`. Point that at the disposable database, lazily,
 // so the module graph does not need the real connection string at import time.
@@ -49,8 +49,10 @@ describe("cross-course Topic access (#39)", () => {
     owned = await aCourseWithTopic(author.id);
     foreign = await aCourseWithTopic(author.id);
 
-    // The learner legitimately owns the first Course and nothing else.
-    await aPurchaseRow(learner.id, owned.course.id);
+    // The learner legitimately has access to the first Course and nothing else.
+    // Both rows, because #48 made Enrollment the entitlement and Purchase only
+    // evidence that a payment happened.
+    await aPaidEnrollment(learner.id, owned.course.id);
   });
 
   it("finds a Topic through its own Course", async () => {
@@ -69,7 +71,7 @@ describe("cross-course Topic access (#39)", () => {
 
   it("returns no content for a foreign Topic even to a paying learner", async () => {
     const result = await getTopic({
-      userId: learner.id,
+      principal: { userId: learner.id, role: "STUDENT" },
       courseId: owned.course.id,
       topicId: foreign.topic.id,
     });
@@ -81,13 +83,13 @@ describe("cross-course Topic access (#39)", () => {
 
   it("still serves the Topic the learner actually bought", async () => {
     const result = await getTopic({
-      userId: learner.id,
+      principal: { userId: learner.id, role: "STUDENT" },
       courseId: owned.course.id,
       topicId: owned.topic.id,
     });
 
     expect(result.topic?.id).toBe(owned.topic.id);
-    expect(result.purchase).not.toBeNull();
+    expect(result.entitlement?.canLearn).toBe(true);
   });
 
   it("hides a Topic whose Module is unpublished, even inside the right Course", async () => {
