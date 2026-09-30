@@ -69,6 +69,10 @@ CHANGELOG.md
 # The permission matrix: the authorization rules every contributor and agent
 # must implement against, asserted by tests/unit/auth/policy.test.ts.
 !/docs/permission-matrix.md
+
+# The API error-shape contract, referenced from lib/http and every route handler.
+!/docs/api-errors.md
+
 # Operational runbooks: procedures a deploy or an incident depends on. A runbook
 # that exists only on one machine is not a runbook.
 !/docs/runbooks/

@@ -1,16 +1,18 @@
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
-import { authorizeQuestionInCourse, requirePrincipal, toResponse } from "@/lib/auth";
-import { logError } from "@/lib/logger";
+import { authorizeQuestionInCourse, requirePrincipal } from "@/lib/auth";
+import { handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
+import { questionParams } from "@/lib/validations/ids";
+import { questionUpdateSchema } from "@/lib/validations/quiz";
 
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ courseId: string; quizId: string; questionId: string }> }
 ) {
-  const routeParams = await params;
-
   try {
+    const routeParams = parseParams(questionParams, await params);
+
     const principal = await requirePrincipal();
     await authorizeQuestionInCourse(
       principal,
@@ -20,87 +22,100 @@ export async function PATCH(
       routeParams.questionId
     );
 
-    const { text, points, options } = await req.json() as {
-      text?: string;
-      points?: number;
-      options?: { id?: string; text: string; isCorrect: boolean; position: number }[];
-    };
+    // The body was cast with `as`, which is a claim rather than a check: `points`
+    // could be a string, `options` could be thousands of entries, and each
+    // option's `text` was unbounded.
+    const body = await parseBody(questionUpdateSchema, req);
 
-    // Update question fields
-    await db.question.update({
-      where: { id: routeParams.questionId },
-      data: {
-        ...(text !== undefined && { text }),
-        ...(points !== undefined && { points }),
-      },
+    const existingOptions = await db.questionOption.findMany({
+      where: { questionId: routeParams.questionId },
+      select: { id: true },
     });
+    const existingIds = new Set(existingOptions.map((o) => o.id));
 
-    // Update options if provided
-    if (options) {
-      // Get existing option IDs
-      const existingOptions = await db.questionOption.findMany({
-        where: { questionId: routeParams.questionId },
-        select: { id: true },
-      });
-
-      const incomingIds = options.filter((o) => o.id).map((o) => o.id!);
-      const toDelete = existingOptions.filter((o) => !incomingIds.includes(o.id));
-
-      // Delete removed options
-      if (toDelete.length > 0) {
-        await db.questionOption.deleteMany({
-          where: { id: { in: toDelete.map((o) => o.id) } },
-        });
-      }
-
-      // Upsert options
-      for (const option of options) {
-        if (option.id) {
-          await db.questionOption.update({
-            where: { id: option.id },
-            data: {
-              text: option.text,
-              isCorrect: option.isCorrect,
-              position: option.position,
-            },
-          });
-        } else {
-          await db.questionOption.create({
-            data: {
-              text: option.text,
-              isCorrect: option.isCorrect,
-              position: option.position,
-              questionId: routeParams.questionId,
-            },
-          });
-        }
-      }
+    // Every supplied option id must already belong to *this* question. The
+    // previous version passed them straight to `update` matched on id alone, so
+    // an author could rewrite the text of -- or flip `isCorrect` on -- an option
+    // belonging to any other question in the product, including one in a Course
+    // they do not own. A uuid from elsewhere is still a valid uuid.
+    const foreign = (body.options ?? []).filter(
+      (option) => option.id !== undefined && !existingIds.has(option.id)
+    );
+    if (foreign.length > 0) {
+      return problem("not_found");
     }
 
-    const updated = await db.question.findUnique({
-      where: { id: routeParams.questionId },
-      include: {
-        options: { orderBy: { position: "asc" } },
-      },
+    // One transaction. A failure partway through used to leave a question whose
+    // options had been deleted but not recreated, which is an unanswerable
+    // question on a published quiz.
+    const updated = await db.$transaction(async (tx) => {
+      await tx.question.update({
+        where: { id: routeParams.questionId },
+        data: {
+          ...(body.text !== undefined && { text: body.text }),
+          ...(body.points !== undefined && { points: body.points }),
+        },
+      });
+
+      if (body.options) {
+        const incomingIds = new Set(
+          body.options.flatMap((o) => (o.id === undefined ? [] : [o.id]))
+        );
+        const toDelete = [...existingIds].filter((id) => !incomingIds.has(id));
+
+        if (toDelete.length > 0) {
+          // Scoped to the question as well as the ids, so the delete cannot
+          // reach further than the question being edited even if `existingIds`
+          // were ever computed from something wider.
+          await tx.questionOption.deleteMany({
+            where: { id: { in: toDelete }, questionId: routeParams.questionId },
+          });
+        }
+
+        for (const option of body.options) {
+          if (option.id !== undefined) {
+            await tx.questionOption.update({
+              where: { id: option.id, questionId: routeParams.questionId },
+              data: {
+                text: option.text,
+                isCorrect: option.isCorrect,
+                position: option.position,
+              },
+            });
+          } else {
+            await tx.questionOption.create({
+              data: {
+                text: option.text,
+                isCorrect: option.isCorrect,
+                position: option.position,
+                questionId: routeParams.questionId,
+              },
+            });
+          }
+        }
+      }
+
+      return tx.question.findUnique({
+        where: { id: routeParams.questionId },
+        include: {
+          options: { orderBy: { position: "asc" } },
+        },
+      });
     });
 
     return NextResponse.json(updated);
   } catch (error) {
-    const denied = toResponse(error);
-    if (denied) return denied;
-
-    logError("QUESTION_ID", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return handleRouteError("QUESTION_ID", error);
   }
 }
 
 export async function DELETE(
-  req: Request,
+  _req: Request,
   { params }: { params: Promise<{ courseId: string; quizId: string; questionId: string }> }
 ) {
-  const routeParams = await params;
-
   try {
+    const routeParams = parseParams(questionParams, await params);
+
     const principal = await requirePrincipal();
     await authorizeQuestionInCourse(
       principal,
@@ -116,10 +131,6 @@ export async function DELETE(
 
     return NextResponse.json(question);
   } catch (error) {
-    const denied = toResponse(error);
-    if (denied) return denied;
-
-    logError("QUESTION_ID_DELETE", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return handleRouteError("QUESTION_ID_DELETE", error);
   }
 }

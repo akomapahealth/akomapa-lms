@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 
-import { z } from "zod";
-
 import { db } from "@/lib/db";
-import { requirePrincipal, toResponse } from "@/lib/auth";
+import { requirePrincipal } from "@/lib/auth";
+import { handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
+import { topicParams } from "@/lib/validations/ids";
+import { progressSchema } from "@/lib/validations/topic";
 import { findPublishedTopicInCourse } from "@/lib/courses/topic-access";
 import {
     isCourseComplete as courseIsComplete,
@@ -14,20 +15,19 @@ import { updateStreak } from "@/lib/streak-service";
 import { generateCertificate } from "@/lib/certificate-service";
 import { logError } from "@/lib/logger";
 
-const progressSchema = z.object({
-    // Runtime-validated: the value drives Enrollment status and certificate
-    // issuance, and JSON will happily deliver a string, a number, or an object.
-    isCompleted: z.boolean(),
-});
-
 export async function PUT(
     req: Request,
     { params }: { params: Promise<{ courseId: string; chapterId: string }> }
 ) {
-        const routeParams = await params;
-
     try {
+        const routeParams = parseParams(topicParams, await params);
+
         const { userId } = await requirePrincipal();
+
+        // Before the Topic lookup: an unparseable or out-of-bounds body should
+        // not cost a query, and the shape is what decides whether the completion
+        // cascade below runs at all.
+        const { isCompleted } = await parseBody(progressSchema, req);
 
         // Published, and in this Course. Without the binding a progress write
         // could be aimed at any Topic in the product by id, and the cascade
@@ -39,7 +39,7 @@ export async function PUT(
         );
 
         if (!topic) {
-            return new NextResponse("Not Found", { status: 404 });
+            return problem("not_found");
         }
 
         // Entitlement. A free-preview Topic is progressable without a purchase;
@@ -53,15 +53,9 @@ export async function PUT(
             });
 
             if (!purchase) {
-                return new NextResponse("Not Found", { status: 404 });
+                return problem("not_found");
             }
         }
-
-        const parsed = progressSchema.safeParse(await req.json());
-        if (!parsed.success) {
-            return new NextResponse("Invalid data", { status: 400 });
-        }
-        const { isCompleted } = parsed.data;
 
         const userProgress = await db.userProgress.upsert({
             where: {
@@ -206,10 +200,6 @@ export async function PUT(
         });
 
     } catch (error) {
-        const denied = toResponse(error);
-        if (denied) return denied;
-
-        logError("CHAPTER_ID_PROGRESS", error);
-        return new NextResponse("Internal Error", { status: 500 });
+        return handleRouteError("CHAPTER_ID_PROGRESS", error);
     }
 }

@@ -1,15 +1,16 @@
 import { db } from "@/lib/db";
-import { authorizeCourse, requirePrincipal, toResponse } from "@/lib/auth";
+import { authorizeCourse, requirePrincipal } from "@/lib/auth";
 import { NextResponse } from "next/server";
-import { logError } from "@/lib/logger";
+import { handleRouteError, parseParams } from "@/lib/http";
+import { attachmentParams } from "@/lib/validations/ids";
 
 export async function DELETE(
     req: Request,
     { params }: { params: Promise<{ courseId: string; attachmentId: string }> }
 ) {
-        const routeParams = await params;
-
     try {
+        const routeParams = parseParams(attachmentParams, await params);
+
         const principal = await requirePrincipal();
         await authorizeCourse(principal, "attachment:delete", routeParams.courseId);
 
@@ -22,10 +23,6 @@ export async function DELETE(
 
         return NextResponse.json(attachment);
     } catch (error) {
-        const denied = toResponse(error);
-        if (denied) return denied;
-
-        logError("ATTACHMENT_ID", error);
-        return new NextResponse("Internal Error", { status: 500 });
+        return handleRouteError("ATTACHMENT_ID", error);
     }
 }

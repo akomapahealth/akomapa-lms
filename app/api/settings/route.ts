@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
-import { requirePrincipal, toResponse } from "@/lib/auth";
+import { requirePrincipal } from "@/lib/auth";
+import { handleRouteError, parseBody } from "@/lib/http";
 import { settingsUpdateSchema } from "@/lib/validations/settings";
-import { logError } from "@/lib/logger";
 
 export async function GET() {
   try {
@@ -22,11 +22,7 @@ export async function GET() {
 
     return NextResponse.json(settings);
   } catch (error) {
-    const denied = toResponse(error);
-    if (denied) return denied;
-
-    logError("SETTINGS_GET", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return handleRouteError("SETTINGS_GET", error);
   }
 }
 
@@ -34,28 +30,19 @@ export async function PATCH(req: Request) {
   try {
     const { userId } = await requirePrincipal();
 
-    const body = await req.json();
-
-    const parsed = settingsUpdateSchema.safeParse(body);
-    if (!parsed.success) {
-      return new NextResponse("Invalid data", { status: 400 });
-    }
+    const values = await parseBody(settingsUpdateSchema, req);
 
     const settings = await db.userSettings.upsert({
       where: { userId },
       create: {
         userId,
-        ...parsed.data,
+        ...values,
       },
-      update: parsed.data,
+      update: values,
     });
 
     return NextResponse.json(settings);
   } catch (error) {
-    const denied = toResponse(error);
-    if (denied) return denied;
-
-    logError("SETTINGS_PATCH", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return handleRouteError("SETTINGS_PATCH", error);
   }
 }

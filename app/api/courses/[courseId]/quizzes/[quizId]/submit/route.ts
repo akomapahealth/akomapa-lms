@@ -1,42 +1,27 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 
 import { db } from "@/lib/db";
-import { requirePrincipal, toResponse } from "@/lib/auth";
+import { requirePrincipal } from "@/lib/auth";
+import { handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
+import { quizParams } from "@/lib/validations/ids";
+import { submissionSchema } from "@/lib/validations/quiz";
 import { findLearnerAttempt } from "@/lib/assessments/attempt-access";
 import { gradeSubmission, validateSubmission } from "@/lib/assessments/grading";
 import { evaluateBadges } from "@/lib/badge-service";
-import { logError } from "@/lib/logger";
-
-const submissionSchema = z.object({
-  attemptId: z.string().min(1),
-  answers: z
-    .array(
-      z.object({
-        questionId: z.string().min(1),
-        selectedOptionId: z.string().min(1),
-      })
-    )
-    // Bounded so a submission cannot be used to write an unlimited number of
-    // rows. A Quiz with more questions than this cannot be graded here, which
-    // is a deliberate ceiling rather than an accident.
-    .max(500),
-});
 
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ courseId: string; quizId: string }> }
 ) {
-  const routeParams = await params;
-
   try {
+    const routeParams = parseParams(quizParams, await params);
+
     const { userId } = await requirePrincipal();
 
-    const parsed = submissionSchema.safeParse(await req.json());
-    if (!parsed.success) {
-      return new NextResponse("Invalid data", { status: 400 });
-    }
-    const { attemptId, answers } = parsed.data;
+    // Ids are uuids and no question may be answered twice. The previous schema
+    // accepted any non-empty string for each id, and a duplicated questionId
+    // created two QuizAnswer rows for one question and double-counted its score.
+    const { attemptId, answers } = await parseBody(submissionSchema, req);
 
     // The attempt must be this learner's, on this Quiz, in this Course. It was
     // previously loaded by id and checked only for ownership, while grading ran
@@ -51,11 +36,11 @@ export async function POST(
     );
 
     if (!attempt) {
-      return new NextResponse("Not Found", { status: 404 });
+      return problem("not_found");
     }
 
     if (attempt.completedAt) {
-      return new NextResponse("Quiz already submitted", { status: 409 });
+      return problem("conflict", { message: "This attempt is already submitted." });
     }
 
     // Server-side time validation (30s grace period)
@@ -63,7 +48,9 @@ export async function POST(
       const elapsed = (Date.now() - attempt.startedAt.getTime()) / 1000;
       const allowedSeconds = attempt.quiz.timeLimitMinutes * 60 + 30;
       if (elapsed > allowedSeconds) {
-        return new NextResponse("Time limit exceeded", { status: 400 });
+        return problem("conflict", {
+          message: "The time limit for this attempt has passed.",
+        });
       }
     }
 
@@ -83,7 +70,11 @@ export async function POST(
     // ids satisfy the database's foreign keys, so nothing else rejected them.
     const invalid = validateSubmission(questions, answers);
     if (invalid) {
-      return new NextResponse("Invalid submission", { status: 400 });
+      // Well-formed but not answerable: the ids are uuids and unique, they just
+      // do not belong to this Quiz. Field-level, without naming which id failed.
+      return problem("validation_failed", {
+        fields: [{ path: "answers", code: "not_in_quiz" }],
+      });
     }
 
     const { totalScore, totalPoints, percentage, results } = gradeSubmission(
@@ -120,7 +111,7 @@ export async function POST(
     });
 
     if (!finalised) {
-      return new NextResponse("Quiz already submitted", { status: 409 });
+      return problem("conflict", { message: "This attempt is already submitted." });
     }
 
     // Gamification: evaluate badges on quiz completion
@@ -168,10 +159,6 @@ export async function POST(
       })),
     });
   } catch (error) {
-    const denied = toResponse(error);
-    if (denied) return denied;
-
-    logError("QUIZ_SUBMIT", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return handleRouteError("QUIZ_SUBMIT", error);
   }
 }

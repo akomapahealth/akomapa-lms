@@ -1,13 +1,27 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { Webhook } from "svix";
-import type { WebhookEvent } from "@clerk/nextjs/server";
 
 import { db } from "@/lib/db";
+import { problem } from "@/lib/http";
+import { logError } from "@/lib/logger";
+import { clerkUserDataSchema, primaryEmailOf } from "@/lib/validations/webhooks";
 
+/**
+ * Clerk identity events, which keep the local `User` row in step with Clerk.
+ *
+ * Authenticated by svix signature rather than by principal. Like the Stripe
+ * route, the signature proves the sender and not the shape: `first_name`,
+ * `last_name`, and the email list are all genuinely optional in Clerk's payload,
+ * and the previous version reached into them with `?.` chains and wrote whatever
+ * came out.
+ *
+ * Logging here used to include the user's id, email address, and name on every
+ * event. Email addresses and names identify real people, so they are not logged
+ * (policy 01); the event type and a correlation-safe id are enough to debug a
+ * delivery.
+ */
 export async function POST(req: Request) {
-  console.log("[Clerk Webhook] Received webhook request");
-  
   try {
     const payload = await req.text();
     const headerStore = await headers();
@@ -16,102 +30,83 @@ export async function POST(req: Request) {
     const svixTimestamp = headerStore.get("svix-timestamp");
     const svixSignature = headerStore.get("svix-signature");
 
-    console.log("[Clerk Webhook] Headers received:", {
-      hasSvixId: !!svixId,
-      hasSvixTimestamp: !!svixTimestamp,
-      hasSvixSignature: !!svixSignature,
-    });
-
     if (!svixId || !svixTimestamp || !svixSignature) {
-      console.error("[Clerk Webhook] Missing Svix signature headers");
-      return new NextResponse("Missing Svix signature headers", { status: 400 });
+      return problem("invalid_parameter", {
+        message: "Missing Svix signature headers.",
+      });
     }
 
     const secret = process.env.CLERK_WEBHOOK_SECRET;
 
     if (!secret) {
-      console.error("[Clerk Webhook] CLERK_WEBHOOK_SECRET is not set in environment variables");
-      return new NextResponse("Webhook not configured", { status: 500 });
+      logError("CLERK_WEBHOOK", new Error("CLERK_WEBHOOK_SECRET is not set"));
+      return problem("internal");
     }
 
-    console.log("[Clerk Webhook] Webhook secret is configured");
-
-    const wh = new Webhook(secret);
-
-    let evt: WebhookEvent;
+    let evt: unknown;
 
     try {
-      evt = wh.verify(payload, {
+      evt = new Webhook(secret).verify(payload, {
         "svix-id": svixId,
         "svix-timestamp": svixTimestamp,
         "svix-signature": svixSignature,
-      }) as WebhookEvent;
-      console.log("[Clerk Webhook] Webhook signature verified successfully");
-    } catch (err) {
-      console.error("[Clerk Webhook] Error verifying webhook signature:", err);
-      return new NextResponse("Invalid signature", { status: 400 });
+      });
+    } catch (error) {
+      logError("CLERK_WEBHOOK_SIGNATURE", error, { svixId });
+      return problem("invalid_parameter", { message: "Invalid signature." });
     }
 
-    const eventType = evt.type;
-    console.log("[Clerk Webhook] Event type:", eventType);
+    const envelope = evt as { type?: unknown; data?: unknown };
+    const eventType = typeof envelope.type === "string" ? envelope.type : "unknown";
 
     if (eventType === "user.created" || eventType === "user.updated") {
-      const {
-        id,
-        email_addresses,
-        first_name,
-        last_name,
-        image_url,
-      } = evt.data;
+      const parsed = clerkUserDataSchema.safeParse(envelope.data);
 
-      const primaryEmail =
-        email_addresses?.find((e) => e.id === evt.data.primary_email_address_id)
-          ?.email_address ?? email_addresses?.[0]?.email_address;
-
-      console.log("[Clerk Webhook] Processing user:", {
-        id,
-        email: primaryEmail,
-        firstName: first_name,
-        lastName: last_name,
-        eventType,
-      });
-
-      try {
-        const user = await db.user.upsert({
-          where: { id },
-          create: {
-            id,
-            email: primaryEmail,
-            firstName: first_name ?? undefined,
-            lastName: last_name ?? undefined,
-            imageUrl: image_url ?? undefined,
-          },
-          update: {
-            email: primaryEmail,
-            firstName: first_name ?? undefined,
-            lastName: last_name ?? undefined,
-            imageUrl: image_url ?? undefined,
-          },
+      if (!parsed.success) {
+        // A payload Clerk signed but this app cannot use. Logged without the
+        // payload, because it carries the person's name and email address.
+        logError("CLERK_WEBHOOK_PAYLOAD", new Error("unexpected user payload"), {
+          eventType,
+          svixId,
         });
-
-        console.log("[Clerk Webhook] User successfully saved to database:", {
-          id: user.id,
-          email: user.email,
+        return problem("validation_failed", {
+          message: "The user payload is missing required fields.",
         });
-      } catch (dbError) {
-        console.error("[Clerk Webhook] Database error:", dbError);
-        return new NextResponse("Database error", { status: 500 });
       }
-    } else if (eventType === "user.deleted") {
-      console.log("[Clerk Webhook] User deleted event received (not processing to preserve referential integrity)");
-    } else {
-      console.log("[Clerk Webhook] Unhandled event type:", eventType);
+
+      const data = parsed.data;
+      const email = primaryEmailOf(data);
+
+      if (email === undefined) {
+        logError("CLERK_WEBHOOK_PAYLOAD", new Error("no email address on account"), {
+          eventType,
+          svixId,
+        });
+        return problem("validation_failed", {
+          message: "The account has no email address.",
+        });
+      }
+
+      const fields = {
+        email,
+        firstName: data.first_name ?? undefined,
+        lastName: data.last_name ?? undefined,
+        imageUrl: data.image_url ?? undefined,
+      };
+
+      await db.user.upsert({
+        where: { id: data.id },
+        create: { id: data.id, ...fields },
+        update: fields,
+      });
     }
 
+    // Every other event type, `user.deleted` included, is acknowledged without
+    // action: deleting the row would break referential integrity with the
+    // learner's progress, purchases, and certificates. #117 owns real deletion.
     return new NextResponse(null, { status: 200 });
   } catch (error) {
-    console.error("[Clerk Webhook] Unexpected error:", error);
-    return new NextResponse("Internal server error", { status: 500 });
+    logError("CLERK_WEBHOOK", error);
+    return problem("internal");
   }
 }
-

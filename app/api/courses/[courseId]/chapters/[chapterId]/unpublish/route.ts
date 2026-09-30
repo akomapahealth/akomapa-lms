@@ -1,15 +1,16 @@
 import { db } from "@/lib/db";
-import { authorizeTopicInCourse, requirePrincipal, toResponse } from "@/lib/auth";
+import { authorizeTopicInCourse, requirePrincipal } from "@/lib/auth";
 import { NextResponse } from "next/server";
-import { logError } from "@/lib/logger";
+import { handleRouteError, parseParams } from "@/lib/http";
+import { topicParams } from "@/lib/validations/ids";
 
 export async function PATCH(
     req: Request,
     { params }: { params: Promise<{ courseId: string; chapterId: string }> }
 ) {
-        const routeParams = await params;
-
     try {
+        const routeParams = parseParams(topicParams, await params);
+
         const principal = await requirePrincipal();
         await authorizeTopicInCourse(principal, "topic:update", routeParams.courseId, routeParams.chapterId);
 
@@ -42,10 +43,6 @@ export async function PATCH(
 
         return NextResponse.json(unpublishedTopic);
     } catch (error) {
-        const denied = toResponse(error);
-        if (denied) return denied;
-
-        logError("CHAPTER_UNPUBLISH", error);
-        return new NextResponse("Internal Error", { status: 500 });
+        return handleRouteError("CHAPTER_UNPUBLISH", error);
     }
 }

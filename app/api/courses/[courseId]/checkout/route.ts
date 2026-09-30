@@ -1,18 +1,19 @@
 import { db } from "@/lib/db";
-import { requirePrincipal, toResponse } from "@/lib/auth";
+import { requirePrincipal } from "@/lib/auth";
 import { stripe } from "@/lib/stripe";
 import { currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { logError } from "@/lib/logger";
+import { handleRouteError, parseParams, problem } from "@/lib/http";
+import { courseParams } from "@/lib/validations/ids";
 
 export async function POST(
     req: Request,
     { params }: { params: Promise<{ courseId: string }> }
 ) {
-        const routeParams = await params;
-
     try {
+        const routeParams = parseParams(courseParams, await params);
+
         // Identity comes from the one derivation point (ADR 0001 section 1);
         // `currentUser` is used only for the email address Stripe needs. This
         // is a money path, so it must not resolve who is paying a second way.
@@ -22,7 +23,9 @@ export async function POST(
         const email = user?.emailAddresses?.[0]?.emailAddress;
 
         if (!email) {
-            return new NextResponse("Unauthorized", { status: 401 });
+            return problem("unauthenticated", {
+                message: "Your account has no email address on file.",
+            });
         }
 
         const course = await db.course.findUnique({
@@ -41,12 +44,26 @@ export async function POST(
             }
         });
 
-        if (purchase) {
-            return new NextResponse("Already purchased", { status: 400 });
+        if (!course) {
+            return problem("not_found");
         }
 
-        if (!course) {
-            return new NextResponse("Course not found", { status: 404 });
+        if (purchase) {
+            // A conflict, not bad input. Checked after the Course lookup so an
+            // unpublished or nonexistent Course answers 404 either way rather
+            // than revealing that the caller already owns something.
+            return problem("conflict", {
+                message: "You already have access to this course.",
+            });
+        }
+
+        // The column is a nullable float (#55 replaces it with exact money), so a
+        // Course with no price set would reach `Math.round(price * 100)` as NaN
+        // and create a Stripe session for an unpayable amount.
+        if (course.price === null || !Number.isFinite(course.price)) {
+            return problem("conflict", {
+                message: "This course is not available for purchase yet.",
+            });
         }
 
         const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = [
@@ -56,9 +73,9 @@ export async function POST(
                     currency: "USD",
                     product_data: {
                         name: course.title,
-                        description: course.description!,
+                        description: course.description ?? undefined,
                     },
-                    unit_amount: Math.round(course.price! * 100),
+                    unit_amount: Math.round(course.price * 100),
                 }
             }
         ];
@@ -99,10 +116,6 @@ export async function POST(
 
         return NextResponse.json({ url: session.url });
     } catch (error) {
-        const denied = toResponse(error);
-        if (denied) return denied;
-
-        logError("COURSE_ID_CHECKOUT", error);
-        return new NextResponse("Internal Error", { status: 500 });
+        return handleRouteError("COURSE_ID_CHECKOUT", error);
     }
 }

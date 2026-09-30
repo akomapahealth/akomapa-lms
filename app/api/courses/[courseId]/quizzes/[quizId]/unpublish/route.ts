@@ -1,16 +1,17 @@
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
-import { authorizeQuizInCourse, requirePrincipal, toResponse } from "@/lib/auth";
-import { logError } from "@/lib/logger";
+import { authorizeQuizInCourse, requirePrincipal } from "@/lib/auth";
+import { handleRouteError, parseParams } from "@/lib/http";
+import { quizParams } from "@/lib/validations/ids";
 
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ courseId: string; quizId: string }> }
 ) {
-  const routeParams = await params;
-
   try {
+    const routeParams = parseParams(quizParams, await params);
+
     const principal = await requirePrincipal();
     await authorizeQuizInCourse(
       principal,
@@ -29,10 +30,6 @@ export async function PATCH(
 
     return NextResponse.json(updated);
   } catch (error) {
-    const denied = toResponse(error);
-    if (denied) return denied;
-
-    logError("QUIZ_UNPUBLISH", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return handleRouteError("QUIZ_UNPUBLISH", error);
   }
 }

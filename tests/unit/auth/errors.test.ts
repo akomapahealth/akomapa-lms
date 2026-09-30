@@ -36,14 +36,41 @@ describe("isDenied", () => {
 
 describe("toResponse", () => {
   it.each([
-    ["unauthenticated", 401, "Unauthorized"],
-    ["forbidden", 403, "Forbidden"],
-    ["not_found", 404, "Not Found"],
-  ] as const)("maps %s to %i", async (reason, status, body) => {
+    ["unauthenticated", 401],
+    ["forbidden", 403],
+    ["not_found", 404],
+  ] as const)("maps %s to %i in the shared problem shape", async (reason, status) => {
     const response = toResponse(new Denied(reason));
 
     expect(response?.status).toBe(status);
-    await expect(response?.text()).resolves.toBe(body);
+
+    // The body is the one documented shape (docs/api-errors.md), not a bare
+    // string: a client has to tell "not signed in" from "not allowed" from
+    // "does not exist" without matching on prose.
+    const body = await response?.json();
+    expect(body.error.code).toBe(reason);
+    expect(typeof body.error.message).toBe("string");
+    expect(body.error.correlationId).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
+    );
+    // No field list: a denial is not a field-level failure.
+    expect(body.error.fields).toBeUndefined();
+  });
+
+  it("carries the correlation id in a header as well as the body", async () => {
+    // So a person reporting a failure can quote an id without opening devtools.
+    const response = toResponse(new Denied("forbidden"));
+    const body = await response!.json();
+
+    expect(response!.headers.get("x-correlation-id")).toBe(body.error.correlationId);
+  });
+
+  it("never names the action or the resource in the response", async () => {
+    // The action reaches the log line via `Denied.message`. It must not reach the
+    // client, where it would describe the permission model to someone probing it.
+    const response = toResponse(new Denied("forbidden", "course:update"));
+
+    await expect(response!.text()).resolves.not.toContain("course:update");
   });
 
   it("returns null for anything that is not a denial", () => {

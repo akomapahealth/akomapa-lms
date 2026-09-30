@@ -1,16 +1,18 @@
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
-import { authorizeQuizInCourse, requirePrincipal, toResponse } from "@/lib/auth";
-import { logError } from "@/lib/logger";
+import { authorizeQuizInCourse, requirePrincipal } from "@/lib/auth";
+import { BODY_BYTES, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
+import { quizParams } from "@/lib/validations/ids";
+import { reorderSchema } from "@/lib/validations/reorder";
 
 export async function PUT(
   req: Request,
   { params }: { params: Promise<{ courseId: string; quizId: string }> }
 ) {
-  const routeParams = await params;
-
   try {
+    const routeParams = parseParams(quizParams, await params);
+
     const principal = await requirePrincipal();
     await authorizeQuizInCourse(
       principal,
@@ -19,23 +21,32 @@ export async function PUT(
       routeParams.quizId
     );
 
-    const { list } = await req.json() as {
-      list: { id: string; position: number }[];
-    };
+    const { list } = await parseBody(reorderSchema, req, BODY_BYTES.reorder);
 
-    for (const item of list) {
-      await db.question.update({
-        where: { id: item.id },
-        data: { position: item.position },
-      });
+    // Every id must be a Question on *this* Quiz. Authorization covered the Quiz
+    // in the URL, not the ids in the body, and the update matched on `id` alone.
+    const ids = list.map((item) => item.id);
+    const owned = await db.question.findMany({
+      where: { id: { in: ids }, quizId: routeParams.quizId },
+      select: { id: true },
+    });
+
+    if (owned.length !== ids.length) {
+      return problem("not_found");
     }
 
-    return new NextResponse("Success", { status: 200 });
-  } catch (error) {
-    const denied = toResponse(error);
-    if (denied) return denied;
+    // One transaction: a partial reorder leaves two questions sharing a position.
+    await db.$transaction(
+      list.map((item) =>
+        db.question.update({
+          where: { id: item.id },
+          data: { position: item.position },
+        })
+      )
+    );
 
-    logError("QUESTIONS_REORDER", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return new NextResponse(null, { status: 204 });
+  } catch (error) {
+    return handleRouteError("QUESTIONS_REORDER", error);
   }
 }

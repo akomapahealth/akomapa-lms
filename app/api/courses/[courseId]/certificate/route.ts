@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
-import { requirePrincipal, toResponse } from "@/lib/auth";
+import { requirePrincipal } from "@/lib/auth";
 import { generateCertificate } from "@/lib/certificate-service";
-import { logError } from "@/lib/logger";
+import { handleRouteError, parseParams, problem } from "@/lib/http";
+import { courseParams } from "@/lib/validations/ids";
 
 export const maxDuration = 30;
 
@@ -14,7 +15,7 @@ export async function POST(
   try {
     const { userId } = await requirePrincipal();
 
-    const { courseId } = await params;
+    const { courseId } = parseParams(courseParams, await params);
 
     // Verify enrollment completion
     const enrollment = await db.enrollment.findFirst({
@@ -22,28 +23,22 @@ export async function POST(
     });
 
     if (!enrollment) {
-      return NextResponse.json(
-        { error: "Course not completed" },
-        { status: 400 }
-      );
+      return problem("conflict", {
+        message: "Finish the course before requesting a certificate.",
+      });
     }
 
     const result = await generateCertificate(userId, courseId);
 
     if (!result) {
-      return NextResponse.json(
-        { error: "Failed to generate certificate" },
-        { status: 500 }
-      );
+      // The service returning nothing is a fault, not a client error, and it
+      // answers in the same shape as any other fault.
+      return problem("internal");
     }
 
     return NextResponse.json(result);
   } catch (error) {
-    const denied = toResponse(error);
-    if (denied) return denied;
-
-    logError("CERTIFICATE_POST", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return handleRouteError("CERTIFICATE_POST", error);
   }
 }
 
@@ -54,7 +49,7 @@ export async function GET(
   try {
     const { userId } = await requirePrincipal();
 
-    const { courseId } = await params;
+    const { courseId } = parseParams(courseParams, await params);
 
     const certificate = await db.certificate.findUnique({
       where: { userId_courseId: { userId, courseId } },
@@ -70,10 +65,6 @@ export async function GET(
       issuedAt: certificate.issuedAt,
     });
   } catch (error) {
-    const denied = toResponse(error);
-    if (denied) return denied;
-
-    logError("CERTIFICATE_GET", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return handleRouteError("CERTIFICATE_GET", error);
   }
 }

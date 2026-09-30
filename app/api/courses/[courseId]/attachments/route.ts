@@ -1,25 +1,34 @@
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
-import { authorizeCourse, requirePrincipal, toResponse } from "@/lib/auth";
-import { logError } from "@/lib/logger";
-
+import { authorizeCourse, requirePrincipal } from "@/lib/auth";
+import { handleRouteError, parseBody, parseParams } from "@/lib/http";
+import { courseParams } from "@/lib/validations/ids";
+import {
+    attachmentCreateSchema,
+    attachmentNameFrom,
+} from "@/lib/validations/attachment";
 
 export async function POST(
     req: Request,
     { params }: { params: Promise<{ courseId: string }> }
 ) {
-        const routeParams = await params;
-
     try {
+        const routeParams = parseParams(courseParams, await params);
+
         const principal = await requirePrincipal();
         await authorizeCourse(principal, "attachment:create", routeParams.courseId);
-        const { url } = await req.json();
+
+        // A real http(s) URL. The bare body allowed any string, so `url` could be
+        // `javascript:...` -- later rendered as an href -- and `name` was derived
+        // with `url.split("/").pop()`, which is `undefined` for a URL ending in a
+        // slash and was written to a non-null column.
+        const { url } = await parseBody(attachmentCreateSchema, req);
 
         const attachment = await db.attachment.create({
             data: {
                 url,
-                name: url.split("/").pop(),
+                name: attachmentNameFrom(url),
                 courseId: routeParams.courseId,
             }
         });
@@ -27,10 +36,6 @@ export async function POST(
         return NextResponse.json(attachment);
 
     } catch (error) {
-        const denied = toResponse(error);
-        if (denied) return denied;
-
-        logError("COURSE_ID_ATTACHMENTS", error);
-        return new NextResponse("Internal Error", { status: 500 });
+        return handleRouteError("COURSE_ID_ATTACHMENTS", error);
     }
 }

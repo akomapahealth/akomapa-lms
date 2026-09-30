@@ -1,15 +1,17 @@
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
-import { authorizeComment, requirePrincipal, toResponse } from "@/lib/auth";
-import { logError } from "@/lib/logger";
+import { authorizeComment, requirePrincipal } from "@/lib/auth";
+import { BODY_BYTES, handleRouteError, parseBody, parseParams } from "@/lib/http";
+import { commentParams } from "@/lib/validations/ids";
+import { commentUpdateSchema } from "@/lib/validations/community";
 
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ commentId: string }> }
 ) {
   try {
-    const { commentId } = await params;
+    const { commentId } = parseParams(commentParams, await params);
 
     // Author only, deliberately: a moderator may remove a comment but not
     // rewrite it, because editing leaves someone's name on words they did not
@@ -17,11 +19,7 @@ export async function PATCH(
     const principal = await requirePrincipal();
     await authorizeComment(principal, "comment:update", commentId);
 
-    const { content } = await req.json();
-
-    if (!content) {
-      return new NextResponse("Content is required", { status: 400 });
-    }
+    const { content } = await parseBody(commentUpdateSchema, req, BODY_BYTES.richText);
 
     const updated = await db.forumComment.update({
       where: { id: commentId },
@@ -30,11 +28,7 @@ export async function PATCH(
 
     return NextResponse.json(updated);
   } catch (error) {
-    const denied = toResponse(error);
-    if (denied) return denied;
-
-    logError("COMMUNITY_COMMENT_PATCH", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return handleRouteError("COMMUNITY_COMMENT_PATCH", error);
   }
 }
 
@@ -43,7 +37,7 @@ export async function DELETE(
   { params }: { params: Promise<{ commentId: string }> }
 ) {
   try {
-    const { commentId } = await params;
+    const { commentId } = parseParams(commentParams, await params);
 
     const principal = await requirePrincipal();
     await authorizeComment(principal, "comment:delete", commentId);
@@ -52,10 +46,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    const denied = toResponse(error);
-    if (denied) return denied;
-
-    logError("COMMUNITY_COMMENT_DELETE", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return handleRouteError("COMMUNITY_COMMENT_DELETE", error);
   }
 }

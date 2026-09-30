@@ -1,34 +1,54 @@
 import { db } from "@/lib/db";
-import { authorizeCourse, requirePrincipal, toResponse } from "@/lib/auth";
+import { authorizeCourse, requirePrincipal } from "@/lib/auth";
 import { NextResponse } from "next/server";
-import { logError } from "@/lib/logger";
+import { BODY_BYTES, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
+import { courseParams } from "@/lib/validations/ids";
+import { reorderSchema } from "@/lib/validations/reorder";
 
 export async function PUT(
     req: Request,
     { params }: { params: Promise<{ courseId: string }> }
 ) {
-        const routeParams = await params;
-
     try {
+        const routeParams = parseParams(courseParams, await params);
+
         const principal = await requirePrincipal();
         await authorizeCourse(principal, "topic:reorder", routeParams.courseId);
 
-        const { list } = await req.json();
+        // Bounded and typed. `list` was `any`: unbounded in length, with ids of
+        // any type, one UPDATE per element.
+        const { list } = await parseBody(reorderSchema, req, BODY_BYTES.reorder);
 
-        for (let item of list) {
-            await db.topic.update({
-                where: { id: item.id },
-                data: { position: item.position }
-            });
+        // Every id must be a Topic in *this* Course. Authorization proved the
+        // caller owns the Course in the URL; it said nothing about the ids in the
+        // body, and the update below matched on `id` alone -- so an author of any
+        // Course could renumber the Topics of any other.
+        const ids = list.map((item) => item.id);
+        const owned = await db.topic.findMany({
+            where: { id: { in: ids }, module: { courseId: routeParams.courseId } },
+            select: { id: true },
+        });
+
+        if (owned.length !== ids.length) {
+            // One answer whether an id is absent or belongs elsewhere, so the
+            // route cannot be used to test which Topics exist.
+            return problem("not_found");
         }
 
-        return new NextResponse("Success", { status: 200 });
+        // One transaction: a partial reorder leaves two Topics sharing a position
+        // and the sidebar ordering non-deterministic.
+        await db.$transaction(
+            list.map((item) =>
+                db.topic.update({
+                    where: { id: item.id },
+                    data: { position: item.position },
+                })
+            )
+        );
+
+        return new NextResponse(null, { status: 204 });
 
     } catch (error) {
-        const denied = toResponse(error);
-        if (denied) return denied;
-
-        logError("REORDER", error);
-        return new NextResponse("Internal Error", { status: 500 });
+        return handleRouteError("REORDER", error);
     }
 }

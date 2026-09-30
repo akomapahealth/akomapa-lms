@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
-import { requirePrincipal, toResponse } from "@/lib/auth";
-import { logError } from "@/lib/logger";
+import { requirePrincipal } from "@/lib/auth";
+import { BODY_BYTES, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
+import { journalEntryParams } from "@/lib/validations/ids";
+import { journalUpdateSchema } from "@/lib/validations/journal";
 
 export async function PATCH(
   req: Request,
@@ -11,40 +13,36 @@ export async function PATCH(
   try {
     const { userId } = await requirePrincipal();
 
-    const { entryId } = await params;
-    const values = await req.json();
+    const { entryId } = parseParams(journalEntryParams, await params);
+    // Strict: `values` was the raw body, and every field was copied across if
+    // merely `!== undefined`, so `isPrivate: "no"` made a private entry public.
+    const body = await parseBody(journalUpdateSchema, req, BODY_BYTES.richText);
 
     const entry = await db.journalEntry.findUnique({
       where: { id: entryId },
       select: { userId: true },
     });
 
+    // Someone else's entry and a nonexistent one answer identically; a Journal
+    // is private content and the endpoint must not confirm that an id exists.
     if (!entry || entry.userId !== userId) {
-      return new NextResponse("Not found", { status: 404 });
+      return problem("not_found");
     }
 
     const updated = await db.journalEntry.update({
       where: { id: entryId },
       data: {
-        ...(values.title !== undefined && { title: values.title }),
-        ...(values.content !== undefined && { content: values.content }),
-        ...(values.isPrivate !== undefined && { isPrivate: values.isPrivate }),
-        ...(values.moduleId !== undefined && {
-          moduleId: values.moduleId || null,
-        }),
-        ...(values.courseId !== undefined && {
-          courseId: values.courseId || null,
-        }),
+        ...(body.title !== undefined && { title: body.title }),
+        ...(body.content !== undefined && { content: body.content }),
+        ...(body.isPrivate !== undefined && { isPrivate: body.isPrivate }),
+        ...(body.moduleId !== undefined && { moduleId: body.moduleId ?? null }),
+        ...(body.courseId !== undefined && { courseId: body.courseId ?? null }),
       },
     });
 
     return NextResponse.json(updated);
   } catch (error) {
-    const denied = toResponse(error);
-    if (denied) return denied;
-
-    logError("JOURNAL_PATCH", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return handleRouteError("JOURNAL_PATCH", error);
   }
 }
 
@@ -55,7 +53,7 @@ export async function DELETE(
   try {
     const { userId } = await requirePrincipal();
 
-    const { entryId } = await params;
+    const { entryId } = parseParams(journalEntryParams, await params);
 
     const entry = await db.journalEntry.findUnique({
       where: { id: entryId },
@@ -63,17 +61,13 @@ export async function DELETE(
     });
 
     if (!entry || entry.userId !== userId) {
-      return new NextResponse("Not found", { status: 404 });
+      return problem("not_found");
     }
 
     await db.journalEntry.delete({ where: { id: entryId } });
 
     return new NextResponse(null, { status: 204 });
   } catch (error) {
-    const denied = toResponse(error);
-    if (denied) return denied;
-
-    logError("JOURNAL_DELETE", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return handleRouteError("JOURNAL_DELETE", error);
   }
 }

@@ -1,17 +1,18 @@
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
-import { requirePrincipal, toResponse } from "@/lib/auth";
+import { requirePrincipal } from "@/lib/auth";
 import { isPostTestUnlocked } from "@/actions/check-post-test-lock";
-import { logError } from "@/lib/logger";
+import { handleRouteError, parseParams, problem } from "@/lib/http";
+import { quizParams } from "@/lib/validations/ids";
 
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ courseId: string; quizId: string }> }
 ) {
-  const routeParams = await params;
-
   try {
+    const routeParams = parseParams(quizParams, await params);
+
     const { userId } = await requirePrincipal();
 
     // Verify enrollment
@@ -25,7 +26,9 @@ export async function POST(
     });
 
     if (!purchase) {
-      return new NextResponse("Not enrolled", { status: 403 });
+      return problem("forbidden", {
+        message: "Enroll in this course to take its quizzes.",
+      });
     }
 
     const quiz = await db.quiz.findUnique({
@@ -57,7 +60,7 @@ export async function POST(
     });
 
     if (!quiz) {
-      return new NextResponse("Quiz not found", { status: 404 });
+      return problem("not_found");
     }
 
     // Check post-test lock
@@ -90,10 +93,6 @@ export async function POST(
       questions: quiz.questions,
     });
   } catch (error) {
-    const denied = toResponse(error);
-    if (denied) return denied;
-
-    logError("QUIZ_START", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return handleRouteError("QUIZ_START", error);
   }
 }

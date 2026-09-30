@@ -1,17 +1,18 @@
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
-import { requirePrincipal, toResponse } from "@/lib/auth";
+import { requirePrincipal } from "@/lib/auth";
 import { attemptInQuizAndCourse } from "@/lib/assessments/attempt-access";
-import { logError } from "@/lib/logger";
+import { handleRouteError, parseParams, problem } from "@/lib/http";
+import { attemptParams } from "@/lib/validations/ids";
 
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ courseId: string; quizId: string; attemptId: string }> }
 ) {
-  const routeParams = await params;
-
   try {
+    const routeParams = parseParams(attemptParams, await params);
+
     const { userId } = await requirePrincipal();
 
     // Bound to the route's Quiz and Course, not just to the caller. An attempt
@@ -60,19 +61,17 @@ export async function GET(
     });
 
     if (!attempt) {
-      return new NextResponse("Not Found", { status: 404 });
+      return problem("not_found");
     }
 
     if (!attempt.completedAt) {
-      return new NextResponse("Quiz not yet completed", { status: 400 });
+      // The answer key is in this payload, so an in-flight attempt must not read
+      // its own results. A state conflict, not bad input.
+      return problem("conflict", { message: "This attempt is not submitted yet." });
     }
 
     return NextResponse.json(attempt);
   } catch (error) {
-    const denied = toResponse(error);
-    if (denied) return denied;
-
-    logError("QUIZ_RESULTS", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return handleRouteError("QUIZ_RESULTS", error);
   }
 }

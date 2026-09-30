@@ -1,16 +1,17 @@
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
-import { authorizeQuizInCourse, requirePrincipal, toResponse } from "@/lib/auth";
-import { logError } from "@/lib/logger";
+import { authorizeQuizInCourse, requirePrincipal } from "@/lib/auth";
+import { handleRouteError, parseParams, problem } from "@/lib/http";
+import { quizParams } from "@/lib/validations/ids";
 
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ courseId: string; quizId: string }> }
 ) {
-  const routeParams = await params;
-
   try {
+    const routeParams = parseParams(quizParams, await params);
+
     const principal = await requirePrincipal();
     await authorizeQuizInCourse(
       principal,
@@ -35,16 +36,22 @@ export async function PATCH(
     });
 
     if (!quiz) {
-      return new NextResponse("Quiz not found", { status: 404 });
+      return problem("not_found");
     }
 
+    // Publication invariants. State conflicts, not malformed input; #65 owns the
+    // full set.
     if (quiz.questions.length === 0) {
-      return new NextResponse("Quiz must have at least one question", { status: 400 });
+      return problem("conflict", {
+        message: "Add at least one question before publishing this quiz.",
+      });
     }
 
     const allHaveCorrect = quiz.questions.every((q) => q.options.length > 0);
     if (!allHaveCorrect) {
-      return new NextResponse("Every question must have a correct answer", { status: 400 });
+      return problem("conflict", {
+        message: "Every question needs a correct answer before publishing.",
+      });
     }
 
     const updated = await db.quiz.update({
@@ -54,10 +61,6 @@ export async function PATCH(
 
     return NextResponse.json(updated);
   } catch (error) {
-    const denied = toResponse(error);
-    if (denied) return denied;
-
-    logError("QUIZ_PUBLISH", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    return handleRouteError("QUIZ_PUBLISH", error);
   }
 }

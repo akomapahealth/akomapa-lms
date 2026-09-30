@@ -1,15 +1,16 @@
 import { db } from "@/lib/db";
-import { authorizeTopicInCourse, requirePrincipal, toResponse } from "@/lib/auth";
+import { authorizeTopicInCourse, requirePrincipal } from "@/lib/auth";
 import { NextResponse } from "next/server";
-import { logError } from "@/lib/logger";
+import { handleRouteError, parseParams, problem } from "@/lib/http";
+import { topicParams } from "@/lib/validations/ids";
 
 export async function PATCH(
     req: Request,
     { params }: { params: Promise<{ courseId: string; chapterId: string }> }
 ) {
-        const routeParams = await params;
-
     try {
+        const routeParams = parseParams(topicParams, await params);
+
         const principal = await requirePrincipal();
 
         const topic = await authorizeTopicInCourse(
@@ -26,7 +27,12 @@ export async function PATCH(
         });
 
         if (!topic || !muxData || !topic.title || !topic.description || !topic.videoUrl) {
-            return new NextResponse("Missing required fields", { status: 400 });
+            // A state conflict rather than malformed input: nothing about the
+            // request is wrong, the Topic is not ready to publish.
+            return problem("conflict", {
+                message:
+                    "Add a title, description, and video before publishing this topic.",
+            });
         }
 
         const publishedTopic = await db.topic.update({
@@ -40,10 +46,6 @@ export async function PATCH(
 
         return NextResponse.json(publishedTopic);
     } catch (error) {
-        const denied = toResponse(error);
-        if (denied) return denied;
-
-        logError("CHAPTER_PUBLISH", error);
-        return new NextResponse("Internal Error", { status: 500 });
+        return handleRouteError("CHAPTER_PUBLISH", error);
     }
 }
