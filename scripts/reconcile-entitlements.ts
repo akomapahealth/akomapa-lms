@@ -11,13 +11,76 @@
  *   npm run entitlement:reconcile          # report only
  *   npm run entitlement:reconcile -- --fix # create the missing Enrollments
  *
+ * Reads `DIRECT_URL` in preference to `DATABASE_URL`, the same way
+ * `prisma.config.ts` does, because after #43 `DATABASE_URL` is the non-bypass
+ * runtime role. Quote the value in single quotes: a password containing `$` is
+ * expanded by the shell inside double quotes, which presents as an
+ * authentication failure.
+ *
  * `--fix` is idempotent and only ever creates an Enrollment for a Purchase that
  * has none. It never changes an existing status: a SUSPENDED or COMPLETED learner
  * must not be reset to ACTIVE by a reconciliation run. Access removal is a status
  * change, never a deletion.
  */
-import { db } from "../lib/db";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "@prisma/client";
+import { config } from "dotenv";
+import { Pool } from "pg";
+
 import { ENROLLMENT_STATUSES } from "../lib/entitlement/types";
+
+// Precedence, most explicit first. Both halves matter:
+//
+//   1. An exported value beats a dotenv file. `.env.local` is loaded with
+//      `override: true` so it beats `.env`, which would otherwise clobber a
+//      connection string passed on the command line -- silently reconciling the
+//      local database while the report claims otherwise.
+//   2. DIRECT_URL beats DATABASE_URL, mirroring `prisma.config.ts`, because after
+//      #43 DATABASE_URL is the non-bypass runtime role.
+//
+// Rule 1 has to outrank rule 2. Preferring a *file* DIRECT_URL over an *exported*
+// DATABASE_URL is how `DATABASE_URL='<production>' npm run entitlement:reconcile`
+// ends up reading a developer's local database.
+const exported = {
+  DIRECT_URL: process.env.DIRECT_URL,
+  DATABASE_URL: process.env.DATABASE_URL,
+};
+
+config();
+config({ path: ".env.local", override: true });
+
+const candidates = [
+  ["DIRECT_URL (exported)", exported.DIRECT_URL],
+  ["DATABASE_URL (exported)", exported.DATABASE_URL],
+  ["DIRECT_URL", process.env.DIRECT_URL],
+  ["DATABASE_URL", process.env.DATABASE_URL],
+] as const;
+
+const chosen = candidates.find(([, value]) => Boolean(value));
+
+if (!chosen) {
+  console.error(
+    "No connection string. Set DIRECT_URL or DATABASE_URL. This script reads " +
+      "Purchase and Enrollment, so it needs a role with privileges on both -- the " +
+      "migration role, not the runtime role."
+  );
+  process.exit(1);
+}
+
+const [connectionSource, connectionString] = chosen as [string, string];
+
+/** Which connection was used, so a surprising report can be attributed. */
+function describeConnection(): string {
+  try {
+    const url = new URL(connectionString);
+    // Role, host, and database. Never the password.
+    return `${connectionSource}  ${url.username}@${url.hostname}${url.pathname}`;
+  } catch {
+    return connectionSource;
+  }
+}
+
+const db = new PrismaClient({ adapter: new PrismaPg(new Pool({ connectionString })) });
 
 const FIX = process.argv.includes("--fix");
 
@@ -55,7 +118,17 @@ async function main() {
 
   const flag = (n: number, note: string) => (n > 0 ? `  ${note}` : "");
 
-  console.log("Entitlement reconciliation (ADR 0002)\n");
+  console.log("Entitlement reconciliation (ADR 0002)");
+  console.log(`Connection: ${describeConnection()}\n`);
+
+  // A totally empty database is far more likely to mean "pointed at the wrong
+  // one" than "nothing to reconcile", and silently reporting all-clear for that
+  // would be the worst possible outcome of a pre-cutover check.
+  if (purchases.length === 0 && enrollments.length === 0) {
+    console.log("  No Purchase or Enrollment rows at all.");
+    console.log("  Check the connection above is the database you meant.\n");
+  }
+
   console.log(`  Purchases                  ${purchases.length}`);
   console.log(`  Enrollments                ${enrollments.length}`);
   console.log(
@@ -113,7 +186,31 @@ async function main() {
 
 main()
   .catch((error) => {
-    console.error("Reconciliation failed:", error instanceof Error ? error.message : error);
+    const message = error instanceof Error ? error.message : String(error);
+
+    // The two failures an operator actually hits, named rather than left as a
+    // Prisma invocation dump.
+    if (/28P01|[Aa]uthentication failed/.test(message)) {
+      console.error(
+        `Could not authenticate on ${describeConnection()}.\n` +
+          "If the password contains a $, quote the value in SINGLE quotes -- inside " +
+          "double quotes the shell expands it, which presents as a bad password."
+      );
+    } else if (/42501|permission denied/.test(message)) {
+      console.error(
+        `Connected on ${describeConnection()}, but that role has no SELECT on ` +
+          "Purchase or Enrollment.\n" +
+          "Run `npm run db:roles` to see what each connection can do, then point " +
+          "this script at a role that can read both -- the table owner, or an admin " +
+          "connection. Note that DDL privileges do not imply SELECT: after #43 " +
+          "`akomapa_migrate` can migrate without necessarily being able to read.\n" +
+          "Override with DIRECT_URL='...' or DATABASE_URL='...' on the command line; " +
+          "an exported value beats the dotenv files."
+      );
+    } else {
+      console.error("Reconciliation failed:", message);
+    }
+
     process.exitCode = 1;
   })
   .finally(async () => {
