@@ -17,8 +17,8 @@ import {
 import { cn } from "@/lib/utils";
 
 const GradesPage = async () => {
-  const { userId } = await requirePagePrincipal("/sign-in");
-  const grades = await getGradesOverview(userId);
+  const principal = await requirePagePrincipal("/sign-in");
+  const grades = await getGradesOverview(principal);
 
   // Calculate overall average
   const coursesWithScores = grades.filter(

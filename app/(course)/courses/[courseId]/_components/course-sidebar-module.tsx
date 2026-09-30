@@ -17,7 +17,7 @@ interface CourseSidebarModuleProps {
   moduleTitle: string;
   topics: TopicWithProgress[];
   courseId: string;
-  isPurchased: boolean;
+  canLearn: boolean;
 }
 
 export const CourseSidebarModule = ({
@@ -25,7 +25,7 @@ export const CourseSidebarModule = ({
   moduleTitle,
   topics,
   courseId,
-  isPurchased,
+  canLearn,
 }: CourseSidebarModuleProps) => {
   const completedCount = topics.filter(
     (t) => t.userProgress?.[0]?.isCompleted
@@ -51,7 +51,7 @@ export const CourseSidebarModule = ({
             label={topic.title}
             isCompleted={!!topic.userProgress?.[0]?.isCompleted}
             courseId={courseId}
-            isLocked={!topic.isFree && !isPurchased}
+            isLocked={!topic.isFree && !canLearn}
           />
         ))}
       </AccordionContent>

@@ -55,7 +55,7 @@ issue, which is exactly why both documents exist.
 | 1.1 | `prisma migrate dev` runs successfully | `verified` | Six migrations in `prisma/migrations/`, including `20260609000000_phase1_modules_quizzes_roles` | |
 | 1.2 | Data migration script runs without errors | `partial` | Migrations exist; no committed backfill script and no migration evidence retained | [#104](https://github.com/akomapahealth/akomapa-lms/issues/104) |
 | 1.3 | Existing chapters appear as topics under default modules | `superseded` | `Topic` is `@@map("Chapter")` in `prisma/schema.prisma`; the rename is storage-level only | [#52](https://github.com/akomapahealth/akomapa-lms/issues/52), [CONTEXT.md](../../CONTEXT.md) |
-| 1.4 | Existing purchases have corresponding enrollments | `superseded` | Both models exist, but access still reads `Purchase` in 12 files. ADR 0002 makes `Enrollment` canonical | [ADR 0002](../adr/0002-enrollment-as-canonical-entitlement.md), [#48](https://github.com/akomapahealth/akomapa-lms/issues/48) |
+| 1.4 | Existing purchases have corresponding enrollments | `verified` | `prisma/migrations/20260930000000_backfill_enrollments_from_purchases` gives every Purchase an Enrollment, idempotently and dated from the payment. `npm run entitlement:reconcile` reports any remaining discrepancy; `tests/integration/entitlement.test.ts` asserts no orphaned Purchase survives | [ADR 0002](../adr/0002-enrollment-as-canonical-entitlement.md) |
 | 1.5 | Sidebar shows correct routes for students | `verified` | `app/(dashboard)/_components/sidebar-routes.tsx` with `app/(dashboard)/_components/sidebar.tsx` | |
 | 1.6 | Sidebar shows correct routes for admin users | `verified` | `app/(dashboard)/_components/sidebar-routes.tsx` filters each destination by a capability derived on the server in `app/(dashboard)/layout.tsx`. Previously evidenced by a client-side helper reading Clerk publicMetadata.role, which nothing in the application ever wrote, so every staff route was shown to every faculty member and the navbar link rendered for nobody | [#42](https://github.com/akomapahealth/akomapa-lms/issues/42) |
 | 1.7 | Admin layout protects routes | `verified` | `TEACHER_ID` is retired and every page under `app/(dashboard)/(routes)/admin/` declares its own capability through `lib/auth/page.ts`; the layout no longer decides on their behalf. Every route handler calls the same module through `lib/auth/guards.ts`, with ownership asserted in the query | [ADR 0001](../adr/0001-identity-authentication-and-rbac.md), [docs/permission-matrix.md](../permission-matrix.md), [#42](https://github.com/akomapahealth/akomapa-lms/issues/42) |
@@ -72,7 +72,7 @@ issue, which is exactly why both documents exist.
 | # | Requirement | Status | Evidence | Issue or decision |
 | --- | --- | --- | --- | --- |
 | 2.1 | Welcome banner with user name | `verified` | `app/(dashboard)/(routes)/dashboard/_components/welcome-banner.tsx` | |
-| 2.2 | Course selector lists enrolled courses | `partial` | `app/(dashboard)/(routes)/dashboard/_components/course-selector.tsx` exists; its data comes from `actions/get-enrolled-courses.ts`, which reads `Purchase` | [#48](https://github.com/akomapahealth/akomapa-lms/issues/48) |
+| 2.2 | Course selector lists enrolled courses | `verified` | `actions/get-enrolled-courses.ts` now builds the list from `entitledCourseIds` in `lib/entitlement`, so a suspended learner no longer sees Courses they cannot open and a completed one no longer disappears | |
 | 2.3 | Selecting a course updates all widgets | `verified` | Selection is held in URL search params and consumed by the dashboard widgets | |
 | 2.4 | Progress donut renders accurate data | `verified` | `app/(dashboard)/(routes)/dashboard/_components/progress-donut-chart.tsx` with `actions/get-course-progress-breakdown.ts` | |
 | 2.5 | Topic progress shows per-module bars | `verified` | `app/(dashboard)/(routes)/dashboard/_components/topic-progress-section.tsx` | |
@@ -91,7 +91,7 @@ issue, which is exactly why both documents exist.
 
 | # | Requirement | Status | Evidence | Issue or decision |
 | --- | --- | --- | --- | --- |
-| 3.1 | Pre-test available at enrollment | `partial` | `app/(course)/courses/[courseId]/quiz/[quizId]/page.tsx` serves it; availability is gated on `Purchase`, not `Enrollment` | [#48](https://github.com/akomapahealth/akomapa-lms/issues/48) |
+| 3.1 | Pre-test available at enrollment | `verified` | `app/api/courses/[courseId]/quizzes/[quizId]/start/route.ts` gates on `courseEntitlement`, so a suspended learner can no longer start a quiz on the strength of an old Purchase | |
 | 3.2 | Post-test locked until modules complete | `verified` | `actions/check-post-test-lock.ts`, enforced server-side in the start route | |
 | 3.3 | Post-test unlocks when the last module completes | `verified` | Same lock action, recomputed per request | |
 | 3.4 | Timer counts down and auto-submits at 0 | `verified` | `app/(course)/courses/[courseId]/quiz/[quizId]/_components/quiz-timer.tsx` | |
@@ -103,7 +103,7 @@ issue, which is exactly why both documents exist.
 | 3.10 | Admin can create/edit/delete quizzes | `verified` | `app/api/courses/[courseId]/quizzes/route.ts` and `[quizId]/route.ts`, surfaced at `app/(dashboard)/(routes)/admin/quizzes/page.tsx` | |
 | 3.11 | Admin can add/edit/delete/reorder questions | `verified` | `questions/route.ts`, `questions/[questionId]/route.ts`, `questions/reorder/route.ts` | |
 | 3.12 | Admin can preview quiz | `missing` | No preview route or component exists under the admin quiz surface | [#87](https://github.com/akomapahealth/akomapa-lms/issues/87) |
-| 3.13 | Grades overview shows all enrolled courses | `partial` | `app/(dashboard)/(routes)/grades/page.tsx` with `actions/get-grades-overview.ts`, which reads `Purchase` | [#48](https://github.com/akomapahealth/akomapa-lms/issues/48) |
+| 3.13 | Grades overview shows all enrolled courses | `verified` | `actions/get-grades-overview.ts` reads `entitledCourseIds` from `lib/entitlement` | |
 | 3.14 | Grades detail shows module breakdown and attempts | `verified` | `app/(dashboard)/(routes)/grades/[courseId]/page.tsx` with `actions/get-grades-detail.ts` | |
 | 3.15 | Score comparison shows pre vs post growth | `verified` | Rendered in the grades detail page from `actions/get-grades-detail.ts` | |
 | 3.16 | `npm run build` succeeds | `verified` | Build job green in CI | |
@@ -164,10 +164,10 @@ issue, which is exactly why both documents exist.
 
 | Status | Count |
 | --- | --- |
-| `verified` | 65 |
-| `partial` | 17 |
+| `verified` | 69 |
+| `partial` | 14 |
 | `missing` | 3 |
-| `superseded` | 2 |
+| `superseded` | 1 |
 | `deferred` | 0 |
 | **Total** | **87** |
 
@@ -179,7 +179,18 @@ this table was wrong; the check exists because of that.
 
 Findings that recur across phases and are more important than any single row.
 
-1. **Entitlement is read from `Purchase` in twelve files.** `actions/get-analytics.ts`, `actions/get-course-detail.ts`, `actions/get-dashboard-courses.ts`, `actions/get-enrolled-courses.ts`, `actions/get-enrolled-modules.ts`, `actions/get-grades-overview.ts`, `actions/get-topic.ts`, `app/(course)/courses/[courseId]/layout.tsx`, `app/(dashboard)/(routes)/community/new/page.tsx`, and three API routes. Six files read `Enrollment`. The two populations disagree, which is the concrete form of the problem [ADR 0002](../adr/0002-enrollment-as-canonical-entitlement.md) fixes. Owner: [#48](https://github.com/akomapahealth/akomapa-lms/issues/48).
+1. **Entitlement was read from `Purchase` in eleven access paths. Closed by #48.**
+   One module, `lib/entitlement`, now answers whether a principal may open a
+   Course, and an `.eslintrc.json` rule fails the build on a direct `db.purchase`
+   or `db.enrollment` read outside it. Three readers remain and are exempt with a
+   stated reason: `actions/get-analytics.ts` counts revenue, for which `Purchase`
+   is the correct source; `actions/get-admin-analytics.ts` and
+   `lib/badge-service.ts` aggregate over enrollments rather than deciding access.
+   The guard caught two sites the manual sweep missed -- a certificate eligibility
+   read and the completion write in the progress route, which matched on
+   (userId, courseId) alone and so could promote a `SUSPENDED` learner to
+   `COMPLETED`. Owner: closed by [ADR 0002](../adr/0002-enrollment-as-canonical-entitlement.md) and [#48](https://github.com/akomapahealth/akomapa-lms/issues/48).
+
 2. **Asynchronous UI states were never built.** No `loading.tsx` exists in the application, one file references a skeleton, and three of six route groups have an error boundary. Phase 5 claimed all three. Owner: [#99](https://github.com/akomapahealth/akomapa-lms/issues/99).
 3. **Derived state is written outside a transaction.** Badge awarding, streak tracking, and certificate issuance each run as separate service calls after the progress write. Owner: [#49](https://github.com/akomapahealth/akomapa-lms/issues/49), per [ADR 0004](../adr/0004-transactional-completion-and-events.md).
 4. **Nothing is covered by an automated test except the five smoke cases and the AI dataset validator.** No phase requirement above has a regression test. Several rows are `partial` for this reason alone: the behaviour reads correctly but nothing prevents it from regressing. Owner: [#106](https://github.com/akomapahealth/akomapa-lms/issues/106), [#107](https://github.com/akomapahealth/akomapa-lms/issues/107), [#108](https://github.com/akomapahealth/akomapa-lms/issues/108).

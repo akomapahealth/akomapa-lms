@@ -1,4 +1,5 @@
 import { requirePagePrincipal } from "@/lib/auth";
+import { courseEntitlement } from "@/lib/entitlement";
 import { getProgress } from "@/actions/get-progress";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
@@ -14,7 +15,8 @@ const CourseLayout = async ({
 }) => {
     const { courseId } = await params;
 
-    const { userId } = await requirePagePrincipal("/dashboard");
+    const principal = await requirePagePrincipal("/dashboard");
+    const { userId } = principal;
     const course = await db.course.findUnique({
         where: {
             id: courseId,
@@ -74,14 +76,9 @@ const CourseLayout = async ({
         return redirect("/dashboard");
     }
 
-    const purchase = await db.purchase.findUnique({
-        where: {
-            userId_courseId: {
-                userId,
-                courseId: course.id,
-            }
-        }
-    });
+    // Entitlement, not payment history (ADR 0002). The sidebar's lock icons were
+    // driven by a Purchase row, so a suspended learner saw every Topic unlocked.
+    const entitlement = await courseEntitlement(principal, course.id);
 
     const progressCount = await getProgress(userId, course.id);
 
@@ -108,7 +105,7 @@ const CourseLayout = async ({
                     course={course}
                     modules={course.modules}
                     progressCount={progressCount}
-                    isPurchased={!!purchase}
+                    canLearn={entitlement.canLearn}
                     quizzes={sidebarQuizzes}
                 />
             }

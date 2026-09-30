@@ -3,6 +3,7 @@ import React from "react";
 
 import { db } from "@/lib/db";
 import { CertificateTemplate } from "@/lib/certificate-template";
+import { enrollmentStatusFor } from "@/lib/entitlement";
 
 async function getNextCertificateNumber(): Promise<string> {
   const year = new Date().getFullYear();
@@ -42,12 +43,10 @@ export async function generateCertificate(
     };
   }
 
-  // Verify course completion
-  const enrollment = await db.enrollment.findFirst({
-    where: { userId, courseId, status: "COMPLETED" },
-  });
-
-  if (!enrollment) {
+  // Certificate eligibility is an access decision, so it goes through the
+  // entitlement module rather than comparing a raw status column here (ADR 0002
+  // point 1). A `COMPLETED` Enrollment is what earns a Certificate.
+  if ((await enrollmentStatusFor(userId, courseId)) !== "COMPLETED") {
     return null;
   }
 

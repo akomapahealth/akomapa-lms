@@ -1,4 +1,6 @@
+import type { Principal } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { entitledCourseIds } from "@/lib/entitlement";
 import { Category, Course, Module, Topic, Quiz } from "@prisma/client";
 import { getProgress } from "./get-progress";
 
@@ -16,39 +18,39 @@ export type EnrolledCourse = Course & {
 };
 
 export const getEnrolledCourses = async (
-  userId: string,
+  principal: Principal,
   filter?: "all" | "in_progress" | "completed" | "not_started",
   search?: string
 ): Promise<EnrolledCourse[]> => {
   try {
-    const purchasedCourses = await db.purchase.findMany({
-      where: {
-        userId,
-      },
-      select: {
-        course: {
+    const userId = principal.userId;
+
+    // Entitled Courses, not purchased ones (ADR 0002). A suspended learner used
+    // to see every Course they had ever bought listed as theirs.
+    const courseIds = await entitledCourseIds(principal);
+    if (courseIds.length === 0) return [];
+
+    const entitledCourses = await db.course.findMany({
+      where: { id: { in: courseIds } },
+      include: {
+        category: true,
+        modules: {
+          where: { isPublished: true },
+          orderBy: { position: "asc" },
           include: {
-            category: true,
-            modules: {
+            topics: {
               where: { isPublished: true },
               orderBy: { position: "asc" },
-              include: {
-                topics: {
-                  where: { isPublished: true },
-                  orderBy: { position: "asc" },
-                },
-              },
             },
-            quizzes: true,
           },
         },
+        quizzes: true,
       },
     });
 
     let courses: EnrolledCourse[] = [];
 
-    for (const purchase of purchasedCourses) {
-      const course = purchase.course;
+    for (const course of entitledCourses) {
       const progress = await getProgress(userId, course.id);
       const moduleCount = course.modules.length;
       const topicCount = course.modules.reduce(

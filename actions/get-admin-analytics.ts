@@ -110,6 +110,9 @@ export const getAdminAnalytics = async (): Promise<AdminAnalyticsData> => {
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
+    // Aggregate reporting over enrollments, not an access decision, so this reads
+    // the table directly (exempt in .eslintrc.json). #90 corrects the denominators
+    // and cohort filters this feeds.
     const enrollments = await db.enrollment.findMany({
       where: { enrolledAt: { gte: sixMonthsAgo } },
       select: { enrolledAt: true },

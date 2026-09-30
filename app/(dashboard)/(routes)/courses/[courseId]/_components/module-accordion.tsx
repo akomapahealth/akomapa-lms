@@ -13,13 +13,13 @@ import { type ModuleDetail } from "@/actions/get-course-detail";
 interface ModuleAccordionProps {
   modules: ModuleDetail[];
   courseId: string;
-  isPurchased: boolean;
+  canLearn: boolean;
 }
 
 export const ModuleAccordion = ({
   modules,
   courseId,
-  isPurchased,
+  canLearn,
 }: ModuleAccordionProps) => {
   return (
     <Accordion type="multiple" className="w-full">
@@ -48,7 +48,7 @@ export const ModuleAccordion = ({
           <AccordionContent>
             <div className="pl-4 pr-2 space-y-1">
               {mod.topics.map((topic) => {
-                const isLocked = !topic.isFree && !isPurchased;
+                const isLocked = !topic.isFree && !canLearn;
                 const Icon = topic.isCompleted
                   ? CheckCircle
                   : isLocked

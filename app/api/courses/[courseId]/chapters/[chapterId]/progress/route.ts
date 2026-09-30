@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { requirePrincipal } from "@/lib/auth";
+import { markCourseCompleted, topicEntitlement } from "@/lib/entitlement";
 import { handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
 import { topicParams } from "@/lib/validations/ids";
 import { progressSchema } from "@/lib/validations/topic";
@@ -22,7 +23,8 @@ export async function PUT(
     try {
         const routeParams = parseParams(topicParams, await params);
 
-        const { userId } = await requirePrincipal();
+        const principal = await requirePrincipal();
+        const { userId } = principal;
 
         // Before the Topic lookup: an unparseable or out-of-bounds body should
         // not cost a query, and the shape is what decides whether the completion
@@ -42,19 +44,18 @@ export async function PUT(
             return problem("not_found");
         }
 
-        // Entitlement. A free-preview Topic is progressable without a purchase;
-        // anything else requires one. Enrollment becomes the canonical record
-        // in #48, at which point this reads from there instead.
-        if (!topic.isFree) {
-            const purchase = await db.purchase.findUnique({
-                where: {
-                    userId_courseId: { userId, courseId: routeParams.courseId },
-                },
-            });
+        // Entitlement through the one module (ADR 0002). It covers the free-preview
+        // Topic case as well, so the two conditions are no longer separate here.
+        // Reading `Purchase` let a suspended learner keep completing Topics --
+        // and therefore keep earning badges, streaks, and a Certificate.
+        const entitlement = await topicEntitlement(
+            principal,
+            routeParams.courseId,
+            routeParams.chapterId
+        );
 
-            if (!purchase) {
-                return problem("not_found");
-            }
+        if (!entitlement.canReadTopic) {
+            return problem("not_found");
         }
 
         const userProgress = await db.userProgress.upsert({
@@ -157,11 +158,11 @@ export async function PUT(
                 if (isCourseComplete) {
                     badgeEvents.push({ type: "course_completed", courseId: routeParams.courseId });
 
-                    // Mark enrollment as completed
-                    await db.enrollment.updateMany({
-                        where: { userId, courseId: routeParams.courseId },
-                        data: { status: "COMPLETED" },
-                    });
+                    // Through the module, which only promotes from ACTIVE. The
+                    // previous updateMany matched on (userId, courseId) alone, so a
+                    // SUSPENDED learner could be flipped to COMPLETED and become
+                    // eligible for a Certificate.
+                    await markCourseCompleted(userId, routeParams.courseId);
 
                     // Auto-generate certificate on course completion
                     try {

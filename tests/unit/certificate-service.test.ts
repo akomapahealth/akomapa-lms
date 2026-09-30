@@ -47,7 +47,7 @@ beforeEach(() => {
 
 describe("eligibility", () => {
   it("refuses to issue without a COMPLETED Enrollment", async () => {
-    dbMock.enrollment.findFirst.mockResolvedValue(null);
+    dbMock.enrollment.findUnique.mockResolvedValue(null);
 
     await expect(generateCertificate("user_1", "course_1")).resolves.toBeNull();
     expect(renderToBuffer).not.toHaveBeenCalled();
@@ -55,17 +55,21 @@ describe("eligibility", () => {
   });
 
   it("checks completion for the exact learner and Course pair", async () => {
-    dbMock.enrollment.findFirst.mockResolvedValue(anEnrollment({ status: "COMPLETED" }));
+    dbMock.enrollment.findUnique.mockResolvedValue(anEnrollment({ status: "COMPLETED" }));
 
     await generateCertificate("user_9", "course_9");
 
-    expect(dbMock.enrollment.findFirst).toHaveBeenCalledWith({
-      where: { userId: "user_9", courseId: "course_9", status: "COMPLETED" },
+    // Eligibility now goes through `enrollmentStatusFor` in @/lib/entitlement,
+    // which reads the composite key and normalizes the status, rather than
+    // comparing a raw column here (ADR 0002 point 1).
+    expect(dbMock.enrollment.findUnique).toHaveBeenCalledWith({
+      where: { userId_courseId: { userId: "user_9", courseId: "course_9" } },
+      select: { status: true },
     });
   });
 
   it("refuses when the Course no longer exists", async () => {
-    dbMock.enrollment.findFirst.mockResolvedValue(anEnrollment({ status: "COMPLETED" }));
+    dbMock.enrollment.findUnique.mockResolvedValue(anEnrollment({ status: "COMPLETED" }));
     dbMock.course.findUnique.mockResolvedValue(null);
 
     await expect(generateCertificate("user_1", "course_1")).resolves.toBeNull();
@@ -76,7 +80,7 @@ describe("eligibility", () => {
     // A row exists but its PDF never persisted. Recovery must still re-check
     // entitlement rather than trusting the orphaned row as proof of completion.
     dbMock.certificate.findUnique.mockResolvedValue(aCertificate({ pdfUrl: null }));
-    dbMock.enrollment.findFirst.mockResolvedValue(null);
+    dbMock.enrollment.findUnique.mockResolvedValue(null);
 
     await expect(generateCertificate("user_1", "course_1")).resolves.toBeNull();
   });
@@ -93,14 +97,14 @@ describe("idempotency", () => {
       pdfUrl: "data:application/pdf;base64,AAAA",
     });
     expect(renderToBuffer).not.toHaveBeenCalled();
-    expect(dbMock.enrollment.findFirst).not.toHaveBeenCalled();
+    expect(dbMock.enrollment.findUnique).not.toHaveBeenCalled();
   });
 
   it("reuses the original number when repairing a certificate with no PDF", async () => {
     dbMock.certificate.findUnique.mockResolvedValue(
       aCertificate({ certificateNumber: "GHELP-2026-00042", pdfUrl: null })
     );
-    dbMock.enrollment.findFirst.mockResolvedValue(anEnrollment({ status: "COMPLETED" }));
+    dbMock.enrollment.findUnique.mockResolvedValue(anEnrollment({ status: "COMPLETED" }));
 
     const result = await generateCertificate("user_1", "course_1");
 
@@ -113,7 +117,7 @@ describe("idempotency", () => {
 
 describe("certificate numbering", () => {
   beforeEach(() => {
-    dbMock.enrollment.findFirst.mockResolvedValue(anEnrollment({ status: "COMPLETED" }));
+    dbMock.enrollment.findUnique.mockResolvedValue(anEnrollment({ status: "COMPLETED" }));
   });
 
   it("starts at one for the first certificate of the year", async () => {
@@ -165,7 +169,7 @@ describe("certificate numbering", () => {
 
 describe("pre-test and post-test scores", () => {
   beforeEach(() => {
-    dbMock.enrollment.findFirst.mockResolvedValue(anEnrollment({ status: "COMPLETED" }));
+    dbMock.enrollment.findUnique.mockResolvedValue(anEnrollment({ status: "COMPLETED" }));
     dbMock.certificate.findFirst.mockResolvedValue(null);
   });
 
@@ -232,7 +236,7 @@ describe("pre-test and post-test scores", () => {
 
 describe("the rendered certificate", () => {
   beforeEach(() => {
-    dbMock.enrollment.findFirst.mockResolvedValue(anEnrollment({ status: "COMPLETED" }));
+    dbMock.enrollment.findUnique.mockResolvedValue(anEnrollment({ status: "COMPLETED" }));
     dbMock.certificate.findFirst.mockResolvedValue(null);
   });
 

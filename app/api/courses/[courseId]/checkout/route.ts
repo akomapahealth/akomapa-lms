@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { requirePrincipal } from "@/lib/auth";
+import { courseEntitlement, LOCKED_STATE_MESSAGE } from "@/lib/entitlement";
 import { stripe } from "@/lib/stripe";
 import { currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
@@ -17,7 +18,8 @@ export async function POST(
         // Identity comes from the one derivation point (ADR 0001 section 1);
         // `currentUser` is used only for the email address Stripe needs. This
         // is a money path, so it must not resolve who is paying a second way.
-        const { userId } = await requirePrincipal();
+        const principal = await requirePrincipal();
+        const { userId } = principal;
 
         const user = await currentUser();
         const email = user?.emailAddresses?.[0]?.emailAddress;
@@ -35,25 +37,30 @@ export async function POST(
             }
         });
 
-        const purchase = await db.purchase.findUnique({
-            where: {
-                userId_courseId: {
-                    userId,
-                    courseId: routeParams.courseId
-                }
-            }
-        });
+        // Whether they already have access, not whether they ever paid. A
+        // scholarship or staff enrolment has no Purchase row, and reading
+        // `Purchase` would have charged such a learner a second time for a Course
+        // they can already open.
+        const entitlement = await courseEntitlement(principal, routeParams.courseId);
 
         if (!course) {
             return problem("not_found");
         }
 
-        if (purchase) {
+        if (entitlement.canLearn) {
             // A conflict, not bad input. Checked after the Course lookup so an
             // unpublished or nonexistent Course answers 404 either way rather
             // than revealing that the caller already owns something.
             return problem("conflict", {
                 message: "You already have access to this course.",
+            });
+        }
+
+        // A suspended learner must not be able to buy their way back in. Lifting a
+        // suspension is an administrative act (#88), not a checkout.
+        if (entitlement.reason === "suspended") {
+            return problem("forbidden", {
+                message: LOCKED_STATE_MESSAGE.suspended,
             });
         }
 

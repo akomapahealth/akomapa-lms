@@ -1,28 +1,28 @@
+import type { Principal } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { topicEntitlement } from "@/lib/entitlement";
 import { logError } from "@/lib/logger";
 import { publishedTopicInCourse } from "@/lib/courses/topic-access";
 import { Attachment, Topic } from "@prisma/client";
 
 interface GetTopicProps {
-    userId: string;
+    principal: Principal;
     courseId: string;
     topicId: string;
 };
 
 export const getTopic = async ({
-    userId,
+    principal,
     courseId,
     topicId,
 }: GetTopicProps) => {
+    const userId = principal.userId;
+
     try {
-        const purchase = await db.purchase.findUnique({
-            where: {
-                userId_courseId: {
-                    userId,
-                    courseId,
-                }
-            }
-        });
+        // One entitlement decision, covering enrollment status and free preview
+        // together (ADR 0002). `purchase` used to gate video, attachments, and
+        // navigation, so a suspended learner kept all three.
+        const entitlement = await topicEntitlement(principal, courseId, topicId);
 
         const course = await db.course.findUnique({
             where: {
@@ -54,7 +54,8 @@ export const getTopic = async ({
         let nextTopic: Topic | null = null;
         let previousTopic: Topic | null = null;
 
-        if (purchase) {
+        // Attachments are paid content: a free-preview Topic does not unlock them.
+        if (entitlement.canLearn) {
             attachments = await db.attachment.findMany({
                 where: {
                     courseId: courseId,
@@ -62,7 +63,7 @@ export const getTopic = async ({
             });
         }
 
-        if (topic.isFree || purchase) {
+        if (entitlement.canReadTopic) {
             muxData = await db.muxData.findUnique({
                 where: {
                     topicId: topicId,
@@ -176,7 +177,7 @@ export const getTopic = async ({
             nextTopic,
             previousTopic,
             userProgress,
-            purchase,
+            entitlement,
         };
     } catch (error) {
         // Redacted in production; console.log printed the whole error object.
@@ -189,7 +190,7 @@ export const getTopic = async ({
             nextTopic: null,
             previousTopic: null,
             userProgress: null,
-            purchase: null,
+            entitlement: null,
         };
     }
 };

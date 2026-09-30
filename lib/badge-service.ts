@@ -169,6 +169,13 @@ async function getCompletedModuleCount(userId: string): Promise<number> {
   return completedCount;
 }
 
+/**
+ * How many Courses this learner has completed, for a badge criterion.
+ *
+ * An aggregate statistic, not an access decision, so it reads the table directly
+ * rather than going through `@/lib/entitlement` (exempt in .eslintrc.json). #83
+ * owns making badge evaluation idempotent and event-driven.
+ */
 async function getCompletedCourseCount(userId: string): Promise<number> {
   const enrollments = await db.enrollment.count({
     where: { userId, status: "COMPLETED" },

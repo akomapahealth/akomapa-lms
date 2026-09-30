@@ -51,6 +51,7 @@ export default defineConfig({
       reportsDirectory: "coverage/unit",
       include: [
         "lib/auth/*.ts",
+        "lib/entitlement/*.ts",
         "lib/http/*.ts",
         "lib/validations/*.ts",
         "lib/courses/*.ts",
@@ -90,6 +91,12 @@ export default defineConfig({
         "lib/case-study-sanitize.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
         // The guard that keeps row-level security from being silently absent.
         "lib/db/roles.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
+        // Course entitlement (#48, ADR 0002). One module decides whether a
+        // learner may open a Course, so every branch of it is exercised -- the
+        // suspension path above all, which is the one that used to be unreachable.
+        "lib/entitlement/types.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
+        "lib/entitlement/course.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
+        "lib/entitlement/enroll.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
         // The request boundary (#44). Every route handler funnels its failures
         // through these three, so a gap here is a gap in all forty at once.
         "lib/http/problem.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },

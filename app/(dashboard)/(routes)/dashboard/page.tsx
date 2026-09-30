@@ -24,7 +24,8 @@ export default async function Dashboard({
 }: {
   searchParams: Promise<{ courseId?: string; period?: string }>;
 }) {
-  const { userId } = await requirePagePrincipal("/sign-in");
+  const principal = await requirePagePrincipal("/sign-in");
+  const { userId } = principal;
   const params = await searchParams;
   const selectedCourseId = params.courseId;
   const period = (params.period === "monthly" ? "monthly" : "weekly") as
@@ -33,7 +34,7 @@ export default async function Dashboard({
 
   // Fetch enrolled courses and gamification data
   const [enrolledCourses, badges, streak] = await Promise.all([
-    getEnrolledCourses(userId),
+    getEnrolledCourses(principal),
     getUserBadges(userId),
     getUserStreak(userId),
   ]);

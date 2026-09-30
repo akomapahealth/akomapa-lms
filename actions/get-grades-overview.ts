@@ -1,4 +1,6 @@
+import type { Principal } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { entitledCourseIds } from "@/lib/entitlement";
 import { getProgress } from "./get-progress";
 
 export interface GradesOverviewItem {
@@ -11,31 +13,34 @@ export interface GradesOverviewItem {
 }
 
 export const getGradesOverview = async (
-  userId: string
+  principal: Principal
 ): Promise<GradesOverviewItem[]> => {
   try {
-    const purchases = await db.purchase.findMany({
-      where: { userId },
+    const userId = principal.userId;
+
+    // Entitled Courses (ADR 0002). Grades were listed from `Purchase`, so a
+    // suspended learner still saw their scores for a Course they cannot open.
+    const courseIds = await entitledCourseIds(principal);
+    if (courseIds.length === 0) return [];
+
+    const entitledCourses = await db.course.findMany({
+      where: { id: { in: courseIds } },
       select: {
-        course: {
+        id: true,
+        title: true,
+        quizzes: {
+          where: {
+            isPublished: true,
+            type: { in: ["PRE_TEST", "POST_TEST"] },
+          },
           select: {
             id: true,
-            title: true,
-            quizzes: {
-              where: {
-                isPublished: true,
-                type: { in: ["PRE_TEST", "POST_TEST"] },
-              },
-              select: {
-                id: true,
-                type: true,
-                attempts: {
-                  where: { userId, completedAt: { not: null } },
-                  orderBy: { score: "desc" },
-                  take: 1,
-                  select: { score: true },
-                },
-              },
+            type: true,
+            attempts: {
+              where: { userId, completedAt: { not: null } },
+              orderBy: { score: "desc" },
+              take: 1,
+              select: { score: true },
             },
           },
         },
@@ -44,8 +49,7 @@ export const getGradesOverview = async (
 
     const items: GradesOverviewItem[] = [];
 
-    for (const purchase of purchases) {
-      const course = purchase.course;
+    for (const course of entitledCourses) {
       const progressPercent = await getProgress(userId, course.id);
 
       const preTest = course.quizzes.find((q) => q.type === "PRE_TEST");

@@ -39,6 +39,17 @@
     "semi": [
       "error",
       "always"
+    ],
+    "no-restricted-syntax": [
+      "error",
+      {
+        "selector": "MemberExpression[object.name='db'][property.name='purchase']",
+        "message": "Purchase is evidence of payment, not entitlement (ADR 0002). Decide access with courseEntitlement/topicEntitlement/entitledCourseIds from @/lib/entitlement. Reading Purchase for access is what let a suspended learner keep everything they had ever paid for. Payment history itself -- revenue reporting -- may read it; add an override here with a reason."
+      },
+      {
+        "selector": "MemberExpression[object.name='db'][property.name='enrollment']",
+        "message": "Do not query Enrollment directly to make an access decision (ADR 0002 point 1). Use @/lib/entitlement, which normalizes the status so an unrecognised value cannot read as access. Aggregate reporting over enrollments may read it; add an override here with a reason."
+      }
     ]
   },
   "overrides": [
@@ -57,6 +68,26 @@
       ],
       "rules": {
         "security/detect-non-literal-fs-filename": "off"
+      }
+    },
+    {
+      "files": [
+        "lib/entitlement/**/*.ts"
+      ],
+      "rules": {
+        "no-restricted-syntax": "off"
+      }
+    },
+    {
+      "files": [
+        "actions/get-analytics.ts",
+        "actions/get-admin-analytics.ts",
+        "lib/badge-service.ts",
+        "scripts/**/*.ts",
+        "tests/**/*.ts"
+      ],
+      "rules": {
+        "no-restricted-syntax": "off"
       }
     }
   ]

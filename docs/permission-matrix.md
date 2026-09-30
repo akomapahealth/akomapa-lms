@@ -118,11 +118,30 @@ then roles are granted with `npm run role:grant` (see below).
 | `course:learn` | `activeEnrollment` | allow | allow | deny | deny |
 
 Privilege does not buy back a suspension: an ADMIN with a `SUSPENDED` Enrollment
-is denied. The full entitlement rule — purchase, Enrollment as the canonical
-record, free-preview Topics — is
-[ADR 0002](adr/0002-enrollment-as-canonical-entitlement.md) and
-[#48](https://github.com/akomapahealth/akomapa-lms/issues/48). What this rule
-owns is the narrower suspension invariant.
+is denied. What `course:learn` owns is that narrow invariant.
+
+The full entitlement rule is
+[ADR 0002](adr/0002-enrollment-as-canonical-entitlement.md), implemented by
+`lib/entitlement` in [#48](https://github.com/akomapahealth/akomapa-lms/issues/48).
+Every surface calls that module; nothing queries `Enrollment` or `Purchase` to
+decide access, and an `.eslintrc.json` rule fails the build on an attempt. The
+decision is ordered, and the order is the rule:
+
+| # | Condition | Result |
+| --- | --- | --- |
+| 1 | No such Course | denied, `course_not_found` |
+| 2 | Enrollment is `SUSPENDED` | denied, `suspended` — **before** staff is considered |
+| 3 | FACULTY who authors the Course, or an ADMIN | full access, `staff_access`, including to an unpublished Course |
+| 4 | Course is not published | denied, `course_unpublished` — a draft is not a preview, so free Topics are shut too |
+| 5 | Enrollment is `ACTIVE` or `COMPLETED` | full access |
+| 6 | Otherwise | preview: `isFree` Topics only |
+
+A status outside `ACTIVE`/`COMPLETED`/`SUSPENDED` is not a status. It grants
+nothing, and is deliberately not read as "no Enrollment", because that would
+downgrade a suspension to a preview — the more permissive reading of corrupt data.
+
+`Purchase` appears nowhere in the table above. It is evidence that a payment
+happened, which is why revenue reporting reads it and no access path does.
 
 ### Reserved
 

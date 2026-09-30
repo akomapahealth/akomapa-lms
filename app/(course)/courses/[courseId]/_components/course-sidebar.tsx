@@ -31,7 +31,7 @@ interface CourseSidebarProps {
   course: Course;
   modules: ModuleWithTopics[];
   progressCount: number;
-  isPurchased: boolean;
+  canLearn: boolean;
   quizzes?: SidebarQuiz[];
 }
 
@@ -39,7 +39,7 @@ export const CourseSidebar = ({
   course,
   modules,
   progressCount,
-  isPurchased,
+  canLearn,
   quizzes = [],
 }: CourseSidebarProps) => {
   const pathname = usePathname();
@@ -69,7 +69,7 @@ export const CourseSidebar = ({
             {completedTopics}/{totalTopics} Done
           </span>
         </div>
-        {isPurchased && (
+        {canLearn && (
           <div className="mt-3">
             <CourseProgress variant="success" value={progressCount} />
           </div>
@@ -110,7 +110,7 @@ export const CourseSidebar = ({
               moduleTitle={mod.title}
               topics={mod.topics}
               courseId={course.id}
-              isPurchased={isPurchased}
+              canLearn={canLearn}
             />
           ))}
         </Accordion>

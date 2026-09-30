@@ -71,8 +71,35 @@ export async function aCourseWithTopic(
   return { course, module: courseModule, topic };
 }
 
+/**
+ * Evidence of payment, and nothing more.
+ *
+ * Since #48 this grants no access on its own (ADR 0002). A test that means "this
+ * learner can open the Course" wants `anEnrollmentRow`; a test that means "this
+ * learner paid but has no Enrollment" -- the state the backfill exists for --
+ * wants this one alone.
+ */
 export async function aPurchaseRow(userId: string, courseId: string) {
   return testDb().purchase.create({ data: { userId, courseId } });
+}
+
+/** The entitlement. `status` decides whether it grants access. */
+export async function anEnrollmentRow(
+  userId: string,
+  courseId: string,
+  status: "ACTIVE" | "COMPLETED" | "SUSPENDED" = "ACTIVE"
+) {
+  return testDb().enrollment.create({ data: { userId, courseId, status } });
+}
+
+/** A learner who paid and is enrolled: what the Stripe path now writes. */
+export async function aPaidEnrollment(
+  userId: string,
+  courseId: string,
+  status: "ACTIVE" | "COMPLETED" | "SUSPENDED" = "ACTIVE"
+) {
+  await aPurchaseRow(userId, courseId);
+  return anEnrollmentRow(userId, courseId, status);
 }
 
 /** A published Quiz with one question and two options, one of them correct. */

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requirePrincipal } from "@/lib/auth";
 import { generateCertificate } from "@/lib/certificate-service";
+import { enrollmentStatusFor } from "@/lib/entitlement";
 import { handleRouteError, parseParams, problem } from "@/lib/http";
 import { courseParams } from "@/lib/validations/ids";
 
@@ -17,12 +18,9 @@ export async function POST(
 
     const { courseId } = parseParams(courseParams, await params);
 
-    // Verify enrollment completion
-    const enrollment = await db.enrollment.findFirst({
-      where: { userId, courseId, status: "COMPLETED" },
-    });
-
-    if (!enrollment) {
+    // Through the entitlement module, which normalizes the status so an
+    // unrecognised value cannot read as completion (ADR 0002).
+    if ((await enrollmentStatusFor(userId, courseId)) !== "COMPLETED") {
       return problem("conflict", {
         message: "Finish the course before requesting a certificate.",
       });
