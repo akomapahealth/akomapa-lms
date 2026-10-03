@@ -66,9 +66,9 @@ real. The store sits behind an interface (`RateLimitStore`), so moving to a
 dedicated cache later changes one file.
 
 Expired rows (past `expiresAt`) are equivalent to absent ones. A consume sweeps
-up to 500 of them with probability 1/100. The scheduled processor from
-[#69](https://github.com/akomapahealth/akomapa-lms/issues/69) is the natural
-home for that sweep once it exists.
+up to 500 of them with probability 1/100, and the daily outbox run
+([#69](https://github.com/akomapahealth/akomapa-lms/issues/69),
+[runbooks/outbox.md](../runbooks/outbox.md)) sweeps another batch.
 
 ### Which address
 
