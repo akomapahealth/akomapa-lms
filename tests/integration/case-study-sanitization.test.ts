@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { SAME_ORIGIN_HEADERS } from "../support/origin";
+
 import { testDb } from "./support/db";
 import { aCaseStudyRow, aCourseWithTopic, aUserRow } from "./support/fixtures";
 
@@ -66,7 +68,7 @@ describe("case study authoring sanitizes on write", () => {
           description: "d",
           scenario,
         }),
-        headers: { "content-type": "application/json" },
+        headers: { ...SAME_ORIGIN_HEADERS, "content-type": "application/json" },
       }),
       { params: Promise.resolve({ courseId: course.course.id }) }
     );
@@ -93,7 +95,7 @@ describe("case study authoring sanitizes on write", () => {
           description: "d",
           scenario: hostileScenario(),
         }),
-        headers: { "content-type": "application/json" },
+        headers: { ...SAME_ORIGIN_HEADERS, "content-type": "application/json" },
       }),
       { params: Promise.resolve({ courseId: course.course.id }) }
     );
@@ -117,7 +119,7 @@ describe("case study authoring sanitizes on write", () => {
       new Request("http://localhost/case-studies/x", {
         method: "PATCH",
         body: JSON.stringify({ scenario: hostileScenario() }),
-        headers: { "content-type": "application/json" },
+        headers: { ...SAME_ORIGIN_HEADERS, "content-type": "application/json" },
       }),
       {
         params: Promise.resolve({
@@ -146,7 +148,7 @@ describe("case study authoring sanitizes on write", () => {
           description: "d",
           scenario: hostileScenario(),
         }),
-        headers: { "content-type": "application/json" },
+        headers: { ...SAME_ORIGIN_HEADERS, "content-type": "application/json" },
       }),
       { params: Promise.resolve({ courseId: course.course.id }) }
     );

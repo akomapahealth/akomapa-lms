@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { SAME_ORIGIN_HEADERS } from "../support/origin";
+
 import { testDb } from "./support/db";
 import {
   aCourseWithTopic,
@@ -36,7 +38,7 @@ function request(isCompleted: unknown) {
   return new Request("http://localhost/progress", {
     method: "PUT",
     body: JSON.stringify({ isCompleted }),
-    headers: { "content-type": "application/json" },
+    headers: { ...SAME_ORIGIN_HEADERS, "content-type": "application/json" },
   });
 }
 

@@ -6,6 +6,8 @@ import {
   withDatabase,
   workerDatabase,
 } from "./database-url";
+import { pinTrustedOrigins } from "../../support/origin";
+
 import { closeTestDatabase, connectTestDatabase, truncateAll } from "./db";
 
 /**
@@ -15,6 +17,10 @@ import { closeTestDatabase, connectTestDatabase, truncateAll } from "./db";
  * tests use real tables without coordinating on ids. The clone is a file copy,
  * so the cost of a worker is close to nothing.
  */
+// The config loads .env.local, which may trust a developer's own origins. The
+// origin guard (#45) must see one fixed allow-list in every run.
+pinTrustedOrigins();
+
 const workerId = process.env.VITEST_WORKER_ID ?? "0";
 const database = workerDatabase(workerId);
 
