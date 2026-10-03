@@ -52,6 +52,10 @@ model User {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Index evidence (#51): docs/runbooks/database-integrity.md#indexes.
+  // Admin student list: by role, newest first.
+  @@index([role, createdAt])
 }
 
 model Course {
@@ -79,7 +83,10 @@ model Course {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Index evidence (#51): docs/runbooks/database-integrity.md#indexes.
   @@index([categoryId])
+  // Author dashboards: courses by owner, newest first.
+  @@index([userId, createdAt])
 }
 
 model Category {
@@ -182,6 +189,9 @@ model UserProgress {
 
   @@unique([userId, topicId], map: "UserProgress_userId_chapterId_key")
   @@index([topicId], map: "UserProgress_chapterId_idx")
+  // Index evidence (#51): docs/runbooks/database-integrity.md#indexes.
+  // Completion timelines and analytics over completion dates.
+  @@index([isCompleted, updatedAt])
 }
 
 model Purchase {
@@ -215,6 +225,9 @@ model Enrollment {
 
   @@unique([userId, courseId])
   @@index([courseId])
+  // Index evidence (#51): docs/runbooks/database-integrity.md#indexes.
+  // Admin analytics over enrolment dates.
+  @@index([enrolledAt])
 }
 
 model StripCustomer {
@@ -310,7 +323,11 @@ model QuizAttempt {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([userId])
+  // Index evidence (#51): docs/runbooks/database-integrity.md#indexes.
+  // Best attempt per learner per quiz; the post-test lock.
+  @@index([userId, quizId])
+  // Admin analytics over completion dates.
+  @@index([completedAt])
   @@index([quizId])
 }
 
@@ -372,7 +389,12 @@ model ForumPost {
 
   @@index([categoryId])
   @@index([courseId])
-  @@index([userId])
+  // Index evidence (#51): docs/runbooks/database-integrity.md#indexes.
+  // Profile feed: a member's posts, newest first.
+  @@index([userId, createdAt])
+  // Community feed: pinned first, then newest.
+  @@index([isPinned, createdAt])
+  @@index([createdAt])
 }
 
 model ForumComment {
@@ -455,8 +477,8 @@ model UserBadge {
   badgeId String
   badge   Badge  @relation(fields: [badgeId], references: [id], onDelete: Restrict)
 
+  // Also serves lookups by userId alone, as its leading column (#51).
   @@unique([userId, badgeId])
-  @@index([userId])
 }
 
 model LearningStreak {
@@ -493,7 +515,9 @@ model JournalEntry {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([userId])
+  // Index evidence (#51): docs/runbooks/database-integrity.md#indexes.
+  // A learner's journal, most recently edited first.
+  @@index([userId, updatedAt])
   @@index([moduleId])
   @@index([courseId])
 }
@@ -547,8 +571,8 @@ model Certificate {
 
   pdfUrl String? @db.Text
 
+  // Also serves lookups by userId alone, as its leading column (#51).
   @@unique([userId, courseId])
-  @@index([userId])
 }
 
 // ─── Phase 5: User Settings ───
