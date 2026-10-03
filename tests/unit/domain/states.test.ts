@@ -17,6 +17,7 @@ import {
   QUIZ_TYPES,
   QuizType,
   ROLE_LABELS,
+  STAFF_ROLES,
   staffBadgeLabel,
   THEME_LABELS,
   THEME_PREFERENCES,
@@ -93,6 +94,10 @@ describe("parseClosed", () => {
 });
 
 describe("staffBadgeLabel", () => {
+  it("defines staff as every role above a learner", () => {
+    expect(STAFF_ROLES).toEqual(["FACULTY", "ADMIN"]);
+  });
+
   it("labels staff and leaves learners unlabelled", () => {
     expect(staffBadgeLabel(UserRole.ADMIN)).toBe("Admin");
     expect(staffBadgeLabel(UserRole.FACULTY)).toBe("Faculty");

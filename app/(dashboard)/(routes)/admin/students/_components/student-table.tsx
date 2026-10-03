@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Search } from "lucide-react";
 
+import type { UserRole } from "@/lib/domain/states";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -22,7 +23,7 @@ interface StudentRow {
   lastName: string | null;
   email: string | null;
   imageUrl: string | null;
-  role: string;
+  role: UserRole;
   enrolledCourses: number;
   overallProgress: number;
   createdAt: Date;

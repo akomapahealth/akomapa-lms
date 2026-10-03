@@ -1,5 +1,6 @@
 "use client";
 
+import { BadgeType } from "@/lib/domain/states";
 import { apiErrorMessage } from "@/lib/api-error-message";
 import { Button } from "@/components/ui/button";
 import { useConfettiStore } from "@/hooks/use-confetti-store";
@@ -45,7 +46,7 @@ export const CourseProgressButton = ({
             // Show badge notifications
             const awardedBadges = response.data.awardedBadges ?? [];
             const hasMilestoneBadge = awardedBadges.some(
-                (b: { type: string }) => b.type === "MILESTONE"
+                (b: { type: BadgeType }) => b.type === BadgeType.MILESTONE
             );
 
             if (!isCompleted && !nextTopicId) {

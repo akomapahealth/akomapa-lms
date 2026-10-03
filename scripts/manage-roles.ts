@@ -26,7 +26,7 @@ import { PrismaClient } from "@prisma/client";
 import { config } from "dotenv";
 import { Pool } from "pg";
 
-import { parseClosed, USER_ROLES, type UserRole } from "../lib/domain/states";
+import { parseClosed, STAFF_ROLES, USER_ROLES, type UserRole } from "../lib/domain/states";
 
 // Precedence: an explicitly exported DATABASE_URL wins over both dotenv files.
 //
@@ -181,7 +181,7 @@ async function find(): Promise<number> {
 /** Lists everyone holding privilege. Prints ids and roles, never emails. */
 async function list(): Promise<number> {
   const privileged = await database.user.findMany({
-    where: { role: { in: ["FACULTY", "ADMIN"] } },
+    where: { role: { in: [...STAFF_ROLES] } },
     select: { id: true, role: true },
     orderBy: [{ role: "asc" }, { id: "asc" }],
   });

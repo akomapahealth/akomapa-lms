@@ -1,3 +1,4 @@
+import { TopicContentType } from "@/lib/domain/states";
 import { requirePagePrincipal } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { File, ChevronLeft, ChevronRight } from "lucide-react";
@@ -52,7 +53,7 @@ const ChapterIdPage = async ({
 
     // Check for case study content
     let caseStudy = null;
-    if (topic.contentType === "INTERACTIVE") {
+    if (topic.contentType === TopicContentType.INTERACTIVE) {
         caseStudy = await db.caseStudy.findUnique({
             where: { topicId: chapterId },
         });

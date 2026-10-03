@@ -59,9 +59,14 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   ADMIN: "Admin",
 };
 
+/** Roles that hold privilege above a learner: FACULTY and ADMIN. */
+export const STAFF_ROLES: readonly UserRole[] = Object.freeze(
+  USER_ROLES.filter((role) => role !== UserRole.STUDENT)
+);
+
 /** The badge shown beside a staff member's name; learners get none. */
 export function staffBadgeLabel(role: UserRole): string | null {
-  return role === UserRole.STUDENT ? null : ROLE_LABELS[role];
+  return STAFF_ROLES.includes(role) ? ROLE_LABELS[role] : null;
 }
 
 export const QUIZ_TYPE_LABELS: Record<QuizType, string> = {

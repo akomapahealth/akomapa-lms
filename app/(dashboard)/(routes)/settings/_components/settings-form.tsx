@@ -5,6 +5,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { Loader2 } from "lucide-react";
 
+import { parseClosed, THEME_LABELS, THEME_PREFERENCES } from "@/lib/domain/states";
 import { apiErrorMessage } from "@/lib/api-error-message";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -64,15 +65,22 @@ export const SettingsForm = ({ initialSettings }: SettingsFormProps) => {
             </div>
             <Select
               value={settings.theme}
-              onValueChange={(value) => updateSetting("theme", value)}
+              onValueChange={(value) => {
+                // The Select only offers known values; anything else is ignored
+                // rather than sent to the server.
+                const theme = parseClosed(THEME_PREFERENCES, value);
+                if (theme !== null) updateSetting("theme", theme);
+              }}
             >
               <SelectTrigger className="w-[140px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="light">Light</SelectItem>
-                <SelectItem value="dark">Dark</SelectItem>
-                <SelectItem value="system">System</SelectItem>
+                {THEME_PREFERENCES.map((value) => (
+                  <SelectItem key={value} value={value}>
+                    {THEME_LABELS[value]}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

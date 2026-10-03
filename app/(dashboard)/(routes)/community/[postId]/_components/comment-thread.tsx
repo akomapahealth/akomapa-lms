@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Reply } from "lucide-react";
 
+import { staffBadgeLabel, type UserRole } from "@/lib/domain/states";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { timeAgo } from "@/lib/utils";
@@ -14,7 +15,7 @@ interface CommentUser {
   firstName: string | null;
   lastName: string | null;
   imageUrl: string | null;
-  role: string;
+  role: UserRole;
 }
 
 interface CommentData {
@@ -87,9 +88,9 @@ function CommentItem({
             <span className="text-sm font-medium text-foreground">
               {authorName}
             </span>
-            {comment.user.role !== "STUDENT" && (
+            {staffBadgeLabel(comment.user.role) && (
               <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-akomapa-ice text-akomapa-teal">
-                {comment.user.role === "ADMIN" ? "Admin" : "Faculty"}
+                {staffBadgeLabel(comment.user.role)}
               </span>
             )}
             <span className="text-xs text-muted-foreground/70">

@@ -1,3 +1,4 @@
+import { QUIZ_TYPE_LABELS } from "@/lib/domain/states";
 import { requirePagePrincipal } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -53,12 +54,7 @@ const QuizEntryPage = async ({
 
   const isLocked = quiz.type === "POST_TEST" && lockStatus && !lockStatus.unlocked;
 
-  const typeLabel =
-    quiz.type === "PRE_TEST"
-      ? "Pre-Test"
-      : quiz.type === "POST_TEST"
-        ? "Post-Test"
-        : "Module Quiz";
+  const typeLabel = QUIZ_TYPE_LABELS[quiz.type];
 
   return (
     <div className="flex flex-col max-w-3xl mx-auto pb-20">

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
 import { ArrowLeft, Lock, MessageSquare } from "lucide-react";
 
+import { staffBadgeLabel } from "@/lib/domain/states";
 import { db } from "@/lib/db";
 import { can, getPrincipal } from "@/lib/auth";
 import { timeAgo } from "@/lib/utils";
@@ -154,9 +155,9 @@ const PostDetailPage = async ({
             >
               {authorName}
             </Link>
-            {post.user.role !== "STUDENT" && (
+            {staffBadgeLabel(post.user.role) && (
               <span className="ml-2 text-[10px] font-medium px-1.5 py-0.5 rounded bg-akomapa-ice text-akomapa-teal">
-                {post.user.role === "ADMIN" ? "Admin" : "Faculty"}
+                {staffBadgeLabel(post.user.role)}
               </span>
             )}
             <p className="text-xs text-muted-foreground">

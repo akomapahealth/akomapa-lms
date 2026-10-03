@@ -7,18 +7,20 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Award, Lock } from "lucide-react";
+import type { BadgeType } from "@/lib/domain/states";
 import { cn } from "@/lib/utils";
 
 interface BadgeDisplayProps {
   name: string;
   description: string;
-  type: string;
+  type: BadgeType;
   earned: boolean;
   earnedAt: Date | null;
   imageUrl?: string | null;
 }
 
-const badgeEmojis: Record<string, string> = {
+// Exhaustive over BadgeType (#50): a new type fails to compile until it has one.
+const badgeEmojis: Record<BadgeType, string> = {
   COMPLETION: "🎯",
   STREAK: "🔥",
   COMMUNITY: "💬",
@@ -57,7 +59,7 @@ export const BadgeDisplay = ({
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={imageUrl} alt={name} className="w-6 h-6" />
                 ) : (
-                  <span>{badgeEmojis[type] ?? "🎯"}</span>
+                  <span>{badgeEmojis[type]}</span>
                 )
               ) : (
                 <Lock className="w-4 h-4 text-muted-foreground" />
