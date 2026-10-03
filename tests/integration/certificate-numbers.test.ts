@@ -22,7 +22,11 @@ vi.mock("@react-pdf/renderer", () => ({
 }));
 vi.mock("@/lib/certificate-template", () => ({ CertificateTemplate: () => null }));
 
-const { allocateCertificateNumber, generateCertificate } = await import("@/lib/certificate-service");
+const { allocateCertificateNumber, generateCertificate, issueCertificate } = await import(
+  "@/lib/certificate-service"
+);
+const { dispatchEvent } = await import("@/lib/outbox/handlers");
+const { renderToBuffer } = await import("@react-pdf/renderer");
 
 /**
  * Certificate numbers under concurrency, against real PostgreSQL (#51).
@@ -106,6 +110,26 @@ describe("generateCertificate under concurrency", () => {
 
     await expect(generateCertificate(learner.id, courseId)).resolves.toBeNull();
     expect(await testDb().certificateNumberSequence.count()).toBe(0);
+  });
+});
+
+describe("the CERTIFICATE_ISSUED consumer (#49)", () => {
+  it("renders the PDF once, however many times the event is delivered", async () => {
+    const author = await aUserRow({ role: "FACULTY" });
+    const courseId = (await aCourseWithTopic(author.id)).course.id;
+    const learner = await aUserRow();
+    await anEnrollmentRow(learner.id, courseId, "COMPLETED");
+    const issued = await issueCertificate(testDb(), learner.id, courseId);
+    vi.mocked(renderToBuffer).mockClear();
+
+    const payload = { userId: learner.id, courseId, certificateId: issued.certificateId };
+    await dispatchEvent("CERTIFICATE_ISSUED", payload);
+    await dispatchEvent("CERTIFICATE_ISSUED", payload);
+    await Promise.all([dispatchEvent("CERTIFICATE_ISSUED", payload), dispatchEvent("CERTIFICATE_ISSUED", payload)]);
+
+    expect(vi.mocked(renderToBuffer)).toHaveBeenCalledTimes(1);
+    const stored = await testDb().certificate.findUniqueOrThrow({ where: { id: issued.certificateId } });
+    expect(numberInPdf(stored.pdfUrl!)).toBe(issued.certificateNumber);
   });
 });
 
