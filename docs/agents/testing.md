@@ -122,6 +122,17 @@ type, and the database, no longer allow one. Migration behaviour against
 legacy data lives in `tests/integration/closed-states.test.ts`, which builds a
 pre-#50 database from the committed migrations.
 
+### Learning state changes through one command
+
+Topic completion goes through `setTopicCompletion` (`lib/courses/complete-topic.ts`),
+and every derived fact -- Module and Course completion, Enrollment, streak,
+badges, the Certificate row -- and its `OutboxEvent` commit in one transaction
+(#49, ADR 0004). Test a new derived effect against PostgreSQL
+(`tests/integration/learning-completion.test.ts` shows rollback, concurrency, and
+repeat cases); a unit double cannot show atomicity. An event consumer in
+`lib/outbox/handlers.ts` needs a test that delivers the same event twice and
+asserts one outcome.
+
 ### Write the negative case first
 
 The failure that matters is rarely "the feature did not work"; it is "the guard
