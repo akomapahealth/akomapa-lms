@@ -111,6 +111,7 @@ export default defineConfig({
         "lib/outbox/events.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
         // Delivery: claiming, outcomes, backoff, parking, retention (#69).
         "lib/outbox/processor.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
+        "lib/outbox/operations.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
         // Course entitlement (#48, ADR 0002). One module decides whether a
         // learner may open a Course, so every branch of it is exercised -- the
         // suspension path above all, which is the one that used to be unreachable.
@@ -126,6 +127,8 @@ export default defineConfig({
         // Cross-site request protection (#45). Every cookie-authenticated
         // mutation calls it first, so an untested branch is an untested way in.
         "lib/http/origin.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
+        // The only thing between the public internet and the outbox processor (#69).
+        "lib/http/cron.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
         // Abuse controls (#46): the arithmetic, the trusted-address rule, the
         // key derivation, and the failure behaviour all decide who is refused.
         "lib/rate-limit/gcra.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },

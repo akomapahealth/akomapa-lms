@@ -14,6 +14,7 @@ const {
   describeError,
   discardParked,
   isPermanent,
+  listParked,
   logRun,
   OUTBOX,
   outboxHealth,
@@ -262,15 +263,29 @@ describe("health, purge, replay, discard", () => {
     expect(c.outboxEvent.updateMany.mock.calls[0][0].data).toEqual({ completedAt: T0, lastError: "discarded: consumer retired" });
   });
 
-  it("uses the shared client and the real clock by default", async () => {
-    await expect(outboxHealth()).resolves.toMatchObject({ pending: 0 });
+  it("uses the real clock by default", async () => {
     const { dbMock } = await import("../support/db");
+    await expect(outboxHealth(dbMock as never)).resolves.toMatchObject({ pending: 0 });
     dbMock.outboxEvent.deleteMany.mockResolvedValue({ count: 0 });
-    await expect(purgeDelivered()).resolves.toBe(0);
+    await expect(purgeDelivered(dbMock as never)).resolves.toBe(0);
     dbMock.outboxEvent.updateMany.mockResolvedValue({ count: 0 });
     await expect(replayParked(dbMock as never, "all")).resolves.toBe(0);
     await expect(discardParked(dbMock as never, ["e"], "r")).resolves.toBe(0);
   });
+
+  it("lists parked events oldest first, without payloads", async () => {
+    const c = { outboxEvent: { findMany: vi.fn().mockResolvedValue([]) } };
+
+    await listParked(c as never);
+
+    expect(c.outboxEvent.findMany).toHaveBeenCalledWith({
+      where: { parkedAt: { not: null }, completedAt: null },
+      orderBy: { parkedAt: "asc" },
+      take: 50,
+      select: { id: true, type: true, attempts: true, lastError: true, occurredAt: true, parkedAt: true },
+    });
+  });
+
 });
 
 describe("logRun", () => {
