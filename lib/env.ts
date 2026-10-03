@@ -39,6 +39,10 @@ const serverSchema = z.object({
   // validated per request by lib/http/origin.ts, which fails closed on a
   // malformed entry; see docs/security/csrf.md.
   TRUSTED_ORIGINS: z.string().optional(),
+
+  // Authenticates Vercel Cron's calls to /api/cron/* (#69). At least 16
+  // characters; without it every scheduled run is refused (lib/http/cron.ts).
+  CRON_SECRET: z.string().min(16).optional(),
 });
 
 const clientSchema = z.object({

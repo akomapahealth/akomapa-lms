@@ -47,7 +47,7 @@ awaiting review.
 | Obligation | Type | Control |
 | --- | --- | --- |
 | A named retention period for every data class | Runbook | Schedule in [policy 02](02-retention-and-deletion.md) |
-| Automatic enforcement of retention periods | Issue | [#118](https://github.com/akomapahealth/akomapa-lms/issues/118). No scheduled job and no `vercel.json` cron exist today |
+| Automatic enforcement of retention periods | Issue | [#118](https://github.com/akomapahealth/akomapa-lms/issues/118). A daily `vercel.json` cron exists for the outbox ([#69](https://github.com/akomapahealth/akomapa-lms/issues/69)) and purges its own and the rate limiter's rows; it does not yet enforce this schedule |
 | Retention, cascades, and concurrency correct at the database layer | Issue | [#51](https://github.com/akomapahealth/akomapa-lms/issues/51) |
 | Public page states real periods, not "a reasonable period" | Issue | [#119](https://github.com/akomapahealth/akomapa-lms/issues/119). Update `lib/legal-content.ts` and bump `siteConfig.legalEffectiveDate` |
 | Confirm the financial retention minimum and the deletion grace period | **Legal** | Pending review, [policy 02](02-retention-and-deletion.md) |

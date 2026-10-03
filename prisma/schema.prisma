@@ -721,8 +721,14 @@ model OutboxEvent {
   completedAt   DateTime?
   /// Error class and message only; never a payload or a stack.
   lastError     String?
+  /// Set when the event is isolated as poison: it exhausted its retries or its
+  /// stored payload no longer validates. A parked event is never claimed again
+  /// until an operator replays or discards it (#69, docs/runbooks/outbox.md).
+  parkedAt      DateTime?
 
   // The processor's claim query: undelivered events whose time has come.
   @@index([completedAt, availableAt])
+  // Operators' view of isolated events.
+  @@index([parkedAt])
   @@index([aggregateType, aggregateId])
 }

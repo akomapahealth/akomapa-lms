@@ -69,17 +69,14 @@ pipeline, so these events are recorded and wait for a consumer. Adding one is
 a handler in `lib/outbox/handlers.ts`, idempotent and tested by delivering the
 same event twice.
 
-## Until the processor exists (#69)
+## Delivery
 
-Events are recorded but nothing delivers them yet, so `OutboxEvent` rows
-accumulate with `completedAt` NULL. This is expected and bounded: a few rows
-per Topic completed. #69 adds the processor, retention, and replay tooling.
-
-Certificate PDFs keep working in the meantime. The completion transaction
-reserves the row and number, and the PDF is rendered the first time the
-learner opens their Certificate (`/api/courses/[courseId]/certificate`), from
-the stored number. When #69 delivers `CERTIFICATE_ISSUED`, the PDF will be
-ready before the learner asks; either path renders it once.
+The outbox processor ([outbox.md](outbox.md), #69) delivers recorded events
+once a day. `CERTIFICATE_ISSUED` renders the PDF; events with no consumer are
+marked delivered. A learner never waits for it: the Certificate PDF also
+renders the first time they open their Certificate
+(`/api/courses/[courseId]/certificate`), from the stored number, and either
+path renders it once.
 
 ## Operations
 
@@ -91,8 +88,8 @@ ready before the learner asks; either path renders it once.
 - A command waits at most 5 s for a database connection and runs at most 15 s.
   Lock waits only queue a learner behind their own requests in the same Course,
   so a timeout means a slow database, not contention.
-- Once #69 lands: outbox depth, oldest undelivered event, and parked rows. Its
-  runbook sets thresholds; #102 turns them into alerts.
+- The outbox's depth, oldest undelivered event, and parked rows: thresholds in
+  [outbox.md](outbox.md#signals-and-alerts); #102 turns them into alerts.
 
 **Alert thresholds** (as log queries until #102):
 
@@ -100,7 +97,7 @@ ready before the learner asks; either path renders it once.
 | --- | --- | --- |
 | `CHAPTER_ID_PROGRESS` errors | More than 1% of progress requests over 15 minutes | Completions are failing; investigate the database first |
 | Transaction timeouts (Prisma `P2028`) in completion logs | Any sustained | The database is slow enough that a 15 s command does not finish |
-| Undelivered `OutboxEvent` rows older than a day | Any, once #69 is live | The processor is not running or is parked |
+| Undelivered `OutboxEvent` rows older than two days | Any | The processor is not running or is failing ([outbox.md](outbox.md)) |
 
 **Repair.** Derived state is a function of persisted rows (ADR 0004), so it
 can be recomputed rather than edited. Take a learner whose progress shows every

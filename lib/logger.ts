@@ -11,6 +11,18 @@ const isProd = process.env.NODE_ENV === "production";
 export type LogContext = Record<string, string | number | boolean | undefined>;
 
 /**
+ * A routine operational record -- a scheduled job's summary, for example --
+ * that dashboards and alerts read but nobody needs to act on.
+ */
+export function logInfo(tag: string, context?: LogContext) {
+  if (isProd) {
+    console.info(JSON.stringify({ tag, timestamp: new Date().toISOString(), ...context }));
+  } else {
+    console.info(`[${tag}]`, context ?? "");
+  }
+}
+
+/**
  * An expected, handled event worth seeing in aggregate -- a refused cross-site
  * request, for example -- that is not a fault. Kept off `console.error` so it
  * does not page anyone.
