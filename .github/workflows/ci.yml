@@ -248,8 +248,14 @@ jobs:
       # never approved and cross-site mutations are refused over real HTTP,
       # through the Clerk proxy, against this production build. The server
       # trusts NEXT_PUBLIC_APP_URL from the workflow env above.
+      # e2e/rate-limit.spec.ts (#46) relies on this job having no database:
+      # the placeholder DATABASE_URL makes the rate-limit store unreachable, so
+      # it can prove fail-closed (503 + Retry-After) and fail-open behaviour
+      # over HTTP. The variable tells the spec that state is intended.
       - name: Run Playwright smoke tests
         run: npm run test:e2e
+        env:
+          E2E_RATE_LIMIT_STORE: unreachable
 
       - name: Upload Playwright report
         if: ${{ !cancelled() }}
