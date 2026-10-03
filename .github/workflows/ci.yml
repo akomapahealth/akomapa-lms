@@ -244,6 +244,10 @@ jobs:
       - name: Build app
         run: npx next build --webpack
 
+      # Includes e2e/origin-guard.spec.ts (#45): cross-origin preflights are
+      # never approved and cross-site mutations are refused over real HTTP,
+      # through the Clerk proxy, against this production build. The server
+      # trusts NEXT_PUBLIC_APP_URL from the workflow env above.
       - name: Run Playwright smoke tests
         run: npm run test:e2e
 
