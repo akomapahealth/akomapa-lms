@@ -110,6 +110,18 @@ per-process memory is the wrong store for serverless. Limits engaging,
 concurrency across instances, and store failure are proven against real
 PostgreSQL in `tests/integration/rate-limit-*.test.ts`.
 
+### Closed states have one source
+
+Roles, Enrollment statuses, Quiz types, Topic content types, Badge types, and
+themes are PostgreSQL enums (#50). Take values, labels, and transitions from
+`lib/domain/states.ts`; `tests/unit/domain/single-source.test.ts` fails the
+build if a file restates one of those sets as a list, union, zod enum, or label
+map. A test that needs an out-of-set value to prove a guard fails closed must
+cast it explicitly (`"PENDING" as EnrollmentStatus`) and say why, because the
+type, and the database, no longer allow one. Migration behaviour against
+legacy data lives in `tests/integration/closed-states.test.ts`, which builds a
+pre-#50 database from the committed migrations.
+
 ### Write the negative case first
 
 The failure that matters is rarely "the feature did not work"; it is "the guard
