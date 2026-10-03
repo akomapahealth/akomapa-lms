@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { authorizeQuizInCourse, requirePrincipal } from "@/lib/auth";
 import { assertTrustedOrigin, handleRouteError, parseBody, parseParams } from "@/lib/http";
+import { withPositionRetry } from "@/lib/courses/ordering";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { quizParams } from "@/lib/validations/ids";
 import { questionCreateSchema } from "@/lib/validations/quiz";
@@ -27,19 +28,21 @@ export async function POST(
 
     const { text } = await parseBody(questionCreateSchema, req);
 
-    const lastQuestion = await db.question.findFirst({
-      where: { quizId: routeParams.quizId },
-      orderBy: { position: "desc" },
-    });
+    // "Last position + 1" races a concurrent create to the same position; the
+    // per-Quiz unique index refuses the loser, which reads again (#51).
+    const question = await withPositionRetry(async () => {
+      const lastQuestion = await db.question.findFirst({
+        where: { quizId: routeParams.quizId },
+        orderBy: { position: "desc" },
+      });
 
-    const newPosition = lastQuestion ? lastQuestion.position + 1 : 1;
-
-    const question = await db.question.create({
-      data: {
-        text,
-        quizId: routeParams.quizId,
-        position: newPosition,
-      },
+      return db.question.create({
+        data: {
+          text,
+          quizId: routeParams.quizId,
+          position: lastQuestion ? lastQuestion.position + 1 : 1,
+        },
+      });
     });
 
     return NextResponse.json(question);

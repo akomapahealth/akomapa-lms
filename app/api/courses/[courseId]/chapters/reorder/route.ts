@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { authorizeCourse, requirePrincipal } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { assertTrustedOrigin, BODY_BYTES, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
+import { applyPlacements } from "@/lib/courses/ordering";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { courseParams } from "@/lib/validations/ids";
 import { reorderSchema } from "@/lib/validations/reorder";
@@ -39,14 +40,13 @@ export async function PUT(
             return problem("not_found");
         }
 
-        // One transaction: a partial reorder leaves two Topics sharing a position
-        // and the sidebar ordering non-deterministic.
-        await db.$transaction(
-            list.map((item) =>
-                db.topic.update({
-                    where: { id: item.id },
-                    data: { position: item.position },
-                })
+        // One transaction, two phases (#51): positions are unique per Module,
+        // so rows park at temporary positions before taking their final ones.
+        // A final position held by a Topic the request did not list makes the
+        // unique index refuse it, and the whole reorder rolls back as a 409.
+        await db.$transaction((tx) =>
+            applyPlacements(list, (id, position) =>
+                tx.topic.update({ where: { id }, data: { position } })
             )
         );
 

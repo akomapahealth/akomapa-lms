@@ -111,7 +111,9 @@ model Module {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([courseId])
+  // Unique per parent (#51): two rows at one position made the order
+  // non-deterministic. Reorders move rows in two phases so this always holds.
+  @@unique([courseId, position])
 }
 
 model Attachment {
@@ -150,7 +152,9 @@ model Topic {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([moduleId])
+  // Unique per parent (#51): two rows at one position made the order
+  // non-deterministic. Reorders move rows in two phases so this always holds.
+  @@unique([moduleId, position])
   @@map("Chapter")
 }
 
@@ -264,7 +268,9 @@ model Question {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([quizId])
+  // Unique per parent (#51): two rows at one position made the order
+  // non-deterministic. Reorders move rows in two phases so this always holds.
+  @@unique([quizId, position])
 }
 
 model QuestionOption {
@@ -281,7 +287,9 @@ model QuestionOption {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([questionId])
+  // Unique per parent (#51): two rows at one position made the order
+  // non-deterministic. Reorders move rows in two phases so this always holds.
+  @@unique([questionId, position])
 }
 
 model QuizAttempt {

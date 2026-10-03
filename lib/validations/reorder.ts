@@ -32,6 +32,12 @@ export const reorderSchema = z
       .refine(
         (list) => new Set(list.map((item) => item.id)).size === list.length,
         { message: "duplicate_id" }
+      )
+      // Two rows asked to share a position would violate the per-parent
+      // unique index (#51); refused here so the caller learns why.
+      .refine(
+        (list) => new Set(list.map((item) => item.position)).size === list.length,
+        { message: "duplicate_position" }
       ),
   })
   .strict();

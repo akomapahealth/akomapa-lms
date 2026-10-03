@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { authorizeQuestionInCourse, requirePrincipal } from "@/lib/auth";
 import { assertTrustedOrigin, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
+import { TEMPORARY_POSITION_BASE } from "@/lib/courses/ordering";
 import { hasLearnerRecords, LEARNER_RECORDS_CONFLICT } from "@/lib/courses/learner-records";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { questionParams } from "@/lib/validations/ids";
@@ -83,6 +84,17 @@ export async function PATCH(
           // were ever computed from something wider.
           await tx.questionOption.deleteMany({
             where: { id: { in: toDelete }, questionId: routeParams.questionId },
+          });
+        }
+
+        // Options are unique per question and position (#51). Park the
+        // surviving options at temporary positions first, so swapping two
+        // options' positions never collides mid-transaction.
+        const surviving = body.options.flatMap((o) => (o.id === undefined ? [] : [o.id]));
+        for (const [index, id] of surviving.entries()) {
+          await tx.questionOption.update({
+            where: { id, questionId: routeParams.questionId },
+            data: { position: TEMPORARY_POSITION_BASE + index },
           });
         }
 

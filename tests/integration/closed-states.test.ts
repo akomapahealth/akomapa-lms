@@ -1,12 +1,12 @@
-import { readdirSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 
 import { Client } from "pg";
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { adminConnectionString, withDatabase } from "./support/database-url";
 import { testDb, testPool } from "./support/db";
 import { aCourseWithTopic, aUserRow } from "./support/fixtures";
+import { applyInTransaction, atMigration, migrationSql, type UpgradeDatabase } from "./support/upgrade";
 
 vi.mock("@/lib/db", async () => {
   const { testDb: get } = await import("./support/db");
@@ -29,35 +29,13 @@ const { markCourseCompleted } = await import("@/lib/entitlement");
  * migration does to data it did not create.
  */
 
-const MIGRATIONS = path.resolve(__dirname, "../../prisma/migrations");
 const TARGET = "20261003010000_closed_domain_states";
 const ROLLBACK = path.resolve(
   __dirname,
   "../../scripts/sql/rollback-20261003010000-closed-domain-states.sql"
 );
 
-// eslint-disable-next-line security/detect-non-literal-fs-filename -- repository paths
-const migrationNames = readdirSync(MIGRATIONS)
-  .filter((name) => /^\d{14}_/.test(name))
-  .sort();
-const before = migrationNames.slice(0, migrationNames.indexOf(TARGET));
-
-function sqlOf(name: string): string {
-  // eslint-disable-next-line security/detect-non-literal-fs-filename -- repository paths
-  return readFileSync(path.join(MIGRATIONS, name, "migration.sql"), "utf8");
-}
-
-/** Prisma applies each migration inside a transaction; so does this. */
-async function applyInTransaction(client: Client, sql: string): Promise<void> {
-  await client.query("BEGIN");
-  try {
-    await client.query(sql);
-    await client.query("COMMIT");
-  } catch (error) {
-    await client.query("ROLLBACK");
-    throw error;
-  }
-}
+const sqlOf = migrationSql;
 
 async function columnType(client: Client, table: string, column: string): Promise<string> {
   const { rows } = await client.query(
@@ -107,28 +85,16 @@ async function snapshot(client: Client): Promise<string[]> {
 }
 
 describe("upgrading a pre-#50 database", () => {
-  const admin = adminConnectionString();
-  const name = `akomapa_integration_upgrade_${process.env.VITEST_WORKER_ID ?? "0"}`;
+  let upgrade: UpgradeDatabase;
   let client: Client;
 
   beforeEach(async () => {
-    const maintenance = new Client({ connectionString: withDatabase(admin, "postgres") });
-    await maintenance.connect();
-    await maintenance.query(`DROP DATABASE IF EXISTS "${name}"`);
-    await maintenance.query(`CREATE DATABASE "${name}"`);
-    await maintenance.end();
-
-    client = new Client({ connectionString: withDatabase(admin, name) });
-    await client.connect();
-    for (const migration of before) await applyInTransaction(client, sqlOf(migration));
+    upgrade = await atMigration(TARGET, "states");
+    client = upgrade.client;
   }, 60_000);
 
   afterEach(async () => {
-    await client.end();
-    const maintenance = new Client({ connectionString: withDatabase(admin, "postgres") });
-    await maintenance.connect();
-    await maintenance.query(`DROP DATABASE IF EXISTS "${name}"`);
-    await maintenance.end();
+    await upgrade.drop();
   });
 
   it("starts from text columns", async () => {
