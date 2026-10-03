@@ -35,6 +35,10 @@ const serverSchema = z.object({
   STRIPE_API_KEY: nonEmpty,
   STRIPE_WEBHOOK_SECRET: nonEmpty,
 
+  // Extra origins the cross-site request guard trusts (#45). Parsed and
+  // validated per request by lib/http/origin.ts, which fails closed on a
+  // malformed entry; see docs/security/csrf.md.
+  TRUSTED_ORIGINS: z.string().optional(),
 });
 
 const clientSchema = z.object({

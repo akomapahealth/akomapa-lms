@@ -377,6 +377,13 @@ describe("exemptions", () => {
     }
   );
 
+  it("is documented in docs/security/csrf.md", () => {
+    const doc = read("docs/security/csrf.md");
+    for (const entry of ORIGIN_GUARD_EXEMPTIONS) {
+      expect(doc).toContain(entry.file);
+    }
+  });
+
   it.each(
     ORIGIN_GUARD_EXEMPTIONS.filter((entry) => entry.scope === "all").map((entry) => [entry.file])
   )("%s does not call the guard, which would refuse every real delivery", (file) => {
@@ -417,5 +424,15 @@ describe("Server Actions", () => {
     // comparison. Any trusted origin belongs in TRUSTED_ORIGINS instead, where
     // the guard enforces it exactly.
     expect(read("next.config.mjs")).not.toMatch(/allowedOrigins/);
+  });
+});
+
+describe("browser preconditions", () => {
+  it("keeps a Referrer-Policy under which browsers send a real Origin", () => {
+    // Under `no-referrer`, some browsers send `Origin: null` on same-origin
+    // form posts, which the guard refuses -- every such write would break.
+    const config = read("next.config.mjs");
+    const policy = config.match(/key:\s*"Referrer-Policy",\s*value:\s*"([^"]+)"/)?.[1];
+    expect(policy).toBe("strict-origin-when-cross-origin");
   });
 });
