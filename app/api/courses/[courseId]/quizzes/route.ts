@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { authorizeCourse, requirePrincipal } from "@/lib/auth";
-import { assertTrustedOrigin, handleRouteError, parseBody, parseParams } from "@/lib/http";
+import { assertTrustedOrigin, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
+import { growthQuizConflict } from "@/lib/assessments/growth-quiz";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { courseParams } from "@/lib/validations/ids";
 import { quizCreateSchema } from "@/lib/validations/quiz";
@@ -24,6 +25,9 @@ export async function POST(
     // `type` is what decides whether the post-test lock applies -- so a quiz
     // stored with an unrecognised type was never locked.
     const body = await parseBody(quizCreateSchema, req);
+
+    const conflict = await growthQuizConflict(routeParams.courseId, body.type);
+    if (conflict !== null) return problem("conflict", { message: conflict });
 
     const quiz = await db.quiz.create({
       data: {

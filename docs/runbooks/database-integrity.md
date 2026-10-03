@@ -7,7 +7,9 @@ migration, not by convention.
 - **Issue:** [#51](https://github.com/akomapahealth/akomapa-lms/issues/51)
 - **Retention source:** [policy 02](../policies/02-retention-and-deletion.md)
 - **Migrations:** `20261003020000_restrict_learner_record_deletes`,
-  `20261003030000_unique_positions`, `20261003040000_query_indexes`
+  `20261003030000_unique_positions`, `20261003040000_query_indexes`,
+  `20261003050000_integrity_constraints`
+- **Rules as code:** `lib/db/integrity.ts` (read by the migration, the preflight, and the tests)
 - **Preflight:** `npm run db:integrity:preflight`
 
 ## Deletes and retention
@@ -97,6 +99,48 @@ options (per Question) are unique by position.
 by position; it is a display hint an administrator sets, not a sequence the
 application maintains.
 
+## Integrity constraints
+
+Prisma cannot model these, so they live in `lib/db/integrity.ts` and the
+migration generated from it; `tests/unit/db/integrity.test.ts` fails if the two
+disagree, and the drift check ignores them by design.
+
+**Ranges** (CHECK constraints):
+
+| Constraint | Rule |
+| --- | --- |
+| `Course_price_non_negative` | Price is NULL or at least 0 |
+| `Quiz_passingScore_percentage` | Passing score is 0-100 |
+| `Quiz_timeLimitMinutes_positive` | Time limit is NULL (none) or above 0 |
+| `Question_points_non_negative` | Points are at least 0 (a 0-point question is allowed, as validation allows it) |
+| `QuizAttempt_score_within_total` | Score is between 0 and the attempt's total points |
+| `LearningStreak_counts_consistent` | Current streak at least 0; longest at least current |
+| `Module_position_non_negative`, `Chapter_…`, `Question_…`, `QuestionOption_…` | Positions are at least 0 |
+
+Request validation refuses these values first; a CHECK violation reaching the
+database is a fault and answers 500 with a logged correlation id.
+
+**Immutable identifiers** (a `BEFORE UPDATE` trigger, `akomapa_refuse_identifier_change`):
+`Certificate.certificateNumber/userId/courseId`, `Purchase.userId/courseId`,
+`Enrollment.userId/courseId`, `QuizAttempt.userId/quizId`, and
+`UserProgress.userId/chapterId`. Any other column still changes freely,
+including Enrollment status and a Certificate's PDF.
+
+**One Pre-Test and one Post-Test per Course** (partial unique index
+`Quiz_courseId_growth_type_key`). The growth measure compares the two, and
+Certificates, grades, and the post-test lock each take "the" Pre-Test. The
+create and update routes answer 409 with the reason
+(`lib/assessments/growth-quiz.ts`); the index decides races. Module quizzes are
+unlimited.
+
+**When the migration aborts:** it lists each violated rule with a row count and
+changes nothing (Prisma `P3018`). Resolve each row as a decision: which of two
+Pre-Tests is the real one (turn the other into a Module quiz rather than
+deleting it, if learners attempted it), what a negative price should have been.
+Then `npx prisma migrate resolve --rolled-back 20261003050000_integrity_constraints`
+and redeploy. Production at 2026-10 held no Courses or Quizzes; expect a clean
+preflight.
+
 ## Indexes
 
 Each index serves a query the application runs. `tests/integration/query-plans.test.ts`
@@ -178,6 +222,10 @@ Forward-fix is preferred. Each migration's inverse:
   indexes and re-create `Module_courseId_idx`, `Chapter_moduleId_idx`,
   `Question_quizId_idx`, and `QuestionOption_questionId_idx`. The renumbering
   is not reverted; the previous order was ambiguous.
+- **`20261003050000_integrity_constraints`.** `ALTER TABLE … DROP CONSTRAINT`
+  for each CHECK in `lib/db/integrity.ts`, `DROP TRIGGER` for each
+  `<table>_identifiers_immutable`, `DROP FUNCTION akomapa_refuse_identifier_change()`,
+  and `DROP INDEX "Quiz_courseId_growth_type_key"`. No data changes either way.
 - **`20261003040000_query_indexes`.** Drop the ten new indexes and re-create
   the five dropped ones. Indexes change performance, never results.
 
