@@ -1,4 +1,3 @@
-import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { Webhook } from "svix";
 
@@ -24,7 +23,9 @@ import { clerkUserDataSchema, primaryEmailOf } from "@/lib/validations/webhooks"
 export async function POST(req: Request) {
   try {
     const payload = await req.text();
-    const headerStore = await headers();
+    // From the request rather than `next/headers`, for the same reason as the
+    // Stripe route: the exemption from the origin guard is tested at this layer.
+    const headerStore = req.headers;
 
     const svixId = headerStore.get("svix-id");
     const svixTimestamp = headerStore.get("svix-timestamp");
