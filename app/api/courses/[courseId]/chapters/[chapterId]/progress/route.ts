@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { requirePrincipal } from "@/lib/auth";
 import { markCourseCompleted, topicEntitlement } from "@/lib/entitlement";
 import { assertTrustedOrigin, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { topicParams } from "@/lib/validations/ids";
 import { progressSchema } from "@/lib/validations/topic";
 import { findPublishedTopicInCourse } from "@/lib/courses/topic-access";
@@ -26,6 +27,7 @@ export async function PUT(
         const routeParams = parseParams(topicParams, await params);
 
         const principal = await requirePrincipal();
+        await enforceRateLimit(req, "write.default", { userId: principal.userId });
         const { userId } = principal;
 
         // Before the Topic lookup: an unparseable or out-of-bounds body should

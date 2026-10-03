@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { authorizeCourse, requirePrincipal } from "@/lib/auth";
 import { assertTrustedOrigin, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { courseParams } from "@/lib/validations/ids";
 import { courseUpdateSchema } from "@/lib/validations/course";
 
@@ -24,6 +25,7 @@ export async function DELETE(
         const routeParams = parseParams(courseParams, await params);
 
         const principal = await requirePrincipal();
+        await enforceRateLimit(req, "write.default", { userId: principal.userId });
         await authorizeCourse(principal, "course:delete", routeParams.courseId);
 
         const course = await db.course.findUnique({
@@ -78,6 +80,7 @@ export async function PATCH(
         const { courseId } = parseParams(courseParams, await params);
 
         const principal = await requirePrincipal();
+        await enforceRateLimit(req, "write.default", { userId: principal.userId });
         await authorizeCourse(principal, "course:update", courseId);
 
         const values = await parseBody(courseUpdateSchema, req);

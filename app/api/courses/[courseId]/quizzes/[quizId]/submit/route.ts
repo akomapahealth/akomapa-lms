@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requirePrincipal } from "@/lib/auth";
 import { assertTrustedOrigin, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { quizParams } from "@/lib/validations/ids";
 import { submissionSchema } from "@/lib/validations/quiz";
 import { findLearnerAttempt } from "@/lib/assessments/attempt-access";
@@ -19,6 +20,7 @@ export async function POST(
     const routeParams = parseParams(quizParams, await params);
 
     const { userId } = await requirePrincipal();
+    await enforceRateLimit(req, "quiz.submit", { userId: userId });
 
     // Ids are uuids and no question may be answered twice. The previous schema
     // accepted any non-empty string for each id, and a duplicated questionId

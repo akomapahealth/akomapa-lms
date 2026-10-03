@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireCapability, requirePrincipal } from "@/lib/auth";
 import { assertTrustedOrigin, handleRouteError, parseBody } from "@/lib/http";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { courseCreateSchema } from "@/lib/validations/course";
 
 export async function POST(req: Request) {
@@ -10,6 +11,7 @@ export async function POST(req: Request) {
         assertTrustedOrigin(req);
 
         const principal = await requirePrincipal();
+        await enforceRateLimit(req, "write.default", { userId: principal.userId });
         requireCapability(principal, "course:create");
 
         // `title` was read off the body unvalidated, so a Course could be created

@@ -1,10 +1,18 @@
-import { existsSync, readdirSync, readFileSync } from "node:fs";
-import path from "node:path";
-
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
 
 import { ORIGIN_GUARD_EXEMPTIONS } from "@/lib/http/origin";
+
+import {
+  boundNames,
+  callsTo,
+  exists,
+  isExported,
+  mutatingHandlers,
+  parse,
+  read,
+  walk,
+} from "../support/source-scan";
 
 /**
  * Every cookie-authenticated mutation calls the origin guard first (#45).
@@ -30,61 +38,8 @@ import { ORIGIN_GUARD_EXEMPTIONS } from "@/lib/http/origin";
  * holds.
  */
 
-const ROOT = path.resolve(__dirname, "../../..");
-const MUTATING = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 const GUARD = "assertTrustedOrigin";
 const ACTION_GUARD = "assertTrustedActionOrigin";
-
-interface Handler {
-  method: string;
-  /** The parsed function, or null when the export form hides its body. */
-  fn: ts.FunctionDeclaration | null;
-}
-
-function parse(file: string, source: string): ts.SourceFile {
-  return ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
-}
-
-function isExported(node: ts.Node): boolean {
-  return (
-    ts.canHaveModifiers(node) &&
-    (ts.getModifiers(node) ?? []).some((m) => m.kind === ts.SyntaxKind.ExportKeyword)
-  );
-}
-
-/** Names bound by a variable declaration, including destructuring. */
-function boundNames(name: ts.BindingName): string[] {
-  if (ts.isIdentifier(name)) return [name.text];
-  return name.elements.flatMap((element) =>
-    ts.isOmittedExpression(element) ? [] : boundNames(element.name)
-  );
-}
-
-/** Every exported mutating handler in a route module. */
-function mutatingHandlers(source: ts.SourceFile): Handler[] {
-  const handlers: Handler[] = [];
-
-  for (const statement of source.statements) {
-    if (ts.isFunctionDeclaration(statement) && isExported(statement)) {
-      const method = statement.name?.text ?? "";
-      if (MUTATING.has(method)) handlers.push({ method, fn: statement });
-    } else if (ts.isVariableStatement(statement) && isExported(statement)) {
-      for (const declaration of statement.declarationList.declarations) {
-        for (const method of boundNames(declaration.name)) {
-          if (MUTATING.has(method)) handlers.push({ method, fn: null });
-        }
-      }
-    } else if (ts.isExportDeclaration(statement) && statement.exportClause) {
-      if (ts.isNamedExports(statement.exportClause)) {
-        for (const element of statement.exportClause.elements) {
-          if (MUTATING.has(element.name.text)) handlers.push({ method: element.name.text, fn: null });
-        }
-      }
-    }
-  }
-
-  return handlers;
-}
 
 /** Whether `statement` is `<callee>(<arg>)` or `await <callee>(<arg>)`. */
 function isCallTo(statement: ts.Statement | undefined, callee: string, arg?: string): boolean {
@@ -118,23 +73,6 @@ function guardsFirst(fn: ts.FunctionDeclaration): boolean {
     ts.isTryStatement(first) &&
     isCallTo(first.tryBlock.statements[0], GUARD, param.name.text)
   );
-}
-
-/** Every call to `callee` anywhere inside `node`. */
-function callsTo(node: ts.Node, callee: string): number {
-  let count = 0;
-  const visit = (child: ts.Node) => {
-    if (
-      ts.isCallExpression(child) &&
-      ts.isIdentifier(child.expression) &&
-      child.expression.text === callee
-    ) {
-      count += 1;
-    }
-    ts.forEachChild(child, visit);
-  };
-  visit(node);
-  return count;
 }
 
 function hasUseServer(statements: ts.NodeArray<ts.Statement>): boolean {
@@ -214,28 +152,6 @@ function unguardedActions(source: ts.SourceFile): string[] {
   if (!moduleLevel) visit(source);
 
   return failures;
-}
-
-// The only filesystem access in this file. Every path is the repository's own:
-// a fixed directory name, an entry from the exemption list, or a name returned
-// by the directory walk. None comes from input, which is what the
-// non-literal-filename rule exists to catch.
-function exists(file: string): boolean {
-  // eslint-disable-next-line security/detect-non-literal-fs-filename -- repository path, see above
-  return existsSync(path.join(ROOT, file));
-}
-
-const read = (file: string) =>
-  // eslint-disable-next-line security/detect-non-literal-fs-filename -- repository path, see above
-  readFileSync(path.join(ROOT, file), "utf8");
-
-function walk(dir: string, accept: (file: string) => boolean): string[] {
-  if (!exists(dir)) return [];
-  // eslint-disable-next-line security/detect-non-literal-fs-filename -- repository path, see above
-  return (readdirSync(path.join(ROOT, dir), { recursive: true }) as string[])
-    .map((relative) => path.join(dir, relative).split(path.sep).join("/"))
-    .filter(accept)
-    .sort();
 }
 
 const ROUTE_FILES = walk("app/api", (file) => /\/route\.tsx?$/.test(file));

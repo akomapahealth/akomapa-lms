@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { authorizeCourse, requirePrincipal } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { assertTrustedOrigin, BODY_BYTES, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { courseParams } from "@/lib/validations/ids";
 import { reorderSchema } from "@/lib/validations/reorder";
 
@@ -15,6 +16,7 @@ export async function PUT(
         const routeParams = parseParams(courseParams, await params);
 
         const principal = await requirePrincipal();
+        await enforceRateLimit(req, "write.default", { userId: principal.userId });
         await authorizeCourse(principal, "topic:reorder", routeParams.courseId);
 
         // Bounded and typed. `list` was `any`: unbounded in length, with ids of

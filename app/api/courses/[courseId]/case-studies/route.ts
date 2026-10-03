@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { authorizeCourse, requirePrincipal } from "@/lib/auth";
 import { sanitizeScenario } from "@/lib/case-study-sanitize";
 import { assertTrustedOrigin, BODY_BYTES, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { courseParams } from "@/lib/validations/ids";
 import { caseStudyCreateSchema } from "@/lib/validations/case-study";
 
@@ -18,6 +19,7 @@ export async function POST(
     const { courseId } = parseParams(courseParams, await params);
 
     const principal = await requirePrincipal();
+    await enforceRateLimit(req, "write.default", { userId: principal.userId });
     await authorizeCourse(principal, "caseStudy:create", courseId);
 
     // Envelope and scenario in one schema. The envelope was previously read off

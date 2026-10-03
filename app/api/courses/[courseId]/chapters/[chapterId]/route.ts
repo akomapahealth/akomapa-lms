@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { authorizeTopicInCourse, requirePrincipal } from "@/lib/auth";
 import { assertTrustedOrigin, BODY_BYTES, handleRouteError, parseBody, parseParams } from "@/lib/http";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { topicParams } from "@/lib/validations/ids";
 import { topicUpdateSchema } from "@/lib/validations/topic";
 
@@ -24,6 +25,7 @@ export async function DELETE(
         const routeParams = parseParams(topicParams, await params);
 
         const principal = await requirePrincipal();
+        await enforceRateLimit(req, "write.default", { userId: principal.userId });
 
         // Asserts Course ownership AND that the Topic is in that Course. The
         // two used to be separate, so owning any Course was enough to reach a
@@ -92,6 +94,7 @@ export async function PATCH(
         const routeParams = parseParams(topicParams, await params);
 
         const principal = await requirePrincipal();
+        await enforceRateLimit(req, "write.default", { userId: principal.userId });
 
         // Course ownership and Topic membership together. Previously the Topic
         // was updated by id alone, so an owner of any Course could edit a Topic

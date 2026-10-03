@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requirePrincipal } from "@/lib/auth";
 import { assertTrustedOrigin, BODY_BYTES, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { postParams } from "@/lib/validations/ids";
 import { commentCreateSchema } from "@/lib/validations/community";
 import { evaluateBadges } from "@/lib/badge-service";
@@ -15,6 +16,7 @@ export async function POST(
     assertTrustedOrigin(req);
 
     const { userId } = await requirePrincipal();
+    await enforceRateLimit(req, "community.comment", { userId: userId });
 
     const { postId } = parseParams(postParams, await params);
     const body = await parseBody(commentCreateSchema, req, BODY_BYTES.richText);

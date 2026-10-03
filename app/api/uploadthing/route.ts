@@ -1,11 +1,13 @@
 import type { NextRequest } from "next/server";
 import { createRouteHandler } from "uploadthing/next";
 
+import { getPrincipal } from "@/lib/auth";
 import {
   assertTrustedOrigin,
   handleRouteError,
   isUploadThingServerCallback,
 } from "@/lib/http";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 import { ourFileRouter } from "./core";
 
@@ -29,11 +31,20 @@ export const GET = handlers.GET;
  * each callback's HMAC signature before running `onUploadComplete`, so those --
  * and only those -- skip the guard. See `isUploadThingServerCallback` and the
  * exemption list in lib/http/origin.ts.
+ *
+ * Browser requests are also rate limited (#46) under `upload.request`, by user
+ * when signed in and by address regardless. Storage and Mux ingest are billed,
+ * so the policy fails closed. Callbacks are not limited: each one follows an
+ * upload slot that was already counted, and they are signature-verified.
+ * The route sits on the proxy's public matcher, so the principal is optional
+ * here; core.ts still refuses an anonymous upload.
  */
 export async function POST(req: NextRequest) {
   if (!isUploadThingServerCallback(req)) {
     try {
       assertTrustedOrigin(req);
+      const principal = await getPrincipal();
+      await enforceRateLimit(req, "upload.request", { userId: principal?.userId });
     } catch (error) {
       return handleRouteError("UPLOADTHING", error);
     }

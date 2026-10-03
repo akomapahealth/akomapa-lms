@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireCapability, requirePrincipal } from "@/lib/auth";
 import { assertTrustedOrigin, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { categoryParams } from "@/lib/validations/ids";
 import { categoryUpdateSchema } from "@/lib/validations/community";
 
@@ -14,6 +15,7 @@ export async function PATCH(
     assertTrustedOrigin(req);
 
     const principal = await requirePrincipal();
+    await enforceRateLimit(req, "write.default", { userId: principal.userId });
     requireCapability(principal, "community:moderate");
 
     const { categoryId } = parseParams(categoryParams, await params);
@@ -38,6 +40,7 @@ export async function DELETE(
     assertTrustedOrigin(req);
 
     const principal = await requirePrincipal();
+    await enforceRateLimit(req, "write.default", { userId: principal.userId });
     requireCapability(principal, "community:moderate");
 
     const { categoryId } = parseParams(categoryParams, await params);

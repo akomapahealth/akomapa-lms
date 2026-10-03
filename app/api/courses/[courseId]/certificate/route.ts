@@ -5,6 +5,7 @@ import { requirePrincipal } from "@/lib/auth";
 import { generateCertificate } from "@/lib/certificate-service";
 import { enrollmentStatusFor } from "@/lib/entitlement";
 import { assertTrustedOrigin, handleRouteError, parseParams, problem } from "@/lib/http";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { courseParams } from "@/lib/validations/ids";
 
 export const maxDuration = 30;
@@ -17,6 +18,7 @@ export async function POST(
     assertTrustedOrigin(req);
 
     const { userId } = await requirePrincipal();
+    await enforceRateLimit(req, "certificate.generate", { userId: userId });
 
     const { courseId } = parseParams(courseParams, await params);
 

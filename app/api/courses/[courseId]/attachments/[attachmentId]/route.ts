@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { authorizeCourse, requirePrincipal } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { assertTrustedOrigin, handleRouteError, parseParams } from "@/lib/http";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { attachmentParams } from "@/lib/validations/ids";
 
 export async function DELETE(
@@ -14,6 +15,7 @@ export async function DELETE(
         const routeParams = parseParams(attachmentParams, await params);
 
         const principal = await requirePrincipal();
+        await enforceRateLimit(req, "write.default", { userId: principal.userId });
         await authorizeCourse(principal, "attachment:delete", routeParams.courseId);
 
         const attachment = await db.attachment.delete({
