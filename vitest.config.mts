@@ -104,6 +104,8 @@ export default defineConfig({
         "lib/db/roles.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
         // The integrity rules the migration, the preflight, and the tests share (#51).
         "lib/db/integrity.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
+        // The only way domain events are recorded (#49, ADR 0004).
+        "lib/outbox/events.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
         // Course entitlement (#48, ADR 0002). One module decides whether a
         // learner may open a Course, so every branch of it is exercised -- the
         // suspension path above all, which is the one that used to be unreachable.

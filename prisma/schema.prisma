@@ -678,3 +678,51 @@ model CertificateNumberSequence {
   year      Int @id
   lastValue Int
 }
+
+// ─── Domain events (#49, ADR 0004; delivery is #69, ADR 0005) ───
+
+/// What happened. A closed set (#50): adding an event is a schema change, and
+/// lib/outbox/events.ts must describe its payload before it compiles.
+enum DomainEventType {
+  TOPIC_COMPLETED
+  TOPIC_UNCOMPLETED
+  MODULE_COMPLETED
+  COURSE_COMPLETED
+  CERTIFICATE_ISSUED
+  BADGE_AWARDED
+  QUIZ_ATTEMPT_COMPLETED
+}
+
+/// A domain event, written in the same transaction as the state change that
+/// caused it (ADR 0004 point 4). The command layer only appends; claiming,
+/// retrying, and parking rows is the processor's (#69, ADR 0005), which is
+/// why the delivery columns exist before anything reads them.
+///
+/// Events carry identifiers, never content (ADR 0005 point 6): no Journal or
+/// Community text, answer keys, payment data, or prompts.
+model OutboxEvent {
+  id            String          @id @default(uuid())
+  type          DomainEventType
+  /// Payload schema version, so a consumer can read old rows after a change.
+  version       Int             @default(1)
+  /// The entity the fact is about, e.g. ("Enrollment", "<userId>:<courseId>").
+  aggregateType String
+  aggregateId   String
+  /// Identifiers only, validated against lib/outbox/events.ts before writing.
+  payload       Json
+  /// Makes a fact recorded twice -- a retried command, a race -- one row.
+  dedupeKey     String          @unique
+  occurredAt    DateTime        @default(now())
+  /// Not before this moment. Retries push it forward (#69).
+  availableAt   DateTime        @default(now())
+  attempts      Int             @default(0)
+  leasedUntil   DateTime?
+  leasedBy      String?
+  completedAt   DateTime?
+  /// Error class and message only; never a payload or a stack.
+  lastError     String?
+
+  // The processor's claim query: undelivered events whose time has come.
+  @@index([completedAt, availableAt])
+  @@index([aggregateType, aggregateId])
+}
