@@ -103,6 +103,9 @@ export default defineConfig({
         "lib/http/body.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
         "lib/http/validate.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
         "lib/http/route.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
+        // Cross-site request protection (#45). Every cookie-authenticated
+        // mutation calls it first, so an untested branch is an untested way in.
+        "lib/http/origin.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
       },
     },
   },

@@ -10,6 +10,21 @@ const isProd = process.env.NODE_ENV === "production";
  */
 export type LogContext = Record<string, string | number | boolean | undefined>;
 
+/**
+ * An expected, handled event worth seeing in aggregate -- a refused cross-site
+ * request, for example -- that is not a fault. Kept off `console.error` so it
+ * does not page anyone.
+ */
+export function logWarn(tag: string, context?: LogContext) {
+  if (isProd) {
+    console.warn(
+      JSON.stringify({ tag, timestamp: new Date().toISOString(), ...context })
+    );
+  } else {
+    console.warn(`[${tag}]`, context ?? "");
+  }
+}
+
 export function logError(tag: string, error: unknown, context?: LogContext) {
   if (isProd) {
     // In production, log tag and message only - no stack traces
