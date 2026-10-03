@@ -28,6 +28,8 @@
     "db:roles": "tsx scripts/check-database-roles.ts",
     "entitlement:reconcile": "tsx scripts/reconcile-entitlements.ts",
     "db:states:preflight": "tsx scripts/check-domain-states.ts",
+    "db:schema:check": "prisma validate && prisma format && git diff --exit-code -- prisma/schema.prisma",
+    "db:migrations:drift": "prisma migrate deploy && prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "issues:next": "node scripts/next-issues.mjs",
