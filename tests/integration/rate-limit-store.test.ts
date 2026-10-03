@@ -175,7 +175,7 @@ describe("postgresStore", () => {
     await expect(unreachable.consume("x", T0, RATE, 1)).rejects.toBeDefined();
 
     // And the policy decides what that means.
-    const env = { CLERK_SECRET_KEY: "sk_test_integration" };
+    const env = { CLERK_SECRET_KEY: "integration-placeholder-secret" };
     const req = () => new Request("http://localhost:3000/api/x", { method: "POST" });
     await expect(
       enforceRateLimit(req(), "quiz.submit", { userId: "u" }, { store: unreachable, env })
@@ -190,7 +190,7 @@ describe("postgresStore", () => {
 });
 
 describe("enforceRateLimit with the default store", () => {
-  const env = { CLERK_SECRET_KEY: "sk_test_integration", VERCEL: "1" };
+  const env = { CLERK_SECRET_KEY: "integration-placeholder-secret", VERCEL: "1" };
   const req = () =>
     new Request("http://localhost:3000/api/x", {
       method: "POST",

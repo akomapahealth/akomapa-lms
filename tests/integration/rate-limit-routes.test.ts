@@ -49,7 +49,7 @@ async function codeOf(response: Response): Promise<string> {
 beforeEach(() => {
   // On Vercel, so the verified address is believed and both dimensions apply.
   vi.stubEnv("VERCEL", "1");
-  vi.stubEnv("CLERK_SECRET_KEY", "sk_test_integration");
+  vi.stubEnv("CLERK_SECRET_KEY", "integration-placeholder-secret");
 });
 
 afterEach(() => {
@@ -192,7 +192,18 @@ describe("refusals that come first do not spend the budget", () => {
 });
 
 describe("webhook.stripe", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("limits forged deliveries by address before verifying a signature", async () => {
+    // Only Date is frozen, so the database driver's timers run normally. With
+    // the real clock, 200 deliveries on a slow runner can take longer than
+    // this policy's 360ms emission interval, refilling a token before the
+    // 201st arrives -- correct behaviour, but not the boundary under test.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-03T12:00:00Z"));
+
     const deliver = (ip: string) =>
       stripeWebhook(
         new Request(`${TEST_ORIGIN}/api/webhook`, {

@@ -17,6 +17,12 @@ regexes = [
   '''Y2xlcmsuZXhhbXBsZS5jb20k''',
   # Every non-secret CI dummy value contains the literal word "placeholder".
   '''placeholder''',
+  # A fixture CLERK_SECRET_KEY from the #46 rate-limit integration tests,
+  # committed on feat/46-abuse-controls before the fixtures adopted the
+  # "placeholder" convention above. Not a credential: an arbitrary string the
+  # tests derive HMAC keys from. Matched by fragment, without the key prefix,
+  # so this config does not itself look like a key.
+  '''test_integration''',
 ]
 # The template file intentionally contains example-shaped values.
 paths = [

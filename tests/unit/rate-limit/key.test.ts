@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { bucketKey, RateLimitConfigError } from "@/lib/rate-limit/key";
 
-const ENV = { CLERK_SECRET_KEY: "sk_test_unit" };
+const ENV = { CLERK_SECRET_KEY: "unit-placeholder-secret" };
 
 describe("bucketKey", () => {
   it("is stable for the same inputs", () => {
@@ -35,13 +35,13 @@ describe("bucketKey", () => {
 
   it("depends on the secret, so keys cannot be computed without it", () => {
     expect(bucketKey("p", "user", "u", ENV)).not.toBe(
-      bucketKey("p", "user", "u", { CLERK_SECRET_KEY: "sk_test_other" })
+      bucketKey("p", "user", "u", { CLERK_SECRET_KEY: "other-placeholder-secret" })
     );
   });
 
   it("re-derives when the secret rotates", () => {
     const before = bucketKey("p", "user", "u", ENV);
-    bucketKey("p", "user", "u", { CLERK_SECRET_KEY: "sk_test_rotated" });
+    bucketKey("p", "user", "u", { CLERK_SECRET_KEY: "rotated-placeholder-secret" });
 
     expect(bucketKey("p", "user", "u", ENV)).toBe(before);
   });
@@ -51,10 +51,10 @@ describe("bucketKey", () => {
   });
 
   it("reads process.env by default", () => {
-    vi.stubEnv("CLERK_SECRET_KEY", "sk_test_from_process");
+    vi.stubEnv("CLERK_SECRET_KEY", "from_process-placeholder-secret");
 
     expect(bucketKey("p", "user", "u")).toBe(
-      bucketKey("p", "user", "u", { CLERK_SECRET_KEY: "sk_test_from_process" })
+      bucketKey("p", "user", "u", { CLERK_SECRET_KEY: "from_process-placeholder-secret" })
     );
   });
 });

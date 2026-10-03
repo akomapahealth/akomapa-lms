@@ -17,8 +17,8 @@ const logWarn = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/logger", () => ({ logError, logWarn }));
 
 const T0 = 1_700_000_000_000;
-const ENV = { CLERK_SECRET_KEY: "sk_test_unit", VERCEL: "1" };
-const OFF_VERCEL = { CLERK_SECRET_KEY: "sk_test_unit" };
+const ENV = { CLERK_SECRET_KEY: "unit-placeholder-secret", VERCEL: "1" };
+const OFF_VERCEL = { CLERK_SECRET_KEY: "unit-placeholder-secret" };
 
 function request(ip?: string): Request {
   return new Request("http://localhost:3000/api/x", {
@@ -273,7 +273,7 @@ describe("enforceRateLimit", () => {
   it("uses the PostgreSQL store and the real clock by default", async () => {
     // The unit suite's database double answers raw queries with no rows, which
     // the store cannot interpret: proof the default store was the one called.
-    vi.stubEnv("CLERK_SECRET_KEY", "sk_test_unit");
+    vi.stubEnv("CLERK_SECRET_KEY", "unit-placeholder-secret");
     await expect(
       enforceRateLimit(request(), "checkout.create", { userId: "u" })
     ).rejects.toMatchObject({ code: "temporarily_unavailable" });
