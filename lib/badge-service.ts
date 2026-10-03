@@ -2,6 +2,26 @@ import type { Badge } from "@prisma/client";
 import { z } from "zod";
 
 import { db } from "@/lib/db";
+
+/**
+ * Any client that can run the badge queries: the shared one, or a transaction.
+ * The completion command passes its transaction (#49, ADR 0004), so badges are
+ * judged on the progress it is about to commit and awarded in the same commit.
+ */
+type BadgeClient = Pick<
+  typeof db,
+  | "badge"
+  | "userBadge"
+  | "userProgress"
+  | "module"
+  | "enrollment"
+  | "course"
+  | "quiz"
+  | "quizAttempt"
+  | "forumPost"
+  | "postLike"
+  | "forumComment"
+>;
 import { logWarn } from "@/lib/logger";
 
 export type BadgeEvent =
@@ -48,11 +68,12 @@ export type BadgeCriteria = z.infer<typeof badgeCriteriaSchema>;
  */
 export async function evaluateBadges(
   userId: string,
-  event: BadgeEvent
+  event: BadgeEvent,
+  client: BadgeClient = db
 ): Promise<Badge[]> {
   const [allBadges, earnedBadgeIds] = await Promise.all([
-    db.badge.findMany(),
-    db.userBadge
+    client.badge.findMany(),
+    client.userBadge
       .findMany({ where: { userId }, select: { badgeId: true } })
       .then((ub) => new Set(ub.map((b) => b.badgeId))),
   ]);
@@ -69,14 +90,14 @@ export async function evaluateBadges(
       logWarn("BADGE_CRITERIA_INVALID", { badgeId: badge.id });
       continue;
     }
-    const met = await checkCriteria(userId, parsed.data, event);
+    const met = await checkCriteria(userId, parsed.data, event, client);
     if (met) {
       newlyEarned.push(badge);
     }
   }
 
   if (newlyEarned.length > 0) {
-    await db.userBadge.createMany({
+    await client.userBadge.createMany({
       data: newlyEarned.map((badge) => ({
         userId,
         badgeId: badge.id,
@@ -91,12 +112,13 @@ export async function evaluateBadges(
 async function checkCriteria(
   userId: string,
   criteria: BadgeCriteria,
-  event: BadgeEvent
+  event: BadgeEvent,
+  client: BadgeClient
 ): Promise<boolean> {
   switch (criteria.type) {
     case "topics_completed": {
       if (event.type !== "topic_completed") return false;
-      const count = await db.userProgress.count({
+      const count = await client.userProgress.count({
         where: { userId, isCompleted: true },
       });
       return count >= (criteria.count ?? 1);
@@ -104,19 +126,19 @@ async function checkCriteria(
 
     case "modules_completed": {
       if (event.type !== "module_completed") return false;
-      const completedModules = await getCompletedModuleCount(userId);
+      const completedModules = await getCompletedModuleCount(userId, client);
       return completedModules >= (criteria.count ?? 1);
     }
 
     case "courses_completed": {
       if (event.type !== "course_completed") return false;
-      const completedCourses = await getCompletedCourseCount(userId);
+      const completedCourses = await getCompletedCourseCount(userId, client);
       return completedCourses >= (criteria.count ?? 1);
     }
 
     case "category_completed": {
       if (event.type !== "module_completed" && event.type !== "course_completed") return false;
-      return checkCategoryCompleted(userId, criteria.category);
+      return checkCategoryCompleted(userId, criteria.category, client);
     }
 
     case "quiz_score": {
@@ -133,7 +155,7 @@ async function checkCriteria(
 
     case "all_quizzes_passed": {
       if (event.type !== "quiz_completed") return false;
-      return checkAllQuizzesPassed(userId, event.quizId);
+      return checkAllQuizzesPassed(userId, event.quizId, client);
     }
 
     case "streak_days": {
@@ -143,13 +165,13 @@ async function checkCriteria(
 
     case "posts_created": {
       if (event.type !== "post_created") return false;
-      const postCount = await db.forumPost.count({ where: { userId } });
+      const postCount = await client.forumPost.count({ where: { userId } });
       return postCount >= (criteria.count ?? 5);
     }
 
     case "post_likes_received": {
       if (event.type !== "post_created" && event.type !== "comment_created") return false;
-      const likeCount = await db.postLike.count({
+      const likeCount = await client.postLike.count({
         where: { post: { userId } },
       });
       return likeCount >= (criteria.count ?? 50);
@@ -157,7 +179,7 @@ async function checkCriteria(
 
     case "comments_created": {
       if (event.type !== "comment_created") return false;
-      const commentCount = await db.forumComment.count({ where: { userId } });
+      const commentCount = await client.forumComment.count({ where: { userId } });
       return commentCount >= (criteria.count ?? 10);
     }
 
@@ -169,8 +191,8 @@ async function checkCriteria(
   }
 }
 
-async function getCompletedModuleCount(userId: string): Promise<number> {
-  const modules = await db.module.findMany({
+async function getCompletedModuleCount(userId: string, client: BadgeClient): Promise<number> {
+  const modules = await client.module.findMany({
     where: {
       isPublished: true,
       course: { purchases: { some: { userId } } },
@@ -186,7 +208,7 @@ async function getCompletedModuleCount(userId: string): Promise<number> {
   let completedCount = 0;
   for (const mod of modules) {
     if (mod.topics.length === 0) continue;
-    const completedTopics = await db.userProgress.count({
+    const completedTopics = await client.userProgress.count({
       where: {
         userId,
         isCompleted: true,
@@ -207,8 +229,8 @@ async function getCompletedModuleCount(userId: string): Promise<number> {
  * rather than going through `@/lib/entitlement` (exempt in .eslintrc.json). #83
  * owns making badge evaluation idempotent and event-driven.
  */
-async function getCompletedCourseCount(userId: string): Promise<number> {
-  const enrollments = await db.enrollment.count({
+async function getCompletedCourseCount(userId: string, client: BadgeClient): Promise<number> {
+  const enrollments = await client.enrollment.count({
     where: { userId, status: "COMPLETED" },
   });
   return enrollments;
@@ -216,9 +238,10 @@ async function getCompletedCourseCount(userId: string): Promise<number> {
 
 async function checkCategoryCompleted(
   userId: string,
-  categoryName: string
+  categoryName: string,
+  client: BadgeClient
 ): Promise<boolean> {
-  const courses = await db.course.findMany({
+  const courses = await client.course.findMany({
     where: {
       category: { name: categoryName },
       purchases: { some: { userId } },
@@ -241,7 +264,7 @@ async function checkCategoryCompleted(
   for (const course of courses) {
     for (const mod of course.modules) {
       if (mod.topics.length === 0) continue;
-      const completed = await db.userProgress.count({
+      const completed = await client.userProgress.count({
         where: {
           userId,
           isCompleted: true,
@@ -256,21 +279,22 @@ async function checkCategoryCompleted(
 
 async function checkAllQuizzesPassed(
   userId: string,
-  currentQuizId: string
+  currentQuizId: string,
+  client: BadgeClient
 ): Promise<boolean> {
-  const quiz = await db.quiz.findUnique({
+  const quiz = await client.quiz.findUnique({
     where: { id: currentQuizId },
     select: { courseId: true },
   });
   if (!quiz?.courseId) return false;
 
-  const courseQuizzes = await db.quiz.findMany({
+  const courseQuizzes = await client.quiz.findMany({
     where: { courseId: quiz.courseId, isPublished: true },
     select: { id: true, passingScore: true },
   });
 
   for (const q of courseQuizzes) {
-    const bestAttempt = await db.quizAttempt.findFirst({
+    const bestAttempt = await client.quizAttempt.findFirst({
       where: { userId, quizId: q.id, completedAt: { not: null } },
       orderBy: { score: "desc" },
       select: { score: true },
