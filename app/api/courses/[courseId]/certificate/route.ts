@@ -4,16 +4,18 @@ import { db } from "@/lib/db";
 import { requirePrincipal } from "@/lib/auth";
 import { generateCertificate } from "@/lib/certificate-service";
 import { enrollmentStatusFor } from "@/lib/entitlement";
-import { handleRouteError, parseParams, problem } from "@/lib/http";
+import { assertTrustedOrigin, handleRouteError, parseParams, problem } from "@/lib/http";
 import { courseParams } from "@/lib/validations/ids";
 
 export const maxDuration = 30;
 
 export async function POST(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ courseId: string }> }
 ) {
   try {
+    assertTrustedOrigin(req);
+
     const { userId } = await requirePrincipal();
 
     const { courseId } = parseParams(courseParams, await params);

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { authorizeComment, requirePrincipal } from "@/lib/auth";
-import { BODY_BYTES, handleRouteError, parseBody, parseParams } from "@/lib/http";
+import { assertTrustedOrigin, BODY_BYTES, handleRouteError, parseBody, parseParams } from "@/lib/http";
 import { commentParams } from "@/lib/validations/ids";
 import { commentUpdateSchema } from "@/lib/validations/community";
 
@@ -11,6 +11,8 @@ export async function PATCH(
   { params }: { params: Promise<{ commentId: string }> }
 ) {
   try {
+    assertTrustedOrigin(req);
+
     const { commentId } = parseParams(commentParams, await params);
 
     // Author only, deliberately: a moderator may remove a comment but not
@@ -37,6 +39,8 @@ export async function DELETE(
   { params }: { params: Promise<{ commentId: string }> }
 ) {
   try {
+    assertTrustedOrigin(req);
+
     const { commentId } = parseParams(commentParams, await params);
 
     const principal = await requirePrincipal();

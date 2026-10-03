@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { requirePrincipal } from "@/lib/auth";
-import { handleRouteError, parseParams } from "@/lib/http";
+import { assertTrustedOrigin, handleRouteError, parseParams } from "@/lib/http";
 import { postParams } from "@/lib/validations/ids";
 
 export async function POST(
@@ -10,6 +10,8 @@ export async function POST(
   { params }: { params: Promise<{ postId: string }> }
 ) {
   try {
+    assertTrustedOrigin(req);
+
     const { userId } = await requirePrincipal();
 
     const { postId } = parseParams(postParams, await params);

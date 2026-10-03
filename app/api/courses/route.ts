@@ -2,11 +2,13 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { requireCapability, requirePrincipal } from "@/lib/auth";
-import { handleRouteError, parseBody } from "@/lib/http";
+import { assertTrustedOrigin, handleRouteError, parseBody } from "@/lib/http";
 import { courseCreateSchema } from "@/lib/validations/course";
 
 export async function POST(req: Request) {
     try {
+        assertTrustedOrigin(req);
+
         const principal = await requirePrincipal();
         requireCapability(principal, "course:create");
 

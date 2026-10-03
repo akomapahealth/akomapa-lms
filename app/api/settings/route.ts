@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { requirePrincipal } from "@/lib/auth";
-import { handleRouteError, parseBody } from "@/lib/http";
+import { assertTrustedOrigin, handleRouteError, parseBody } from "@/lib/http";
 import { settingsUpdateSchema } from "@/lib/validations/settings";
 
 export async function GET() {
@@ -28,6 +28,8 @@ export async function GET() {
 
 export async function PATCH(req: Request) {
   try {
+    assertTrustedOrigin(req);
+
     const { userId } = await requirePrincipal();
 
     const values = await parseBody(settingsUpdateSchema, req);

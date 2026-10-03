@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { authorizeQuestionInCourse, requirePrincipal } from "@/lib/auth";
-import { handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
+import { assertTrustedOrigin, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
 import { questionParams } from "@/lib/validations/ids";
 import { questionUpdateSchema } from "@/lib/validations/quiz";
 
@@ -11,6 +11,8 @@ export async function PATCH(
   { params }: { params: Promise<{ courseId: string; quizId: string; questionId: string }> }
 ) {
   try {
+    assertTrustedOrigin(req);
+
     const routeParams = parseParams(questionParams, await params);
 
     const principal = await requirePrincipal();
@@ -110,10 +112,12 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ courseId: string; quizId: string; questionId: string }> }
 ) {
   try {
+    assertTrustedOrigin(req);
+
     const routeParams = parseParams(questionParams, await params);
 
     const principal = await requirePrincipal();

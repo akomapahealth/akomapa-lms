@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { authorizeCourse, requirePrincipal } from "@/lib/auth";
 import { sanitizeScenario } from "@/lib/case-study-sanitize";
-import { BODY_BYTES, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
+import { assertTrustedOrigin, BODY_BYTES, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
 import { courseParams } from "@/lib/validations/ids";
 import { caseStudyCreateSchema } from "@/lib/validations/case-study";
 
@@ -13,6 +13,8 @@ export async function POST(
   { params }: { params: Promise<{ courseId: string }> }
 ) {
   try {
+    assertTrustedOrigin(req);
+
     const { courseId } = parseParams(courseParams, await params);
 
     const principal = await requirePrincipal();

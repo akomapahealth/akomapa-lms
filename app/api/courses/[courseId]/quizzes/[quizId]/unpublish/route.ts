@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { authorizeQuizInCourse, requirePrincipal } from "@/lib/auth";
-import { handleRouteError, parseParams } from "@/lib/http";
+import { assertTrustedOrigin, handleRouteError, parseParams } from "@/lib/http";
 import { quizParams } from "@/lib/validations/ids";
 
 export async function PATCH(
@@ -10,6 +10,8 @@ export async function PATCH(
   { params }: { params: Promise<{ courseId: string; quizId: string }> }
 ) {
   try {
+    assertTrustedOrigin(req);
+
     const routeParams = parseParams(quizParams, await params);
 
     const principal = await requirePrincipal();

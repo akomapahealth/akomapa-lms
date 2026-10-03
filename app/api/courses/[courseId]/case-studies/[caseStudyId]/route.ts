@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { authorizeCaseStudyInCourse, requirePrincipal } from "@/lib/auth";
 import { sanitizeScenario } from "@/lib/case-study-sanitize";
-import { BODY_BYTES, handleRouteError, parseBody, parseParams } from "@/lib/http";
+import { assertTrustedOrigin, BODY_BYTES, handleRouteError, parseBody, parseParams } from "@/lib/http";
 import { caseStudyParams } from "@/lib/validations/ids";
 import { caseStudyUpdateSchema } from "@/lib/validations/case-study";
 
@@ -13,6 +13,8 @@ export async function PATCH(
   { params }: { params: Promise<{ courseId: string; caseStudyId: string }> }
 ) {
   try {
+    assertTrustedOrigin(req);
+
     const { courseId, caseStudyId } = parseParams(caseStudyParams, await params);
 
     const principal = await requirePrincipal();
@@ -39,10 +41,12 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ courseId: string; caseStudyId: string }> }
 ) {
   try {
+    assertTrustedOrigin(req);
+
     const { courseId, caseStudyId } = parseParams(caseStudyParams, await params);
 
     const principal = await requirePrincipal();

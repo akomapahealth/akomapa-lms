@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { requirePrincipal } from "@/lib/auth";
-import { handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
+import { assertTrustedOrigin, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
 import { caseStudyAttemptParams } from "@/lib/validations/ids";
 import { caseStudyAttemptSchema } from "@/lib/validations/case-study";
 
@@ -11,6 +11,8 @@ export async function POST(
   { params }: { params: Promise<{ courseId: string; caseStudyId: string }> }
 ) {
   try {
+    assertTrustedOrigin(req);
+
     const { courseId, caseStudyId } = parseParams(
       caseStudyAttemptParams,
       await params

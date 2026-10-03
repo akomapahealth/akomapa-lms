@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { requirePrincipal } from "@/lib/auth";
-import { BODY_BYTES, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
+import { assertTrustedOrigin, BODY_BYTES, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
 import { journalEntryParams } from "@/lib/validations/ids";
 import { journalUpdateSchema } from "@/lib/validations/journal";
 
@@ -11,6 +11,8 @@ export async function PATCH(
   { params }: { params: Promise<{ entryId: string }> }
 ) {
   try {
+    assertTrustedOrigin(req);
+
     const { userId } = await requirePrincipal();
 
     const { entryId } = parseParams(journalEntryParams, await params);
@@ -47,10 +49,12 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ entryId: string }> }
 ) {
   try {
+    assertTrustedOrigin(req);
+
     const { userId } = await requirePrincipal();
 
     const { entryId } = parseParams(journalEntryParams, await params);

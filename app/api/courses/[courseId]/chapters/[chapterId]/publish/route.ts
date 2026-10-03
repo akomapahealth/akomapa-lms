@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { authorizeTopicInCourse, requirePrincipal } from "@/lib/auth";
 import { NextResponse } from "next/server";
-import { handleRouteError, parseParams, problem } from "@/lib/http";
+import { assertTrustedOrigin, handleRouteError, parseParams, problem } from "@/lib/http";
 import { topicParams } from "@/lib/validations/ids";
 
 export async function PATCH(
@@ -9,6 +9,8 @@ export async function PATCH(
     { params }: { params: Promise<{ courseId: string; chapterId: string }> }
 ) {
     try {
+        assertTrustedOrigin(req);
+
         const routeParams = parseParams(topicParams, await params);
 
         const principal = await requirePrincipal();

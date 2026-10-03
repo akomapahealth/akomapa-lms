@@ -5,7 +5,7 @@ import { stripe } from "@/lib/stripe";
 import { currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { handleRouteError, parseParams, problem } from "@/lib/http";
+import { assertTrustedOrigin, handleRouteError, parseParams, problem } from "@/lib/http";
 import { courseParams } from "@/lib/validations/ids";
 
 export async function POST(
@@ -13,6 +13,8 @@ export async function POST(
     { params }: { params: Promise<{ courseId: string }> }
 ) {
     try {
+        assertTrustedOrigin(req);
+
         const routeParams = parseParams(courseParams, await params);
 
         // Identity comes from the one derivation point (ADR 0001 section 1);

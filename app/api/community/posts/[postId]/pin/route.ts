@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { requireCapability, requirePrincipal } from "@/lib/auth";
-import { handleRouteError, parseParams, problem } from "@/lib/http";
+import { assertTrustedOrigin, handleRouteError, parseParams, problem } from "@/lib/http";
 import { postParams } from "@/lib/validations/ids";
 
 export async function PATCH(
@@ -10,6 +10,8 @@ export async function PATCH(
   { params }: { params: Promise<{ postId: string }> }
 ) {
   try {
+    assertTrustedOrigin(req);
+
     const principal = await requirePrincipal();
     requireCapability(principal, "community:moderate");
 

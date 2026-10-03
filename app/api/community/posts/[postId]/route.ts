@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { authorizePost, requirePrincipal } from "@/lib/auth";
-import { BODY_BYTES, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
+import { assertTrustedOrigin, BODY_BYTES, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
 import { postParams } from "@/lib/validations/ids";
 import { postUpdateSchema } from "@/lib/validations/community";
 
@@ -86,6 +86,8 @@ export async function PATCH(
   { params }: { params: Promise<{ postId: string }> }
 ) {
   try {
+    assertTrustedOrigin(req);
+
     const { postId } = parseParams(postParams, await params);
 
     // Author or moderator. The rule lives in lib/auth/policy.ts rather than
@@ -113,6 +115,8 @@ export async function DELETE(
   { params }: { params: Promise<{ postId: string }> }
 ) {
   try {
+    assertTrustedOrigin(req);
+
     const { postId } = parseParams(postParams, await params);
 
     const principal = await requirePrincipal();

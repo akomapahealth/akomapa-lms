@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { requirePrincipal } from "@/lib/auth";
-import { BODY_BYTES, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
+import { assertTrustedOrigin, BODY_BYTES, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
 import { postParams } from "@/lib/validations/ids";
 import { commentCreateSchema } from "@/lib/validations/community";
 import { evaluateBadges } from "@/lib/badge-service";
@@ -12,6 +12,8 @@ export async function POST(
   { params }: { params: Promise<{ postId: string }> }
 ) {
   try {
+    assertTrustedOrigin(req);
+
     const { userId } = await requirePrincipal();
 
     const { postId } = parseParams(postParams, await params);
