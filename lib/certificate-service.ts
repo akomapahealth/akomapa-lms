@@ -1,9 +1,9 @@
 import { renderToBuffer } from "@react-pdf/renderer";
+import type { Prisma } from "@prisma/client";
 import React from "react";
 
 import { db } from "@/lib/db";
 import { CertificateTemplate } from "@/lib/certificate-template";
-import { isUniqueViolation } from "@/lib/courses/ordering";
 import { enrollmentStatusFor } from "@/lib/entitlement";
 
 /** The prefix every generated Certificate number shares. */
@@ -14,6 +14,9 @@ export function formatCertificateNumber(year: number, sequence: number): string 
   return `${CERTIFICATE_PREFIX}-${year}-${sequence.toString().padStart(5, "0")}`;
 }
 
+/** Any client that can allocate and insert: the shared one, or a transaction. */
+type CertificateClient = Pick<Prisma.TransactionClient, "$queryRaw" | "certificate">;
+
 /**
  * Allocates the next number for a year, atomically (#51).
  *
@@ -22,9 +25,12 @@ export function formatCertificateNumber(year: number, sequence: number): string 
  * number. A number whose Certificate then fails to save is not reused; gaps are
  * harmless, duplicates are not.
  */
-export async function allocateCertificateNumber(now: Date = new Date()): Promise<string> {
+export async function allocateCertificateNumber(
+  now: Date = new Date(),
+  client: Pick<Prisma.TransactionClient, "$queryRaw"> = db
+): Promise<string> {
   const year = now.getUTCFullYear();
-  const [row] = await db.$queryRaw<{ lastValue: number }[]>`
+  const [row] = await client.$queryRaw<{ lastValue: number }[]>`
     INSERT INTO "CertificateNumberSequence" ("year", "lastValue")
     VALUES (${year}, 1)
     ON CONFLICT ("year") DO UPDATE
@@ -34,25 +40,58 @@ export async function allocateCertificateNumber(now: Date = new Date()): Promise
   return formatCertificateNumber(year, Number(row.lastValue));
 }
 
+export interface IssuedCertificate {
+  certificateId: string;
+  certificateNumber: string;
+  /** False when the learner already held this Certificate. */
+  created: boolean;
+}
+
 /**
  * The learner's Certificate row for a Course, created if absent, with its
- * permanent number. Created *before* the PDF is rendered, so the PDF always
- * shows the number the database holds: when two requests race, the one whose
- * insert loses adopts the winner's number instead of rendering its own.
+ * permanent number -- and no PDF yet (#49, #51).
+ *
+ * Safe inside the completion transaction (ADR 0004): the insert is
+ * `ON CONFLICT DO NOTHING`, so a Certificate created concurrently by the
+ * on-demand route never raises -- in PostgreSQL a failed statement aborts the
+ * whole transaction, which would roll back the completion with it. The loser
+ * reads the winner's row. The PDF is rendered later, outside any transaction
+ * (`generateCertificate`, and the CERTIFICATE_ISSUED handler), so the PDF
+ * always shows the number the database holds.
  */
-async function reserveCertificateNumber(userId: string, courseId: string): Promise<string> {
+export async function issueCertificate(
+  client: CertificateClient,
+  userId: string,
+  courseId: string,
+  now: Date = new Date()
+): Promise<IssuedCertificate> {
   const where = { userId_courseId: { userId, courseId } };
-  const certificateNumber = await allocateCertificateNumber();
-
-  try {
-    await db.certificate.create({ data: { userId, courseId, certificateNumber } });
-    return certificateNumber;
-  } catch (error) {
-    if (!isUniqueViolation(error)) throw error;
-    const winner = await db.certificate.findUnique({ where, select: { certificateNumber: true } });
-    if (winner === null) throw error;
-    return winner.certificateNumber;
+  const existing = await client.certificate.findUnique({
+    where,
+    select: { id: true, certificateNumber: true },
+  });
+  if (existing) {
+    return { certificateId: existing.id, certificateNumber: existing.certificateNumber, created: false };
   }
+
+  const certificateNumber = await allocateCertificateNumber(now, client);
+  const certificateId = globalThis.crypto.randomUUID();
+  const inserted = await client.$queryRaw<{ id: string }[]>`
+    INSERT INTO "Certificate" ("id", "userId", "courseId", "certificateNumber")
+    VALUES (${certificateId}, ${userId}, ${courseId}, ${certificateNumber})
+    ON CONFLICT ("userId", "courseId") DO NOTHING
+    RETURNING "id"
+  `;
+  if (inserted.length > 0) return { certificateId, certificateNumber, created: true };
+
+  const winner = await client.certificate.findUnique({
+    where,
+    select: { id: true, certificateNumber: true },
+  });
+  // ON CONFLICT on (userId, courseId) inserted nothing, so a row exists; a
+  // missing one means it was deleted in between, which RESTRICT forbids.
+  if (winner === null) throw new Error("certificate conflict without a certificate");
+  return { certificateId: winner.id, certificateNumber: winner.certificateNumber, created: false };
 }
 
 export async function generateCertificate(
@@ -128,7 +167,7 @@ export async function generateCertificate(
       : null;
 
   const certificateNumber =
-    existing?.certificateNumber ?? (await reserveCertificateNumber(userId, courseId));
+    existing?.certificateNumber ?? (await issueCertificate(db, userId, courseId)).certificateNumber;
   const issuedDate = new Date().toLocaleDateString("en-GB", {
     day: "numeric",
     month: "long",

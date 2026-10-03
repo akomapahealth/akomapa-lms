@@ -2,211 +2,162 @@ import { describe, expect, it, vi } from "vitest";
 
 import { aLearningStreak } from "./support/builders";
 import { dbMock } from "./support/db";
-import { dayStart, freezeTimeAt } from "./support/time";
+import { freezeTimeAt } from "./support/time";
 
 vi.mock("@/lib/db", async () => ({
   db: (await import("./support/db")).dbMock,
 }));
 
-const { updateStreak } = await import("@/lib/streak-service");
+const { nextStreak, recordStreakActivity, updateStreak, utcDay } = await import(
+  "@/lib/streak-service"
+);
 
 /**
  * The streak rule is small but every branch of it is a date comparison, and
- * date comparisons are where this codebase has historically been wrong. The
- * clock is pinned for every case so a run at 23:59 UTC behaves like a run at
- * noon.
- *
- * Related work: #83 (idempotency and concurrency) and #60 (timezone-safe
- * progress dates) own the fixes characterised at the end of this file.
+ * date comparisons are where this codebase has historically been wrong. Since
+ * #49 the rule is the pure `nextStreak`, tested against explicit instants, and
+ * `recordStreakActivity` applies it in the caller's transaction.
  */
-const NOW = "2026-03-15T10:30:00.000Z";
-const TODAY = dayStart("2026-03-15");
-const YESTERDAY = dayStart("2026-03-14");
+const at = (iso: string) => new Date(iso);
+const day = (iso: string) => new Date(`${iso}T00:00:00.000Z`);
+const NOW = at("2026-03-15T10:30:00.000Z");
 
-function arriveWith(streak: Parameters<typeof aLearningStreak>[0]) {
-  dbMock.learningStreak.upsert.mockResolvedValue(aLearningStreak(streak));
-  dbMock.learningStreak.update.mockResolvedValue(aLearningStreak(streak));
-}
-
-describe("updateStreak", () => {
-  it("leaves the streak untouched when activity was already recorded today", async () => {
-    freezeTimeAt(NOW);
-    arriveWith({ currentStreak: 4, longestStreak: 9, lastActivityDate: TODAY });
-
-    await expect(updateStreak("user_1")).resolves.toBe(4);
-
-    // The second write is what makes the operation non-idempotent, so its
-    // absence is the actual assertion here.
-    expect(dbMock.learningStreak.update).not.toHaveBeenCalled();
+describe("nextStreak", () => {
+  it("leaves the streak untouched when activity was already recorded today", () => {
+    expect(
+      nextStreak({ currentStreak: 4, longestStreak: 6, lastActivityDate: day("2026-03-15") }, NOW)
+    ).toEqual({ currentStreak: 4, longestStreak: 6, lastActivityDate: day("2026-03-15"), changed: false });
   });
 
-  it("increments on a consecutive day", async () => {
-    freezeTimeAt(NOW);
-    arriveWith({ currentStreak: 4, longestStreak: 9, lastActivityDate: YESTERDAY });
+  it("increments on a consecutive day", () => {
+    expect(
+      nextStreak({ currentStreak: 4, longestStreak: 4, lastActivityDate: day("2026-03-14") }, NOW)
+    ).toMatchObject({ currentStreak: 5, longestStreak: 5, lastActivityDate: day("2026-03-15"), changed: true });
+  });
 
-    await expect(updateStreak("user_1")).resolves.toBe(5);
+  it("resets to 1 after a gap, keeping the longest", () => {
+    expect(
+      nextStreak({ currentStreak: 9, longestStreak: 12, lastActivityDate: day("2026-03-10") }, NOW)
+    ).toMatchObject({ currentStreak: 1, longestStreak: 12 });
+  });
 
-    expect(dbMock.learningStreak.update).toHaveBeenCalledWith({
-      where: { userId: "user_1" },
-      data: { currentStreak: 5, longestStreak: 9, lastActivityDate: TODAY },
+  it("starts at 1 for a first-time learner", () => {
+    expect(nextStreak(null, NOW)).toEqual({
+      currentStreak: 1,
+      longestStreak: 1,
+      lastActivityDate: day("2026-03-15"),
+      changed: true,
     });
   });
 
-  it("resets to 1 after a gap", async () => {
-    freezeTimeAt(NOW);
-    arriveWith({
-      currentStreak: 30,
-      longestStreak: 30,
-      lastActivityDate: dayStart("2026-03-13"),
-    });
-
-    await expect(updateStreak("user_1")).resolves.toBe(1);
-
-    expect(dbMock.learningStreak.update).toHaveBeenCalledWith({
-      where: { userId: "user_1" },
-      data: { currentStreak: 1, longestStreak: 30, lastActivityDate: TODAY },
+  it("starts at 1 when the record has never recorded activity", () => {
+    expect(nextStreak({ currentStreak: 3, longestStreak: 3, lastActivityDate: null }, NOW)).toMatchObject({
+      currentStreak: 1,
+      longestStreak: 3,
     });
   });
 
-  it("resets to 1 when the record has never recorded activity", async () => {
-    freezeTimeAt(NOW);
-    arriveWith({ currentStreak: 0, longestStreak: 0, lastActivityDate: null });
-
-    await expect(updateStreak("user_1")).resolves.toBe(1);
+  it("advances the longest streak when the current one overtakes it", () => {
+    expect(
+      nextStreak({ currentStreak: 5, longestStreak: 5, lastActivityDate: day("2026-03-14") }, NOW).longestStreak
+    ).toBe(6);
   });
 
-  it("creates a record for a first-time learner and counts it as day one", async () => {
-    freezeTimeAt(NOW);
-    arriveWith({ currentStreak: 1, longestStreak: 1, lastActivityDate: TODAY });
+  it.each([
+    ["a month boundary", "2026-03-01T00:00:01.000Z", "2026-02-28", 3],
+    ["a year boundary", "2026-01-01T12:00:00.000Z", "2025-12-31", 3],
+    // 23:59:59 today and 00:00 yesterday are one calendar day apart, though
+    // nearly 48 hours apart as instants.
+    ["the time of day", "2026-03-15T23:59:59.999Z", "2026-03-14", 3],
+  ])("counts %s as consecutive", (_label, now, last, expected) => {
+    expect(
+      nextStreak({ currentStreak: 2, longestStreak: 2, lastActivityDate: day(last) }, at(now)).currentStreak
+    ).toBe(expected);
+  });
 
-    await expect(updateStreak("user_1")).resolves.toBe(1);
+  it("resets rather than credits a streak when the stored date is in the future", () => {
+    // Clock skew or a bad backfill must not be able to inflate a streak.
+    expect(
+      nextStreak({ currentStreak: 5, longestStreak: 5, lastActivityDate: day("2026-03-16") }, NOW).currentStreak
+    ).toBe(1);
+  });
 
-    expect(dbMock.learningStreak.upsert).toHaveBeenCalledWith({
-      where: { userId: "user_1" },
-      create: {
-        userId: "user_1",
-        currentStreak: 1,
-        longestStreak: 1,
-        lastActivityDate: TODAY,
+  it("counts days, not activities: two activities on one day earn one day", () => {
+    // Two completions racing on the same day both read yesterday and both
+    // compute 5. That is the rule, not a lost update: a streak is a count of
+    // consecutive days, so 6 would be the defect.
+    const yesterday = { currentStreak: 4, longestStreak: 4, lastActivityDate: day("2026-03-14") };
+
+    expect(nextStreak(yesterday, at("2026-03-15T08:00:00Z")).currentStreak).toBe(5);
+    expect(nextStreak(yesterday, at("2026-03-15T08:00:00.001Z")).currentStreak).toBe(5);
+  });
+});
+
+describe("utcDay", () => {
+  it("is midnight UTC whatever the time of day", () => {
+    expect(utcDay(at("2026-03-15T23:59:59.999Z"))).toEqual(day("2026-03-15"));
+  });
+});
+
+describe("recordStreakActivity", () => {
+  function client(existing: ReturnType<typeof aLearningStreak> | null) {
+    return {
+      learningStreak: {
+        findUnique: vi.fn().mockResolvedValue(existing),
+        upsert: vi.fn().mockResolvedValue({}),
       },
-      update: {},
+    };
+  }
+
+  it("writes the next streak through the client it is given", async () => {
+    const tx = client(aLearningStreak({ currentStreak: 4, longestStreak: 4, lastActivityDate: day("2026-03-14") }));
+
+    await expect(recordStreakActivity(tx as never, "user_1", NOW)).resolves.toBe(5);
+    expect(tx.learningStreak.upsert).toHaveBeenCalledWith({
+      where: { userId: "user_1" },
+      create: { userId: "user_1", currentStreak: 5, longestStreak: 5, lastActivityDate: day("2026-03-15") },
+      update: { currentStreak: 5, longestStreak: 5, lastActivityDate: day("2026-03-15") },
     });
   });
 
-  describe("longest streak", () => {
-    it("advances when the current streak overtakes it", async () => {
-      freezeTimeAt(NOW);
-      arriveWith({ currentStreak: 9, longestStreak: 9, lastActivityDate: YESTERDAY });
+  it("writes nothing when today is already counted", async () => {
+    const tx = client(aLearningStreak({ currentStreak: 4, longestStreak: 4, lastActivityDate: day("2026-03-15") }));
 
-      await updateStreak("user_1");
-
-      expect(dbMock.learningStreak.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({ currentStreak: 10, longestStreak: 10 }),
-        })
-      );
-    });
-
-    it("never decreases, including when the current streak resets", async () => {
-      freezeTimeAt(NOW);
-      arriveWith({
-        currentStreak: 30,
-        longestStreak: 30,
-        lastActivityDate: dayStart("2026-01-01"),
-      });
-
-      await updateStreak("user_1");
-
-      expect(dbMock.learningStreak.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({ currentStreak: 1, longestStreak: 30 }),
-        })
-      );
-    });
+    await expect(recordStreakActivity(tx as never, "user_1", NOW)).resolves.toBe(4);
+    expect(tx.learningStreak.upsert).not.toHaveBeenCalled();
   });
 
-  describe("boundaries", () => {
-    it("counts a month boundary as consecutive", async () => {
-      freezeTimeAt("2026-03-01T00:00:01.000Z");
-      arriveWith({
-        currentStreak: 2,
-        longestStreak: 2,
-        lastActivityDate: dayStart("2026-02-28"),
-      });
+  it("creates the record for a first-time learner", async () => {
+    const tx = client(null);
 
-      await expect(updateStreak("user_1")).resolves.toBe(3);
-    });
-
-    it("counts a year boundary as consecutive", async () => {
-      freezeTimeAt("2026-01-01T12:00:00.000Z");
-      arriveWith({
-        currentStreak: 7,
-        longestStreak: 7,
-        lastActivityDate: dayStart("2025-12-31"),
-      });
-
-      await expect(updateStreak("user_1")).resolves.toBe(8);
-    });
-
-    it("ignores the time of day when comparing calendar dates", async () => {
-      // 23:59:59 today and 00:00:00 yesterday are one calendar day apart even
-      // though they are nearly 48 hours apart as instants.
-      freezeTimeAt("2026-03-15T23:59:59.999Z");
-      arriveWith({
-        currentStreak: 1,
-        longestStreak: 1,
-        lastActivityDate: new Date("2026-03-14T00:00:00.000Z"),
-      });
-
-      await expect(updateStreak("user_1")).resolves.toBe(2);
-    });
-
-    it("resets rather than credits a streak when the stored date is in the future", async () => {
-      // Clock skew or a bad backfill must not be able to inflate a streak.
-      freezeTimeAt(NOW);
-      arriveWith({
-        currentStreak: 5,
-        longestStreak: 5,
-        lastActivityDate: dayStart("2026-03-16"),
-      });
-
-      await expect(updateStreak("user_1")).resolves.toBe(1);
-    });
+    await expect(recordStreakActivity(tx as never, "user_1", NOW)).resolves.toBe(1);
+    expect(tx.learningStreak.upsert).toHaveBeenCalled();
   });
 
-  /**
-   * Characterisation tests. These pin defects that exist today so that the
-   * issues which fix them have a failing test to turn green. Delete them there
-   * rather than here.
-   */
-  describe("known defects", () => {
-    it("derives the new value from an earlier read, so concurrent calls lose an update (#83)", async () => {
-      freezeTimeAt(NOW);
-      arriveWith({ currentStreak: 4, longestStreak: 4, lastActivityDate: YESTERDAY });
+  it("uses the shared client and the real clock when called without a transaction", async () => {
+    freezeTimeAt("2026-03-15T10:30:00.000Z");
+    dbMock.learningStreak.findUnique.mockResolvedValue(null);
+    dbMock.learningStreak.upsert.mockResolvedValue({});
 
-      const [first, second] = await Promise.all([
-        updateStreak("user_1"),
-        updateStreak("user_1"),
-      ]);
+    await expect(updateStreak("user_1")).resolves.toBe(1);
+    expect(dbMock.learningStreak.upsert).toHaveBeenCalled();
+  });
+});
 
-      // Both callers read `currentStreak: 4` before either wrote, so both
-      // compute 5 and the second write silently overwrites the first. An
-      // atomic `{ increment: 1 }` would produce 5 and 6.
-      expect([first, second]).toEqual([5, 5]);
-      expect(dbMock.learningStreak.update).toHaveBeenCalledTimes(2);
-    });
-
-    it("compares dates in the server's local timezone, not the learner's (#60)", async () => {
-      // The service strips time with `new Date(y, m, d)`, which is server-local.
-      // Under TZ=UTC (pinned by the suite) an instant just after midnight UTC is
-      // "today"; for a learner in UTC-5 it is still the previous evening, so the
-      // same action can land on either side of a streak boundary depending on
-      // where the server runs.
-      freezeTimeAt("2026-03-15T00:30:00.000Z");
-      arriveWith({ currentStreak: 3, longestStreak: 3, lastActivityDate: YESTERDAY });
-
-      await expect(updateStreak("user_1")).resolves.toBe(4);
-      expect(process.env.TZ).toBe("UTC");
-    });
+/**
+ * Characterisation. This pins a known limitation so the issue that fixes it has
+ * a failing test to turn green. Delete it there rather than here.
+ */
+describe("known defects", () => {
+  it("counts UTC calendar days, not the learner's (#60)", () => {
+    // 00:30 UTC on the 15th is still the evening of the 14th for a learner in
+    // UTC-5, so the same action can land on either side of a streak boundary
+    // depending on where the learner is.
+    expect(
+      nextStreak(
+        { currentStreak: 3, longestStreak: 3, lastActivityDate: day("2026-03-14") },
+        at("2026-03-15T00:30:00.000Z")
+      ).currentStreak
+    ).toBe(4);
   });
 });

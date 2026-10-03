@@ -239,10 +239,8 @@ describe("streak criteria", () => {
 
 describe("module and category completion", () => {
   it("requires every published Topic in a Module to be complete", async () => {
-    dbMock.module.findMany.mockResolvedValue([
-      { id: "module_1", isPublished: true, topics: [{ id: "t1" }, { id: "t2" }] },
-    ]);
-    dbMock.userProgress.count.mockResolvedValue(1);
+    const topic = (id: string, done: boolean) => ({ id, userProgress: done ? [{ isCompleted: true }] : [] });
+    dbMock.module.findMany.mockResolvedValue([{ topics: [topic("t1", true), topic("t2", false)] }]);
 
     expect(
       await earns({ type: "modules_completed", count: 1 }, {
@@ -251,13 +249,23 @@ describe("module and category completion", () => {
       })
     ).toBe(false);
 
-    dbMock.userProgress.count.mockResolvedValue(2);
+    dbMock.module.findMany.mockResolvedValue([{ topics: [topic("t1", true), topic("t2", true)] }]);
     expect(
       await earns({ type: "modules_completed", count: 1 }, {
         type: "module_completed",
         moduleId: "module_1",
       })
     ).toBe(true);
+  });
+
+  it("counts Modules in Courses the learner is enrolled on, not only purchased ones (#49)", async () => {
+    await earns({ type: "modules_completed", count: 1 }, { type: "module_completed", moduleId: "m" });
+
+    expect(dbMock.module.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { isPublished: true, course: { enrollments: { some: { userId: "user_1" } } } },
+      })
+    );
   });
 
   it("does not count an empty Module as completed", async () => {

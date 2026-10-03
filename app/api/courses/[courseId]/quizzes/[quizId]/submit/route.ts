@@ -9,6 +9,7 @@ import { submissionSchema } from "@/lib/validations/quiz";
 import { findLearnerAttempt } from "@/lib/assessments/attempt-access";
 import { gradeSubmission, validateSubmission } from "@/lib/assessments/grading";
 import { evaluateBadges } from "@/lib/badge-service";
+import { appendEvents } from "@/lib/outbox/events";
 
 export async function POST(
   req: Request,
@@ -91,7 +92,13 @@ export async function POST(
     // concurrent submissions both pass the completedAt check above, and only
     // the one that actually flips the row from null commits. #63 replaces this
     // with a full attempt state machine.
-    const finalised = await db.$transaction(async (tx) => {
+    // Answers, finalisation, the badges they earn, and the events recording
+    // them commit together (ADR 0004). The conditional update is what makes
+    // submission idempotent under a double-click or a retry: two concurrent
+    // submissions both pass the completedAt check above, and only the one that
+    // actually flips the row from null commits. #63 replaces this with a full
+    // attempt state machine.
+    const awardedBadges = await db.$transaction(async (tx) => {
       const claimed = await tx.quizAttempt.updateMany({
         where: { id: attemptId, completedAt: null },
         data: {
@@ -101,7 +108,7 @@ export async function POST(
         },
       });
 
-      if (claimed.count === 0) return false;
+      if (claimed.count === 0) return null;
 
       await tx.quizAnswer.createMany({
         data: answers.map((a) => ({
@@ -111,42 +118,50 @@ export async function POST(
         })),
       });
 
-      return true;
-    });
-
-    if (!finalised) {
-      return problem("conflict", { message: "This attempt is already submitted." });
-    }
-
-    // Gamification: evaluate badges on quiz completion
-    let preTestScore: number | undefined;
-
-    // If this is a post-test, find the pre-test score for growth comparison
-    if (attempt.quiz.type === "POST_TEST" && attempt.quiz.courseId) {
-      const preTest = await db.quiz.findFirst({
-        where: { courseId: attempt.quiz.courseId, type: "PRE_TEST" },
-        select: { id: true },
-      });
-      if (preTest) {
-        const bestPreAttempt = await db.quizAttempt.findFirst({
-          where: { userId, quizId: preTest.id, completedAt: { not: null } },
-          orderBy: { score: "desc" },
-          select: { score: true, totalPoints: true },
+      // For a post-test, the pre-test score is the growth baseline.
+      let preTestScore: number | undefined;
+      if (attempt.quiz.type === "POST_TEST" && attempt.quiz.courseId) {
+        const preTest = await tx.quiz.findFirst({
+          where: { courseId: attempt.quiz.courseId, type: "PRE_TEST" },
+          select: { id: true },
         });
-        if (bestPreAttempt && bestPreAttempt.totalPoints) {
-          preTestScore = Math.round(
-            (bestPreAttempt.score! / bestPreAttempt.totalPoints) * 100
-          );
+        if (preTest) {
+          const bestPreAttempt = await tx.quizAttempt.findFirst({
+            where: { userId, quizId: preTest.id, completedAt: { not: null } },
+            orderBy: { score: "desc" },
+            select: { score: true, totalPoints: true },
+          });
+          if (bestPreAttempt && bestPreAttempt.totalPoints) {
+            preTestScore = Math.round(
+              (bestPreAttempt.score! / bestPreAttempt.totalPoints) * 100
+            );
+          }
         }
       }
-    }
 
-    const awardedBadges = await evaluateBadges(userId, {
-      type: "quiz_completed",
-      quizId: routeParams.quizId,
-      score: percentage,
-      preTestScore,
+      const badges = await evaluateBadges(
+        userId,
+        { type: "quiz_completed", quizId: routeParams.quizId, score: percentage, preTestScore },
+        tx
+      );
+
+      await appendEvents(tx, [
+        {
+          type: "QUIZ_ATTEMPT_COMPLETED",
+          payload: { userId, quizId: routeParams.quizId, attemptId },
+        },
+        ...badges.map((badge) => ({
+          type: "BADGE_AWARDED" as const,
+          payload: { userId, badgeId: badge.id },
+        })),
+      ]);
+
+      return badges;
     });
+
+    if (awardedBadges === null) {
+      return problem("conflict", { message: "This attempt is already submitted." });
+    }
 
     return NextResponse.json({
       attemptId,

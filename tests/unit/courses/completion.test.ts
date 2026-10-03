@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { isCourseComplete, isModuleComplete } from "@/lib/courses/completion";
+import { isCourseComplete, isModuleComplete, summarizeCompletion } from "@/lib/courses/completion";
 
 /**
  * Completion decides whether a certificate is issued, which is the product's
@@ -82,5 +82,29 @@ describe("isCourseComplete", () => {
   it("does not let a Topic from another Course complete this one", () => {
     expect(isCourseComplete([{ topics: [pending("a")] }, { topics: [pending("b")] }], "foreign"))
       .toBe(false);
+  });
+});
+
+describe("summarizeCompletion (#49)", () => {
+  const done = (id: string) => ({ id, completed: true });
+  const todo = (id: string) => ({ id, completed: false });
+
+  it("counts finished Modules and leaves empty ones out of both counts", () => {
+    expect(
+      summarizeCompletion([{ topics: [done("a"), done("b")] }, { topics: [done("c"), todo("d")] }, { topics: [] }])
+    ).toEqual({ completedModules: 1, countedModules: 2, courseComplete: false });
+  });
+
+  it("calls the Course complete only when every eligible Topic is done", () => {
+    expect(summarizeCompletion([{ topics: [done("a")] }, { topics: [] }])).toEqual({
+      completedModules: 1,
+      countedModules: 1,
+      courseComplete: true,
+    });
+  });
+
+  it("is never complete with nothing to complete", () => {
+    expect(summarizeCompletion([])).toEqual({ completedModules: 0, countedModules: 0, courseComplete: false });
+    expect(summarizeCompletion([{ topics: [] }])).toMatchObject({ courseComplete: false });
   });
 });
