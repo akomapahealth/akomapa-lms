@@ -22,6 +22,7 @@ type BadgeClient = Pick<
   | "postLike"
   | "forumComment"
 >;
+import { summarizeCompletion } from "@/lib/courses/completion";
 import { logWarn } from "@/lib/logger";
 
 export type BadgeEvent =
@@ -192,34 +193,30 @@ async function checkCriteria(
 }
 
 async function getCompletedModuleCount(userId: string, client: BadgeClient): Promise<number> {
+  // Modules in Courses the learner is enrolled on (ADR 0002: Enrollment is the
+  // entitlement; counting only purchased Courses left free enrolments out),
+  // judged by the shared non-vacuous rule (#49).
   const modules = await client.module.findMany({
     where: {
       isPublished: true,
-      course: { purchases: { some: { userId } } },
+      course: { enrollments: { some: { userId } } },
     },
-    include: {
+    select: {
       topics: {
         where: { isPublished: true },
-        select: { id: true },
+        select: { id: true, userProgress: { where: { userId }, select: { isCompleted: true } } },
       },
     },
   });
 
-  let completedCount = 0;
-  for (const mod of modules) {
-    if (mod.topics.length === 0) continue;
-    const completedTopics = await client.userProgress.count({
-      where: {
-        userId,
-        isCompleted: true,
-        topicId: { in: mod.topics.map((t) => t.id) },
-      },
-    });
-    if (completedTopics === mod.topics.length) {
-      completedCount++;
-    }
-  }
-  return completedCount;
+  return summarizeCompletion(
+    modules.map((courseModule) => ({
+      topics: courseModule.topics.map((topic) => ({
+        id: topic.id,
+        completed: topic.userProgress.some((p) => p.isCompleted),
+      })),
+    }))
+  ).completedModules;
 }
 
 /**

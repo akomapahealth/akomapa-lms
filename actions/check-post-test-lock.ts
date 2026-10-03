@@ -1,5 +1,13 @@
 import { db } from "@/lib/db";
+import { summarizeCompletion } from "@/lib/courses/completion";
+import { logError } from "@/lib/logger";
 
+/**
+ * Whether a learner may start the Course's Post-Test: only once every eligible
+ * Topic is complete, by the same rule that completes the Course (#49).
+ *
+ * Fails closed: if progress cannot be read, the Post-Test stays locked.
+ */
 export async function isPostTestUnlocked(
   userId: string,
   courseId: string
@@ -7,7 +15,7 @@ export async function isPostTestUnlocked(
   try {
     const modules = await db.module.findMany({
       where: { courseId, isPublished: true },
-      include: {
+      select: {
         topics: {
           where: { isPublished: true },
           select: {
@@ -21,21 +29,22 @@ export async function isPostTestUnlocked(
       },
     });
 
-    let completedModules = 0;
-    for (const mod of modules) {
-      const allComplete =
-        mod.topics.length > 0 &&
-        mod.topics.every((t) => t.userProgress.some((p) => p.isCompleted));
-      if (allComplete) completedModules++;
-    }
+    const summary = summarizeCompletion(
+      modules.map((courseModule) => ({
+        topics: courseModule.topics.map((topic) => ({
+          id: topic.id,
+          completed: topic.userProgress.some((p) => p.isCompleted),
+        })),
+      }))
+    );
 
     return {
-      unlocked: modules.length > 0 && completedModules === modules.length,
-      completedModules,
-      totalModules: modules.length,
+      unlocked: summary.courseComplete,
+      completedModules: summary.completedModules,
+      totalModules: summary.countedModules,
     };
   } catch (error) {
-    console.log("[CHECK_POST_TEST_LOCK]", error);
+    logError("CHECK_POST_TEST_LOCK", error);
     return { unlocked: false, completedModules: 0, totalModules: 0 };
   }
 }

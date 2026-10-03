@@ -44,6 +44,7 @@ vi.mock("@/lib/outbox/events", async (importOriginal) => {
 });
 
 const { setTopicCompletion } = await import("@/lib/courses/complete-topic");
+const { isPostTestUnlocked } = await import("@/actions/check-post-test-lock");
 const { PUT: putProgress } = await import(
   "@/app/api/courses/[courseId]/chapters/[chapterId]/progress/route"
 );
@@ -320,6 +321,41 @@ describe("eligible content", () => {
     await expect(setTopicCompletion(principal(w), w.courseId, other.topics[0], true, NOW)).resolves.toEqual({
       kind: "not_found",
     });
+  });
+});
+
+describe("read paths agree with the command", () => {
+  it("unlocks the Post-Test when eligible content is done, despite an empty Module", async () => {
+    // Before #49 the lock demanded every published Module be complete, and an
+    // empty Module can never be, so it locked the Post-Test forever.
+    await testDb().module.create({
+      data: { id: id(), courseId: w.courseId, title: "Coming soon", position: 3, isPublished: true },
+    });
+    for (const topic of w.topics) await complete(w, topic);
+
+    await expect(isPostTestUnlocked(w.learner.id, w.courseId)).resolves.toEqual({
+      unlocked: true,
+      completedModules: 2,
+      totalModules: 2,
+    });
+  });
+
+  it("keeps the Post-Test locked until every eligible Topic is done", async () => {
+    await complete(w, w.topics[0]);
+
+    await expect(isPostTestUnlocked(w.learner.id, w.courseId)).resolves.toMatchObject({ unlocked: false });
+  });
+
+  it("counts a free enrolment's Modules toward Module badges", async () => {
+    // The counter used to look only at purchased Courses (ADR 0002).
+    await testDb().badge.create({
+      data: { name: `Module Master ${unique}`, description: "d", type: "COMPLETION", criteria: { type: "modules_completed", count: 1 } },
+    });
+
+    await complete(w, w.topics[0]);
+    const outcome = await complete(w, w.topics[1]);
+
+    expect(outcome.kind === "recorded" && outcome.awardedBadges.map((b) => b.name)).toContain(`Module Master ${unique}`);
   });
 });
 

@@ -60,3 +60,30 @@ export function isCourseComplete(
   if (topics.length === 0) return false;
   return topics.every((topic) => isDone(topic, justCompletedId));
 }
+
+export interface CompletionSummary {
+  /** Modules with at least one eligible Topic, all of them done. */
+  completedModules: number;
+  /** Modules with at least one eligible Topic; empty Modules are not counted. */
+  countedModules: number;
+  /** The same non-vacuous rule the completion command applies. */
+  courseComplete: boolean;
+}
+
+/**
+ * Progress through a Course, by the rules above, for read paths (#49).
+ *
+ * The post-test lock, the badge counters, and the completion command must agree
+ * on what "complete" means; before #49 each wrote its own loop, and they did
+ * not: the post-test lock counted an empty Module as unfinished, so one empty
+ * Module locked the Post-Test forever. Empty Modules are left out of both
+ * counts, as they neither block nor manufacture completion.
+ */
+export function summarizeCompletion(modules: ModuleCompletion[]): CompletionSummary {
+  const counted = modules.filter((courseModule) => courseModule.topics.length > 0);
+  return {
+    completedModules: counted.filter((courseModule) => isModuleComplete(courseModule, "")).length,
+    countedModules: counted.length,
+    courseComplete: isCourseComplete(modules, ""),
+  };
+}

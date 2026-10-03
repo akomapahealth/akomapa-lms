@@ -1,3 +1,5 @@
+import { EnrollmentStatus } from "@/lib/domain/states";
+import { enrollmentStatusFor } from "@/lib/entitlement";
 import { QUIZ_TYPE_LABELS } from "@/lib/domain/states";
 import { requirePagePrincipal } from "@/lib/auth";
 import { redirect } from "next/navigation";
@@ -28,18 +30,19 @@ const GradesDetailPage = async ({
 }) => {
   const { courseId } = await params;
   const { userId } = await requirePagePrincipal("/sign-in");
-  const [detail, certificate] = await Promise.all([
+  const [detail, certificate, enrollmentStatus] = await Promise.all([
     getGradesDetail(userId, courseId),
     getCertificate(userId, courseId),
+    enrollmentStatusFor(userId, courseId),
   ]);
 
   if (!detail) {
     return redirect("/grades");
   }
 
-  const isCourseCompleted = detail.modules.every(
-    (mod) => mod.status === "COMPLETED"
-  );
+  // The Enrollment is the one record of completion (#49, ADR 0004). Deriving it
+  // here from module statuses called a Course with no Modules completed.
+  const isCourseCompleted = enrollmentStatus === EnrollmentStatus.COMPLETED;
 
   return (
     <div className="px-4 py-6 sm:p-6">
