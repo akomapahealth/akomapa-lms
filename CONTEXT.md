@@ -79,8 +79,12 @@ only identity authority and there is no local password. Prisma: `User`.
 **Enrollment.** The canonical entitlement to a Course. `ACTIVE` grants access;
 `COMPLETED` keeps read access to the Course and its Certificate; `SUSPENDED`
 denies access whatever the Purchase says. Status is one of `ACTIVE`,
-`COMPLETED`, `SUSPENDED`, and a value outside that set is not a status and
-grants nothing. Unique per learner and Course. Decided by `lib/entitlement`,
+`COMPLETED`, `SUSPENDED`, a PostgreSQL enum since
+[#50](https://github.com/akomapahealth/akomapa-lms/issues/50), so the database
+refuses any other value. Legal changes: `ACTIVE` to `COMPLETED` or `SUSPENDED`,
+`COMPLETED` to `SUSPENDED`, `SUSPENDED` to `ACTIVE`; completion is never undone
+and access is never removed by deleting the row (`ENROLLMENT_TRANSITIONS` in
+`lib/domain/states.ts`). Unique per learner and Course. Decided by `lib/entitlement`,
 which is the only place that answers the question.
 Prisma: `Enrollment`. See
 [ADR 0002](docs/adr/0002-enrollment-as-canonical-entitlement.md).
@@ -243,6 +247,12 @@ feature.
 - A Certificate exists only where the completion that justifies it exists, and
   its number is unique and permanently verifiable.
 - Missing, stale, or contradictory state denies access. Deny by default.
+- Every closed set of persisted values -- role, Topic content type, Enrollment
+  status, Quiz type, Badge type, theme -- is a PostgreSQL enum, and application
+  code takes the values from `lib/domain/states.ts`, never from a second copy
+  ([#50](https://github.com/akomapahealth/akomapa-lms/issues/50)). A new closed
+  set, such as a subscription or outbox state, is an enum from its first
+  migration.
 - Answer keys (`QuestionOption.isCorrect`), Journal Entry content, private
   Community content, secrets, tokens, raw payment data, and AI prompts are
   never logged. Telemetry uses correlation ids and safe identifiers.

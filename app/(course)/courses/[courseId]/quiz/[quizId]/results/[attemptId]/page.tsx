@@ -1,3 +1,4 @@
+import { QUIZ_TYPE_LABELS } from "@/lib/domain/states";
 import { requirePagePrincipal } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -76,12 +77,7 @@ const QuizResultsPage = async ({
   const seconds = diffSec % 60;
   const timeTaken = `${minutes}:${seconds.toString().padStart(2, "0")}`;
 
-  const typeLabel =
-    attempt.quiz.type === "PRE_TEST"
-      ? "Pre-Test"
-      : attempt.quiz.type === "POST_TEST"
-        ? "Post-Test"
-        : "Module Quiz";
+  const typeLabel = QUIZ_TYPE_LABELS[attempt.quiz.type];
 
   // Sort answers by question position
   const sortedAnswers = [...attempt.answers].sort(

@@ -1,3 +1,4 @@
+import type { QuizType } from "@/lib/domain/states";
 import { db } from "@/lib/db";
 
 export type ModuleGradeStatus = "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED";
@@ -15,7 +16,7 @@ export interface QuizAttemptRecord {
   attemptId: string;
   quizId: string;
   quizTitle: string;
-  quizType: string;
+  quizType: QuizType;
   date: Date;
   score: number;
   totalPoints: number;

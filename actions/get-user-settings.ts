@@ -1,7 +1,8 @@
 import { db } from "@/lib/db";
+import { ThemePreference } from "@/lib/domain/states";
 
 export interface UserSettingsData {
-  theme: string;
+  theme: ThemePreference;
   defaultJournalPrivacy: boolean;
   showProfileInCommunity: boolean;
   emailOnBadgeEarned: boolean;
@@ -19,7 +20,7 @@ export const getUserSettings = async (
 
     if (!settings) {
       return {
-        theme: "light",
+        theme: ThemePreference.light,
         defaultJournalPrivacy: true,
         showProfileInCommunity: true,
         emailOnBadgeEarned: true,
@@ -39,7 +40,7 @@ export const getUserSettings = async (
   } catch (error) {
     console.log("[GET_USER_SETTINGS]", error);
     return {
-      theme: "light",
+      theme: ThemePreference.light,
       defaultJournalPrivacy: true,
       showProfileInCommunity: true,
       emailOnBadgeEarned: true,

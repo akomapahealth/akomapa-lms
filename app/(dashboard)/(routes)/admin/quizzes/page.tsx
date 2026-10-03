@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { FileQuestion } from "lucide-react";
 
+import { QUIZ_TYPE_LABELS } from "@/lib/domain/states";
 import { db } from "@/lib/db";
 import { requirePageCapability } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
@@ -32,12 +33,6 @@ const AdminQuizzesPage = async () => {
     },
     orderBy: { createdAt: "desc" },
   });
-
-  const typeLabels: Record<string, string> = {
-    PRE_TEST: "Pre-Test",
-    POST_TEST: "Post-Test",
-    MODULE_QUIZ: "Module Quiz",
-  };
 
   return (
     <PageContainer width="wide">
@@ -89,7 +84,7 @@ const AdminQuizzesPage = async () => {
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline">
-                      {typeLabels[quiz.type] ?? quiz.type}
+                      {QUIZ_TYPE_LABELS[quiz.type]}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-center">

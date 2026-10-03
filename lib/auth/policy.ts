@@ -1,3 +1,10 @@
+import {
+  EnrollmentStatus,
+  parseClosed,
+  USER_ROLES,
+  UserRole,
+} from "../domain/states";
+
 import { type Action, isAction } from "./actions";
 
 /**
@@ -12,7 +19,8 @@ import { type Action, isAction } from "./actions";
  * Implements ADR 0001. Documented in docs/permission-matrix.md.
  */
 
-export type Role = "STUDENT" | "FACULTY" | "ADMIN";
+/** The schema's `UserRole` enum (#50); the values are not restated here. */
+export type Role = UserRole;
 
 export interface Principal {
   userId: string;
@@ -37,7 +45,7 @@ export type Resource =
   /** Learner-authored content: a forum post, a comment. */
   | { kind: "authored"; authorId: string }
   /** A learner's relationship to a Course. */
-  | { kind: "enrollment"; status: string };
+  | { kind: "enrollment"; status: EnrollmentStatus };
 
 type Rule =
   /** ADMIN only. Ownership is not consulted. */
@@ -127,14 +135,12 @@ const RULES: Record<Action, Rule> = {
  * hand-edited `User.role` fail closed instead of open.
  */
 export function normalizeRole(value: unknown): Role | null {
-  return value === "STUDENT" || value === "FACULTY" || value === "ADMIN"
-    ? value
-    : null;
+  return parseClosed(USER_ROLES, value);
 }
 
 function isAtLeastFaculty(role: Role): boolean {
   // ADR 0001 section 3: ADMIN implies FACULTY; FACULTY does not imply ADMIN.
-  return role === "FACULTY" || role === "ADMIN";
+  return role === UserRole.FACULTY || role === UserRole.ADMIN;
 }
 
 /** Does this principal own the resource well enough to author it? */
@@ -198,7 +204,7 @@ export function can(
 
   switch (rule) {
     case "adminOnly":
-      return role === "ADMIN";
+      return role === UserRole.ADMIN;
 
     case "facultyGlobal":
       return isAtLeastFaculty(role);
@@ -207,7 +213,7 @@ export function can(
       return isAtLeastFaculty(role) && ownsForAuthoring(principal, resource);
 
     case "authorOrModerator":
-      if (role === "ADMIN") return true;
+      if (role === UserRole.ADMIN) return true;
       return isAuthor(principal, resource);
 
     case "authorOnly":
@@ -218,7 +224,8 @@ export function can(
       // narrower invariant that a suspended learner loses access.
       return (
         resource.kind === "enrollment" &&
-        (resource.status === "ACTIVE" || resource.status === "COMPLETED")
+        (resource.status === EnrollmentStatus.ACTIVE ||
+          resource.status === EnrollmentStatus.COMPLETED)
       );
 
     case "reserved":

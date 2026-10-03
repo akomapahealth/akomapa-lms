@@ -1,3 +1,4 @@
+import { staffBadgeLabel } from "@/lib/domain/states";
 import { requirePagePrincipal } from "@/lib/auth";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -95,9 +96,9 @@ const CommunityProfilePage = async ({
           <div>
             <h1 className="text-xl font-bold text-foreground">{authorName}</h1>
             <div className="flex items-center gap-2 mt-1">
-              {user.role !== "STUDENT" && (
+              {staffBadgeLabel(user.role) && (
                 <span className="text-xs font-medium px-2 py-0.5 rounded bg-akomapa-ice text-akomapa-teal">
-                  {user.role === "ADMIN" ? "Admin" : "Faculty"}
+                  {staffBadgeLabel(user.role)}
                 </span>
               )}
               <span className="flex items-center gap-1 text-xs text-muted-foreground">

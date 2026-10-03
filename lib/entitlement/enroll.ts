@@ -3,6 +3,7 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 
 import { db } from "@/lib/db";
+import { EnrollmentStatus, enrollmentSourcesFor } from "@/lib/domain/states";
 
 /**
  * Creating entitlement (#48, ADR 0002).
@@ -44,7 +45,7 @@ export async function recordPaidEnrollment(
 
     await client.enrollment.upsert({
       where: { userId_courseId: { userId, courseId } },
-      create: { userId, courseId, status: "ACTIVE" },
+      create: { userId, courseId, status: EnrollmentStatus.ACTIVE },
       // Left alone on purpose: see the note above about SUSPENDED and COMPLETED.
       update: {},
     });
@@ -69,7 +70,7 @@ export async function recordFreeEnrollment(
   const client = tx ?? db;
   await client.enrollment.upsert({
     where: { userId_courseId: { userId, courseId } },
-    create: { userId, courseId, status: "ACTIVE" },
+    create: { userId, courseId, status: EnrollmentStatus.ACTIVE },
     update: {},
   });
 }
@@ -92,8 +93,10 @@ export async function markCourseCompleted(
 ): Promise<boolean> {
   const client = tx ?? db;
   const result = await client.enrollment.updateMany({
-    where: { userId, courseId, status: "ACTIVE" },
-    data: { status: "COMPLETED" },
+    // The transition table decides the source statuses (only ACTIVE), and the
+    // conditional update applies it atomically.
+    where: { userId, courseId, status: { in: enrollmentSourcesFor(EnrollmentStatus.COMPLETED) } },
+    data: { status: EnrollmentStatus.COMPLETED },
   });
 
   return result.count > 0;

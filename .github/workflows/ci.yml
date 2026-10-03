@@ -147,9 +147,28 @@ jobs:
 
       - run: npm ci
 
+      # The schema validates and is formatted as committed (#50).
+      - name: Check the Prisma schema
+        run: npm run db:schema:check
+
+      # Migrations are hand-written where Prisma's generated SQL would lose data
+      # (#50), so prove they produce exactly the database schema.prisma
+      # describes: apply them all to a fresh database, then diff it against the
+      # schema. Any difference exits 2 and fails the job.
+      - name: Check migrations for drift
+        env:
+          PGPASSWORD: postgres
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/akomapa_drift
+          DIRECT_URL: postgresql://postgres:postgres@localhost:5432/akomapa_drift
+        run: |
+          psql -h localhost -U postgres -d postgres -c 'CREATE DATABASE akomapa_drift'
+          npm run db:migrations:drift
+
       # The suite applies the committed migrations to a template database and
       # clones it per worker, so a migration that does not apply cleanly fails
-      # here rather than in production.
+      # here rather than in production. It also runs the #50 upgrade fixtures:
+      # a pre-migration database with every legacy value, the abort path, and
+      # the rollback round trip (tests/integration/closed-states.test.ts).
       - name: Run integration tests
         run: npm run test:integration
         env:

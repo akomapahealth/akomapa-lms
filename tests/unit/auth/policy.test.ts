@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { ACTIONS, isAction, type Action } from "@/lib/auth/actions";
+import type { EnrollmentStatus } from "@/lib/domain/states";
 import {
   can,
   normalizeRole,
@@ -265,7 +266,7 @@ describe("author-only actions", () => {
 
 describe("learner access to Course content", () => {
   for (const action of ACTIVE_ENROLLMENT) {
-    it.each(["ACTIVE", "COMPLETED"])(`allows a %s Enrollment for ${action}`, (status) => {
+    it.each(["ACTIVE", "COMPLETED"] as const)(`allows a %s Enrollment for ${action}`, (status) => {
       expect(can(student, action, { kind: "enrollment", status })).toBe(true);
     });
 
@@ -276,8 +277,13 @@ describe("learner access to Course content", () => {
     });
 
     it(`refuses an unrecognised Enrollment status for ${action}`, () => {
+      // The column is an enum since #50, so the database cannot hold these.
+      // The rule still refuses them: a value that reaches it by any other path
+      // (a raw query, a future refactor) must not read as access.
       for (const status of ["", "active", "PENDING", "REFUNDED"]) {
-        expect(can(student, action, { kind: "enrollment", status })).toBe(false);
+        expect(
+          can(student, action, { kind: "enrollment", status: status as EnrollmentStatus })
+        ).toBe(false);
       }
     });
 

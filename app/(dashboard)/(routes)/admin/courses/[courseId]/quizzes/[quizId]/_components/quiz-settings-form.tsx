@@ -17,6 +17,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { QUIZ_TYPE_LABELS, QUIZ_TYPES, QuizType } from "@/lib/domain/states";
 import { apiErrorMessage } from "@/lib/api-error-message";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -30,7 +31,7 @@ import {
 
 interface QuizSettingsFormProps {
   initialData: {
-    type: string;
+    type: QuizType;
     timeLimitMinutes: number | null;
     passingScore: number;
   };
@@ -39,16 +40,10 @@ interface QuizSettingsFormProps {
 }
 
 const formSchema = z.object({
-  type: z.string().min(1),
+  type: z.nativeEnum(QuizType),
   timeLimitMinutes: z.coerce.number().min(1).nullable(),
   passingScore: z.coerce.number().min(0).max(100),
 });
-
-const typeLabels: Record<string, string> = {
-  PRE_TEST: "Pre-Test",
-  POST_TEST: "Post-Test",
-  MODULE_QUIZ: "Module Quiz",
-};
 
 export const QuizSettingsForm = ({
   initialData,
@@ -96,7 +91,7 @@ export const QuizSettingsForm = ({
       </div>
       {!isEditing && (
         <div className="text-sm mt-2 space-y-1">
-          <p>Type: {typeLabels[initialData.type] ?? initialData.type}</p>
+          <p>Type: {QUIZ_TYPE_LABELS[initialData.type]}</p>
           <p>
             Time Limit:{" "}
             {initialData.timeLimitMinutes
@@ -126,9 +121,11 @@ export const QuizSettingsForm = ({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="PRE_TEST">Pre-Test</SelectItem>
-                      <SelectItem value="POST_TEST">Post-Test</SelectItem>
-                      <SelectItem value="MODULE_QUIZ">Module Quiz</SelectItem>
+                      {QUIZ_TYPES.map((value) => (
+                        <SelectItem key={value} value={value}>
+                          {QUIZ_TYPE_LABELS[value]}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />

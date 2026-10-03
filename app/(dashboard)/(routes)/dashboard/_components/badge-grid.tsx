@@ -1,12 +1,13 @@
 "use client";
 
+import type { BadgeType } from "@/lib/domain/states";
 import { BadgeDisplay } from "@/components/badge-display";
 
 interface BadgeData {
   id: string;
   name: string;
   description: string;
-  type: string;
+  type: BadgeType;
   imageUrl: string | null;
   earned: boolean;
   earnedAt: Date | null;

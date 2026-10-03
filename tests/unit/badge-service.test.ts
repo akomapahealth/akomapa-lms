@@ -1,11 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { SEED_BADGES } from "../../scripts/seed-badges";
+
 import { aBadgeWithCriteria } from "./support/builders";
 import { dbMock } from "./support/db";
 
 vi.mock("@/lib/db", async () => ({
   db: (await import("./support/db")).dbMock,
 }));
+
+const logWarn = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/logger", () => ({ logWarn, logError: vi.fn() }));
 
 const { evaluateBadges } = await import("@/lib/badge-service");
 type BadgeEvent = Parameters<typeof evaluateBadges>[1];
@@ -465,3 +470,52 @@ describe("all_quizzes_passed", () => {
     ).toBe(true);
   });
 });
+
+describe("criteria validation (#50)", () => {
+  // Every event is generous, so a refusal can only come from validation.
+  const generous: BadgeEvent = { type: "topic_completed", topicId: "t1" };
+
+  beforeEach(() => {
+    logWarn.mockClear();
+    dbMock.userProgress.count.mockResolvedValue(1_000);
+  });
+
+  it.each([
+    ["an unknown rule", { type: "secret_handshake" }],
+    ["a misspelt rule", { type: "topic_completed", count: 1 }],
+    ["a different case", { type: "TOPICS_COMPLETED", count: 1 }],
+    ["a string count", { type: "topics_completed", count: "1" }],
+    ["a fractional count", { type: "topics_completed", count: 1.5 }],
+    ["a zero count", { type: "topics_completed", count: 0 }],
+    ["an unexpected field", { type: "topics_completed", count: 1, bonus: true }],
+    ["a missing category", { type: "category_completed" }],
+    ["an empty category", { type: "category_completed", category: "" }],
+    ["an out-of-range score", { type: "quiz_score", score: 150 }],
+    ["an unknown scope", { type: "all_quizzes_passed", scope: "platform" }],
+    ["no rule at all", {}],
+  ])("never awards a badge with %s, and logs it by id", async (_label, criteria) => {
+    expect(await earns(criteria, generous)).toBe(false);
+    expect(logWarn).toHaveBeenCalledWith("BADGE_CRITERIA_INVALID", { badgeId: expect.any(String) });
+    expect(JSON.stringify(logWarn.mock.calls)).not.toContain("secret_handshake");
+  });
+
+  it("still evaluates the valid badges beside an invalid one", async () => {
+    dbMock.badge.findMany.mockResolvedValue([
+      aBadgeWithCriteria({ type: "nonsense" }, { id: "bad" }),
+      aBadgeWithCriteria({ type: "topics_completed", count: 1 }, { id: "good" }),
+    ]);
+
+    const awarded = await evaluateBadges("user_1", generous);
+
+    expect(awarded.map((b) => b.id)).toEqual(["good"]);
+  });
+
+  it.each(SEED_BADGES.map((badge) => [badge.name, badge.criteria] as const))(
+    "accepts the seeded rule for %s",
+    async (_name, criteria) => {
+      const { badgeCriteriaSchema } = await import("@/lib/badge-service");
+      expect(badgeCriteriaSchema.safeParse(criteria).success).toBe(true);
+    }
+  );
+});
+

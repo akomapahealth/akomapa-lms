@@ -1,3 +1,4 @@
+import type { QuizType } from "@/lib/domain/states";
 import { db } from "@/lib/db";
 
 export type QuizStatus = "NOT_ATTEMPTED" | "PASSED" | "FAILED";
@@ -5,7 +6,7 @@ export type QuizStatus = "NOT_ATTEMPTED" | "PASSED" | "FAILED";
 export interface QuizProgressItem {
   quizId: string;
   title: string;
-  type: string;
+  type: QuizType;
   moduleName: string | null;
   passingScore: number;
   bestScore: number | null;

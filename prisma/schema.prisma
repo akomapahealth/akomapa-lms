@@ -8,7 +8,6 @@ generator client {
   provider = "prisma-client-js"
 }
 
-
 datasource db {
   provider = "postgresql"
 }
@@ -20,7 +19,7 @@ model User {
   firstName String?
   lastName  String?
   imageUrl  String?
-  role      String   @default("STUDENT") // STUDENT, FACULTY, ADMIN
+  role      UserRole @default(STUDENT)
 
   // Faculty-specific fields
   bio            String? @db.Text
@@ -68,9 +67,9 @@ model Course {
   categoryId String?
   category   Category? @relation(fields: [categoryId], references: [id])
 
-  modules     Module[]
-  attachments Attachment[]
-  purchases   Purchase[]
+  modules        Module[]
+  attachments    Attachment[]
+  purchases      Purchase[]
   enrollments    Enrollment[]
   quizzes        Quiz[]
   forumPosts     ForumPost[]
@@ -98,15 +97,15 @@ model Module {
   isPublished Boolean @default(false)
 
   courseId String
-  course  Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   facultyId String?
   faculty   User?   @relation("ModuleFaculty", fields: [facultyId], references: [id])
 
   reflectionPrompt String? @db.Text
 
-  topics  Topic[]
-  quizzes Quiz[]
+  topics         Topic[]
+  quizzes        Quiz[]
   journalEntries JournalEntry[]
 
   createdAt DateTime @default(now())
@@ -130,15 +129,15 @@ model Attachment {
 }
 
 model Topic {
-  id          String  @id @default(uuid())
+  id          String           @id @default(uuid())
   title       String
-  description String? @db.Text
-  videoUrl    String? @db.Text
-  textContent String? @db.Text
-  contentType String  @default("VIDEO") // VIDEO, TEXT, INTERACTIVE
+  description String?          @db.Text
+  videoUrl    String?          @db.Text
+  textContent String?          @db.Text
+  contentType TopicContentType @default(VIDEO)
   position    Int
-  isPublished Boolean @default(false)
-  isFree      Boolean @default(false)
+  isPublished Boolean          @default(false)
+  isFree      Boolean          @default(false)
 
   muxData   MuxData?
   caseStudy CaseStudy?
@@ -151,8 +150,8 @@ model Topic {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@map("Chapter")
   @@index([moduleId])
+  @@map("Chapter")
 }
 
 model MuxData {
@@ -202,10 +201,10 @@ model Enrollment {
   user   User   @relation(fields: [userId], references: [id])
 
   courseId String
-  course  Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
-  status     String   @default("ACTIVE") // ACTIVE, COMPLETED, SUSPENDED
-  enrolledAt DateTime @default(now())
+  status     EnrollmentStatus @default(ACTIVE)
+  enrolledAt DateTime         @default(now())
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -227,15 +226,15 @@ model StripCustomer {
 // ─── Quiz System ───
 
 model Quiz {
-  id               String  @id @default(uuid())
+  id               String   @id @default(uuid())
   title            String
-  type             String  // PRE_TEST, POST_TEST, MODULE_QUIZ
+  type             QuizType
   timeLimitMinutes Int?
-  passingScore     Float   @default(70)
-  isPublished      Boolean @default(false)
+  passingScore     Float    @default(70)
+  isPublished      Boolean  @default(false)
 
   courseId String?
-  course  Course? @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course   Course? @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   moduleId String?
   module   Module? @relation(fields: [moduleId], references: [id], onDelete: Cascade)
@@ -355,7 +354,7 @@ model ForumPost {
   category   ForumCategory @relation(fields: [categoryId], references: [id])
 
   courseId String?
-  course  Course? @relation(fields: [courseId], references: [id])
+  course   Course? @relation(fields: [courseId], references: [id])
 
   comments ForumComment[]
   likes    PostLike[]
@@ -396,7 +395,7 @@ model PostLike {
   id String @id @default(uuid())
 
   userId String
-  user   User @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
 
   postId String
   post   ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
@@ -411,7 +410,7 @@ model CommentLike {
   id String @id @default(uuid())
 
   userId String
-  user   User @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
 
   commentId String
   comment   ForumComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
@@ -425,11 +424,11 @@ model CommentLike {
 // ─── Phase 5: Gamification ───
 
 model Badge {
-  id          String  @id @default(uuid())
-  name        String  @unique
+  id          String    @id @default(uuid())
+  name        String    @unique
   description String
-  imageUrl    String? @db.Text
-  type        String // COMPLETION, STREAK, COMMUNITY, QUIZ_SCORE, MILESTONE
+  imageUrl    String?   @db.Text
+  type        BadgeType
   criteria    Json
 
   userBadges UserBadge[]
@@ -536,7 +535,7 @@ model Certificate {
   user   User   @relation(fields: [userId], references: [id])
 
   courseId String
-  course  Course @relation(fields: [courseId], references: [id])
+  course   Course @relation(fields: [courseId], references: [id])
 
   pdfUrl String? @db.Text
 
@@ -551,12 +550,12 @@ model UserSettings {
   userId String @unique
   user   User   @relation(fields: [userId], references: [id])
 
-  theme                  String  @default("light")
-  defaultJournalPrivacy  Boolean @default(true)
-  showProfileInCommunity Boolean @default(true)
-  emailOnBadgeEarned     Boolean @default(true)
-  emailOnForumReply      Boolean @default(true)
-  emailOnFacultyComment  Boolean @default(true)
+  theme                  ThemePreference @default(light)
+  defaultJournalPrivacy  Boolean         @default(true)
+  showProfileInCommunity Boolean         @default(true)
+  emailOnBadgeEarned     Boolean         @default(true)
+  emailOnForumReply      Boolean         @default(true)
+  emailOnFacultyComment  Boolean         @default(true)
 
   updatedAt DateTime @updatedAt
 }
@@ -579,4 +578,58 @@ model RateLimitBucket {
   expiresAt DateTime
 
   @@index([expiresAt])
+}
+
+// ─── Closed domain states (#50) ───
+//
+// Every finite set of persisted values is a PostgreSQL enum, so the database
+// refuses a value outside it rather than storing one that every reader must
+// remember to distrust. Application code takes its types and value lists from
+// the generated client via lib/domain/states.ts; nothing else spells the values
+// out. Values match what the columns held as text, so the conversion
+// (migration 20261003010000_closed_domain_states) maps each one to itself and
+// refuses to run on anything else.
+
+/// Authorization role (ADR 0001). ADMIN implies FACULTY.
+enum UserRole {
+  STUDENT
+  FACULTY
+  ADMIN
+}
+
+/// How a Topic's main content is delivered.
+enum TopicContentType {
+  VIDEO
+  TEXT
+  INTERACTIVE
+}
+
+/// Course entitlement state (ADR 0002). Transitions: lib/domain/states.ts.
+enum EnrollmentStatus {
+  ACTIVE
+  COMPLETED
+  SUSPENDED
+}
+
+/// A Quiz's role in a Course. PRE_TEST and POST_TEST form the growth measure.
+enum QuizType {
+  PRE_TEST
+  POST_TEST
+  MODULE_QUIZ
+}
+
+/// The category a Badge is awarded in; its rule lives in `Badge.criteria`.
+enum BadgeType {
+  COMPLETION
+  STREAK
+  COMMUNITY
+  QUIZ_SCORE
+  MILESTONE
+}
+
+/// A learner's colour scheme. Lowercase because next-themes uses these names.
+enum ThemePreference {
+  light
+  dark
+  system
 }

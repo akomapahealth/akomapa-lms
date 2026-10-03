@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Course, Module, Topic, UserProgress } from "@prisma/client";
 import { FileQuestion, Lock, CheckCircle2, Circle } from "lucide-react";
+import type { QuizType } from "@/lib/domain/states";
 import { CourseProgress } from "@/components/course-progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Accordion } from "@/components/ui/accordion";
@@ -22,7 +23,7 @@ type ModuleWithTopics = Module & {
 export interface SidebarQuiz {
   id: string;
   title: string;
-  type: string;
+  type: QuizType;
   hasAttempt: boolean;
   passed: boolean;
 }

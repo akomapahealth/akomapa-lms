@@ -26,6 +26,8 @@ import { PrismaClient } from "@prisma/client";
 import { config } from "dotenv";
 import { Pool } from "pg";
 
+import { parseClosed, STAFF_ROLES, USER_ROLES, type UserRole } from "../lib/domain/states";
+
 // Precedence: an explicitly exported DATABASE_URL wins over both dotenv files.
 //
 // This matters more here than in most scripts. `.env.local` is loaded with
@@ -44,8 +46,9 @@ if (explicitDatabaseUrl) {
   process.env.DATABASE_URL = explicitDatabaseUrl;
 }
 
-const ROLES = ["STUDENT", "FACULTY", "ADMIN"] as const;
-type Role = (typeof ROLES)[number];
+// The schema's UserRole enum (#50); not restated here.
+const ROLES = USER_ROLES;
+type Role = UserRole;
 
 const connectionString = process.env.DATABASE_URL;
 
@@ -84,7 +87,7 @@ function flag(name: string): string | undefined {
 }
 
 function isRole(value: string | undefined): value is Role {
-  return ROLES.includes(value as Role);
+  return parseClosed(ROLES, value) !== null;
 }
 
 /** Resolves the target user from --email or --user. */
@@ -178,7 +181,7 @@ async function find(): Promise<number> {
 /** Lists everyone holding privilege. Prints ids and roles, never emails. */
 async function list(): Promise<number> {
   const privileged = await database.user.findMany({
-    where: { role: { in: ["FACULTY", "ADMIN"] } },
+    where: { role: { in: [...STAFF_ROLES] } },
     select: { id: true, role: true },
     orderBy: [{ role: "asc" }, { id: "asc" }],
   });

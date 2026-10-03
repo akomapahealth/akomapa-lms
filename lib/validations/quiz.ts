@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { QuizType } from "@/lib/domain/states";
 import { COUNT, NUMBER } from "@/lib/http/limits";
 
 import { resourceId } from "./ids";
@@ -13,7 +14,10 @@ import { requiredShortText } from "./text";
  * and `type` decides whether the post-test lock applies, so an unrecognised
  * value silently bypassed it.
  */
-export const quizType = z.enum(["PRE_TEST", "POST_TEST", "MODULE_QUIZ"]);
+//
+// The accepted values are the schema's `QuizType` enum (#50), not a second
+// copy of the list.
+export const quizType = z.nativeEnum(QuizType);
 
 export const quizCreateSchema = z
   .object({

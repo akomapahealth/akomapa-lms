@@ -9,30 +9,25 @@
  * which is the "OR" ADR 0002 rejects because the weaker condition always wins.
  */
 
-/**
- * `Enrollment.status` values.
- *
- * The column is a free-form `String` with a comment. #50 turns it into a Prisma
- * enum; until then this is the one place the allowed values are written down, and
- * `normalizeEnrollmentStatus` is what keeps an unrecognised row from being read
- * as access.
- */
-export const ENROLLMENT_STATUSES = ["ACTIVE", "COMPLETED", "SUSPENDED"] as const;
+import { ENROLLMENT_STATUSES, EnrollmentStatus, parseClosed } from "../domain/states";
 
-export type EnrollmentStatus = (typeof ENROLLMENT_STATUSES)[number];
+/**
+ * `Enrollment.status` values: the schema's `EnrollmentStatus` enum since #50.
+ * Re-exported so entitlement callers keep one import; the values and the legal
+ * transitions live in lib/domain/states.ts.
+ */
+export { ENROLLMENT_STATUSES, EnrollmentStatus };
 
 /**
  * Narrows an untrusted status to a known one.
  *
- * A row written by hand, by a half-finished migration, or by a future status this
- * code does not know about must not be read as access. `null` means "not a status
- * this system recognises", and every caller treats that as no entitlement.
+ * The column can no longer hold anything else, but a status arriving by another
+ * path -- a raw query, a cached object, a future refactor -- must still not be
+ * read as access. `null` means "not a status this system recognises", and every
+ * caller treats that as no entitlement.
  */
 export function normalizeEnrollmentStatus(value: unknown): EnrollmentStatus | null {
-  return typeof value === "string" &&
-    (ENROLLMENT_STATUSES as readonly string[]).includes(value)
-    ? (value as EnrollmentStatus)
-    : null;
+  return parseClosed(ENROLLMENT_STATUSES, value);
 }
 
 /**

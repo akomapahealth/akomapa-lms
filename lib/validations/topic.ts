@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { TopicContentType } from "@/lib/domain/states";
+
 import { resourceId } from "./ids";
 import { httpUrl, optionalRichText, shortText, title } from "./text";
 
@@ -16,7 +18,7 @@ export const topicUpdateSchema = z
     // Handed to Mux as an asset input, so it must be a real http(s) URL.
     videoUrl: httpUrl.optional().nullable(),
     textContent: optionalRichText.optional().nullable(),
-    contentType: z.enum(["VIDEO", "TEXT", "INTERACTIVE"]).optional(),
+    contentType: z.nativeEnum(TopicContentType).optional(),
     isFree: z.boolean().optional(),
   })
   .strict()

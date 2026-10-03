@@ -6,6 +6,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { PlusCircle } from "lucide-react";
 
+import { parseClosed, QUIZ_TYPE_LABELS, QUIZ_TYPES, QuizType } from "@/lib/domain/states";
 import { apiErrorMessage } from "@/lib/api-error-message";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,7 +34,7 @@ export const CreateQuizButton = ({ courseId }: CreateQuizButtonProps) => {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [title, setTitle] = useState("");
-  const [type, setType] = useState("MODULE_QUIZ");
+  const [type, setType] = useState<QuizType>(QuizType.MODULE_QUIZ);
   const [isLoading, setIsLoading] = useState(false);
 
   const onSubmit = async () => {
@@ -80,14 +81,20 @@ export const CreateQuizButton = ({ courseId }: CreateQuizButtonProps) => {
           </div>
           <div className="space-y-2">
             <Label>Type</Label>
-            <Select value={type} onValueChange={setType} disabled={isLoading}>
+            <Select
+              value={type}
+              onValueChange={(value) => setType(parseClosed(QUIZ_TYPES, value) ?? QuizType.MODULE_QUIZ)}
+              disabled={isLoading}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="PRE_TEST">Pre-Test</SelectItem>
-                <SelectItem value="POST_TEST">Post-Test</SelectItem>
-                <SelectItem value="MODULE_QUIZ">Module Quiz</SelectItem>
+                {QUIZ_TYPES.map((value) => (
+                  <SelectItem key={value} value={value}>
+                    {QUIZ_TYPE_LABELS[value]}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

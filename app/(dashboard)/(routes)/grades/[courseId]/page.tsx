@@ -1,3 +1,4 @@
+import { QUIZ_TYPE_LABELS } from "@/lib/domain/states";
 import { requirePagePrincipal } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { CheckCircle2, Circle, Clock } from "lucide-react";
@@ -39,12 +40,6 @@ const GradesDetailPage = async ({
   const isCourseCompleted = detail.modules.every(
     (mod) => mod.status === "COMPLETED"
   );
-
-  const typeLabels: Record<string, string> = {
-    PRE_TEST: "Pre-Test",
-    POST_TEST: "Post-Test",
-    MODULE_QUIZ: "Module Quiz",
-  };
 
   return (
     <div className="px-4 py-6 sm:p-6">
@@ -168,7 +163,7 @@ const GradesDetailPage = async ({
                             variant="outline"
                             className="ml-2 text-xs"
                           >
-                            {typeLabels[attempt.quizType] ?? attempt.quizType}
+                            {QUIZ_TYPE_LABELS[attempt.quizType]}
                           </Badge>
                         </div>
                       </TableCell>
