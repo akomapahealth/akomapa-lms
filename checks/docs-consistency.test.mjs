@@ -23,6 +23,7 @@ const docs = [
   ...listMarkdown("docs/policies"),
   ...listMarkdown("docs/ai"),
   ...listMarkdown("docs/release"),
+  ...listMarkdown("docs/security"),
   "evals/README.md",
 ].filter((f) => fs.existsSync(path.join(root, f)));
 

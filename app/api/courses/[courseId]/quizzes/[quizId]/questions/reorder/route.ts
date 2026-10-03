@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { authorizeQuizInCourse, requirePrincipal } from "@/lib/auth";
-import { BODY_BYTES, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
+import { assertTrustedOrigin, BODY_BYTES, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
 import { quizParams } from "@/lib/validations/ids";
 import { reorderSchema } from "@/lib/validations/reorder";
 
@@ -11,6 +11,8 @@ export async function PUT(
   { params }: { params: Promise<{ courseId: string; quizId: string }> }
 ) {
   try {
+    assertTrustedOrigin(req);
+
     const routeParams = parseParams(quizParams, await params);
 
     const principal = await requirePrincipal();

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { BODY_BYTES } from "@/lib/http/limits";
 
+import { SAME_ORIGIN_HEADERS } from "../../support/origin";
 import { dbMock } from "../support/db";
 
 const clerkAuth = vi.hoisted(() => vi.fn());
@@ -55,7 +56,10 @@ function request(body: unknown, contentType: string | null = "application/json")
   return new Request("http://localhost/api", {
     method: "POST",
     body: typeof body === "string" ? body : JSON.stringify(body),
-    ...(contentType === null ? {} : { headers: { "content-type": contentType } }),
+    headers: {
+      ...SAME_ORIGIN_HEADERS,
+      ...(contentType === null ? {} : { "content-type": contentType }),
+    },
   });
 }
 
@@ -107,7 +111,7 @@ describe("unsupported media type", () => {
 
   it("refuses a body with no Content-Type at all", async () => {
     const bare = new Request("http://localhost/api", { method: "POST", body: "{}" });
-    Object.defineProperty(bare, "headers", { value: new Headers() });
+    Object.defineProperty(bare, "headers", { value: new Headers(SAME_ORIGIN_HEADERS) });
 
     expect(await codeOf(await createCourse(bare))).toBe("unsupported_media_type");
   });

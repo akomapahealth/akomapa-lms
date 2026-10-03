@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requirePrincipal } from "@/lib/auth";
 import { markCourseCompleted, topicEntitlement } from "@/lib/entitlement";
-import { handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
+import { assertTrustedOrigin, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
 import { topicParams } from "@/lib/validations/ids";
 import { progressSchema } from "@/lib/validations/topic";
 import { findPublishedTopicInCourse } from "@/lib/courses/topic-access";
@@ -21,6 +21,8 @@ export async function PUT(
     { params }: { params: Promise<{ courseId: string; chapterId: string }> }
 ) {
     try {
+        assertTrustedOrigin(req);
+
         const routeParams = parseParams(topicParams, await params);
 
         const principal = await requirePrincipal();

@@ -26,6 +26,7 @@ describe("ERROR_CODES", () => {
     expect(ERROR_CODES).toEqual({
       unauthenticated: 401,
       forbidden: 403,
+      untrusted_origin: 403,
       not_found: 404,
       invalid_parameter: 400,
       malformed_json: 400,

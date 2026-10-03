@@ -87,6 +87,16 @@ it: importing `auth` from `@clerk/nextjs/server` anywhere except `lib/auth/` and
 `proxy.ts` fails the build. `currentUser` stays available for profile data such
 as an email address, but identity itself comes from the principal.
 
+### Mutations are origin-guarded
+
+Every `POST`, `PUT`, `PATCH`, and `DELETE` handler calls `assertTrustedOrigin(req)`
+first (#45, [docs/security/csrf.md](../security/csrf.md)), so a test request
+without browser headers is refused with 403 `untrusted_origin` before the
+handler does anything. Build handler requests with `SAME_ORIGIN_HEADERS` from
+`tests/support/origin.ts`. Both suites pin the trusted origin in their setup
+files, so your `.env.local` cannot change the result. A new mutating handler
+that skips the guard fails `tests/unit/http/origin-coverage.test.ts`.
+
 ### Write the negative case first
 
 The failure that matters is rarely "the feature did not work"; it is "the guard

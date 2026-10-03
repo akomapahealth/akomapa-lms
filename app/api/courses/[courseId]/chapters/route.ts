@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { authorizeCourse, requirePrincipal } from "@/lib/auth";
-import { handleRouteError, parseBody, parseParams } from "@/lib/http";
+import { assertTrustedOrigin, handleRouteError, parseBody, parseParams } from "@/lib/http";
 import { courseParams } from "@/lib/validations/ids";
 import { topicCreateSchema } from "@/lib/validations/topic";
 
@@ -11,6 +11,8 @@ export async function POST(
     { params }: { params: Promise<{ courseId: string }> }
 ) {
     try {
+        assertTrustedOrigin(req);
+
         const routeParams = parseParams(courseParams, await params);
 
         const principal = await requirePrincipal();

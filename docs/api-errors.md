@@ -52,6 +52,7 @@ unexpected fault — is a JSON object:
 | --- | --- | --- |
 | `unauthenticated` | 401 | No session. Signing in would help. |
 | `forbidden` | 403 | Signed in, but the role cannot do this anywhere. Signing in again will not help. |
+| `untrusted_origin` | 403 | A mutation that did not come from a trusted origin: cross-site, a sibling subdomain, or no `Origin`. Checked before authentication. See [security/csrf.md](security/csrf.md). |
 | `not_found` | 404 | The resource does not exist, **or** exists and is not yours. |
 | `invalid_parameter` | 400 | A path or query segment is missing or the wrong shape, e.g. a non-uuid id. |
 | `malformed_json` | 400 | The body is not parseable JSON, or is not valid UTF-8. |
@@ -135,7 +136,12 @@ guards. They still answer in this shape.
 - `POST /api/webhooks/clerk` — Clerk, verified by svix. Same convention.
 - `/api/uploadthing` — authenticates inside `core.ts`, and surfaces
   `UploadThingError` rather than this shape, because the client library expects
-  its own protocol.
+  its own protocol. The one exception is a refusal by the origin guard, which
+  happens before the library runs and answers `untrusted_origin` in this shape.
+
+The two webhooks are also exempt from the origin guard, and so are
+UploadThing's signed server callbacks; browser upload requests are not. See
+[security/csrf.md](security/csrf.md#exemptions).
 
 ### Server components are not in scope
 

@@ -1,5 +1,4 @@
 import Stripe from "stripe";
-import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { stripe } from "@/lib/stripe";
@@ -23,8 +22,10 @@ import { checkoutMetadataSchema } from "@/lib/validations/webhooks";
  */
 export async function POST(req: Request) {
     const body = await req.text();
-    const headersList = await headers();
-    const signature = headersList.get("Stripe-Signature");
+    // Read from the request itself rather than `next/headers`, which needs a
+    // Next.js request scope and so cannot be exercised by a route-level test of
+    // this route's exemption from the origin guard (#45).
+    const signature = req.headers.get("Stripe-Signature");
 
     if (signature === null) {
         return problem("invalid_parameter", { message: "Missing Stripe signature." });

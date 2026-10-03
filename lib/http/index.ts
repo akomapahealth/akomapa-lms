@@ -24,3 +24,8 @@ export {
 export { readBoundedText, readJson } from "./body";
 export { parseBody, parseParams, parseQuery, toFieldProblems } from "./validate";
 export { handleRouteError } from "./route";
+export {
+  assertTrustedOrigin,
+  isUploadThingServerCallback,
+  ORIGIN_GUARD_EXEMPTIONS,
+} from "./origin";

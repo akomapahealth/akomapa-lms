@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { requireCapability, requirePrincipal } from "@/lib/auth";
-import { handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
+import { assertTrustedOrigin, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
 import { categoryParams } from "@/lib/validations/ids";
 import { categoryUpdateSchema } from "@/lib/validations/community";
 
@@ -11,6 +11,8 @@ export async function PATCH(
   { params }: { params: Promise<{ categoryId: string }> }
 ) {
   try {
+    assertTrustedOrigin(req);
+
     const principal = await requirePrincipal();
     requireCapability(principal, "community:moderate");
 
@@ -29,10 +31,12 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ categoryId: string }> }
 ) {
   try {
+    assertTrustedOrigin(req);
+
     const principal = await requirePrincipal();
     requireCapability(principal, "community:moderate");
 

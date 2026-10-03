@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, vi } from "vitest";
 
+import { pinTrustedOrigins } from "../../support/origin";
+
 import { resetDbMock } from "./db";
 
 /**
@@ -20,6 +22,10 @@ process.env.TZ = "UTC";
 // the wrong reason. Clear it; the tests that assert its irrelevance set it
 // explicitly.
 delete process.env.TEACHER_ID;
+
+// The origin guard (#45) reads its allow-list from the environment. Pinned so a
+// developer's local configuration cannot make a cross-site test pass.
+pinTrustedOrigins();
 
 const REAL_RANDOM = Math.random;
 

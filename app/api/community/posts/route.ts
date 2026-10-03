@@ -2,12 +2,14 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { requirePrincipal } from "@/lib/auth";
-import { BODY_BYTES, handleRouteError, parseBody } from "@/lib/http";
+import { assertTrustedOrigin, BODY_BYTES, handleRouteError, parseBody } from "@/lib/http";
 import { postCreateSchema } from "@/lib/validations/community";
 import { evaluateBadges } from "@/lib/badge-service";
 
 export async function POST(req: Request) {
   try {
+    assertTrustedOrigin(req);
+
     const { userId } = await requirePrincipal();
 
     // Rich text, so the larger body ceiling. The previous check was

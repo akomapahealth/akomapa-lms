@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { requirePrincipal } from "@/lib/auth";
 import { courseEntitlement, LOCKED_STATE_MESSAGE } from "@/lib/entitlement";
 import { isPostTestUnlocked } from "@/actions/check-post-test-lock";
-import { handleRouteError, parseParams, problem } from "@/lib/http";
+import { assertTrustedOrigin, handleRouteError, parseParams, problem } from "@/lib/http";
 import { quizParams } from "@/lib/validations/ids";
 
 export async function POST(
@@ -12,6 +12,8 @@ export async function POST(
   { params }: { params: Promise<{ courseId: string; quizId: string }> }
 ) {
   try {
+    assertTrustedOrigin(req);
+
     const routeParams = parseParams(quizParams, await params);
 
     const principal = await requirePrincipal();

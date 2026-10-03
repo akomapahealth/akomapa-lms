@@ -30,6 +30,15 @@ export const ERROR_CODES = {
   /** Authenticated, but the role cannot perform this action anywhere. 403. */
   forbidden: 403,
   /**
+   * A cookie-authenticated mutation that did not come from a trusted origin
+   * (#45): cross-site, sibling-subdomain, opaque, or missing `Origin`. 403.
+   *
+   * Separate from `forbidden` because the remedy is different -- the caller's
+   * role is irrelevant, and an operator seeing these from a real deployment is
+   * looking at a missing entry in TRUSTED_ORIGINS rather than a permission bug.
+   */
+  untrusted_origin: 403,
+  /**
    * The resource does not exist, or exists and is not the principal's. 404.
    *
    * Deliberately one code for both: answering 403 for "exists but is not
@@ -93,6 +102,8 @@ export const CORRELATION_HEADER = "x-correlation-id";
 const MESSAGES: Record<ErrorCode, string> = {
   unauthenticated: "Sign in to continue.",
   forbidden: "You do not have permission to perform this action.",
+  untrusted_origin:
+    "This request did not come from a trusted origin. Reload the page and try again.",
   not_found: "Not found.",
   invalid_parameter: "The request address is not valid.",
   malformed_json: "The request body is not valid JSON.",

@@ -2,11 +2,13 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { requirePrincipal } from "@/lib/auth";
-import { BODY_BYTES, handleRouteError, parseBody } from "@/lib/http";
+import { assertTrustedOrigin, BODY_BYTES, handleRouteError, parseBody } from "@/lib/http";
 import { journalCreateSchema } from "@/lib/validations/journal";
 
 export async function POST(req: Request) {
   try {
+    assertTrustedOrigin(req);
+
     const { userId } = await requirePrincipal();
 
     const body = await parseBody(journalCreateSchema, req, BODY_BYTES.richText);
