@@ -73,6 +73,12 @@ CHANGELOG.md
 # The API error-shape contract, referenced from lib/http and every route handler.
 !/docs/api-errors.md
 
+# Security controls every route handler implements against: the origin guard's
+# strategy, trusted origins per environment, and its exemptions (#45). Asserted
+# by tests/unit/http/origin-coverage.test.ts.
+!/docs/security/
+!/docs/security/**
+
 # Operational runbooks: procedures a deploy or an incident depends on. A runbook
 # that exists only on one machine is not a runbook.
 !/docs/runbooks/
