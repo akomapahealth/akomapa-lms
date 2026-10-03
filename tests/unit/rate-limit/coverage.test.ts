@@ -147,6 +147,47 @@ describe("rate-limit coverage", () => {
     expect(unused).toEqual(["ai.request"]);
   });
 
+  it("tells the learner how long to wait wherever the UI calls a mutation", () => {
+    // A 429 shown as "Something went wrong" invites the immediate retry that
+    // fails again. Every catch around an axios mutation routes its toast
+    // through apiErrorMessage, which reads Retry-After.
+    const sources = ["app", "components", "hooks"].flatMap((dir) =>
+      walk(dir, (file) => /\.tsx?$/.test(file))
+    );
+    const unwrapped: string[] = [];
+    let checked = 0;
+
+    for (const file of sources) {
+      const source = parse(file, read(file));
+      const visit = (node: ts.Node) => {
+        if (
+          ts.isTryStatement(node) &&
+          node.catchClause &&
+          /axios\.(post|put|patch|delete)/.test(node.tryBlock.getText())
+        ) {
+          const find = (child: ts.Node) => {
+            if (ts.isCallExpression(child) && child.expression.getText() === "toast.error") {
+              checked += 1;
+              const [argument] = child.arguments;
+              const wrapped =
+                argument !== undefined &&
+                ts.isCallExpression(argument) &&
+                argument.expression.getText() === "apiErrorMessage";
+              if (!wrapped) unwrapped.push(`${file}: ${child.getText()}`);
+            }
+            ts.forEachChild(child, find);
+          };
+          find(node.catchClause.block);
+        }
+        ts.forEachChild(node, visit);
+      };
+      visit(source);
+    }
+
+    expect(checked).toBeGreaterThanOrEqual(46);
+    expect(unwrapped).toEqual([]);
+  });
+
   it("reads the principal for upload limits rather than trusting the request", () => {
     const source = read("app/api/uploadthing/route.ts");
 

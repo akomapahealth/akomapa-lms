@@ -1,4 +1,4 @@
-import type { NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { createRouteHandler } from "uploadthing/next";
 
 import { getPrincipal } from "@/lib/auth";
@@ -14,6 +14,21 @@ import { ourFileRouter } from "./core";
 const handlers = createRouteHandler({
   router: ourFileRouter,
 });
+
+/**
+ * UploadThing's client shows a top-level `message` from an error body and
+ * ignores the rest, so a refusal from this wrapper -- an untrusted origin, a
+ * rate limit, a store outage -- would otherwise reach the author as a generic
+ * failure. The contract's own fixed message is copied up beside the standard
+ * `error` object; nothing else changes, and nothing in it came from the request.
+ */
+async function forUploadThingClient(response: NextResponse): Promise<NextResponse> {
+  const body = (await response.json()) as { error: { message: string } };
+  return NextResponse.json(
+    { ...body, message: body.error.message },
+    { status: response.status, headers: response.headers }
+  );
+}
 
 /** The route configuration the client library reads. Changes nothing. */
 export const GET = handlers.GET;
@@ -46,7 +61,7 @@ export async function POST(req: NextRequest) {
       const principal = await getPrincipal();
       await enforceRateLimit(req, "upload.request", { userId: principal?.userId });
     } catch (error) {
-      return handleRouteError("UPLOADTHING", error);
+      return forUploadThingClient(handleRouteError("UPLOADTHING", error));
     }
   }
 

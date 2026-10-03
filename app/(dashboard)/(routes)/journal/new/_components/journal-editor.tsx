@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { apiErrorMessage } from "@/lib/api-error-message";
 import { stripHtml } from "@/lib/text/strip-html";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -90,8 +91,8 @@ export const JournalEditor = ({
         window.history.replaceState(null, "", `/journal/${response.data.id}`);
       }
       setLastSaved(new Date());
-    } catch {
-      toast.error("Failed to save");
+    } catch (error) {
+      toast.error(apiErrorMessage(error, "Failed to save"));
     } finally {
       setIsSaving(false);
     }
@@ -111,8 +112,8 @@ export const JournalEditor = ({
       toast.success("Entry deleted");
       router.push("/journal");
       router.refresh();
-    } catch {
-      toast.error("Failed to delete");
+    } catch (error) {
+      toast.error(apiErrorMessage(error, "Failed to delete"));
     }
   };
 

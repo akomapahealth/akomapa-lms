@@ -5,6 +5,7 @@ import { useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 
+import { apiErrorMessage } from "@/lib/api-error-message";
 import { cn } from "@/lib/utils";
 
 interface LikeButtonProps {
@@ -38,11 +39,11 @@ export const LikeButton = ({
       const response = await axios.post(url);
       setLiked(response.data.liked);
       setCount(response.data.count);
-    } catch {
+    } catch (error) {
       // Revert on error
       setLiked(liked);
       setCount(count);
-      toast.error("Something went wrong");
+      toast.error(apiErrorMessage(error, "Something went wrong"));
     } finally {
       setIsLoading(false);
     }

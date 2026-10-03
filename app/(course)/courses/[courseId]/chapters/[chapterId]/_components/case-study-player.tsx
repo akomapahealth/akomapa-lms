@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+import { apiErrorMessage } from "@/lib/api-error-message";
 import { Button } from "@/components/ui/button";
 import {
   type CaseStudyScenario,
@@ -72,8 +73,8 @@ export const CaseStudyPlayer = ({
         `/api/courses/${courseId}/case-studies/${caseStudyId}/attempt`,
         { choices, completed: true }
       );
-    } catch {
-      toast.error("Failed to save your progress");
+    } catch (error) {
+      toast.error(apiErrorMessage(error, "Failed to save your progress"));
     } finally {
       setIsSaving(false);
     }

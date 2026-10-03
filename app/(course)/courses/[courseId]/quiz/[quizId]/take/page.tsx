@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import axios from "axios";
 import toast from "react-hot-toast";
 
+import { apiErrorMessage } from "@/lib/api-error-message";
 import { useQuizStore } from "@/hooks/use-quiz-store";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { QuizTimer } from "../_components/quiz-timer";
@@ -49,7 +50,7 @@ const QuizTakePage = () => {
         setQuiz(params.quizId, data.attemptId, data.questions, timeLimitSeconds);
         setIsLoading(false);
       } catch (error) {
-        toast.error("Failed to start quiz");
+        toast.error(apiErrorMessage(error, "Failed to start quiz"));
         router.push(`/courses/${params.courseId}/quiz/${params.quizId}`);
       }
     };
@@ -132,7 +133,7 @@ const QuizTakePage = () => {
         `/courses/${params.courseId}/quiz/${params.quizId}/results/${response.data.attemptId}`
       );
     } catch (error) {
-      toast.error("Failed to submit quiz");
+      toast.error(apiErrorMessage(error, "Failed to submit quiz"));
       setIsSubmitting(false);
     }
   };

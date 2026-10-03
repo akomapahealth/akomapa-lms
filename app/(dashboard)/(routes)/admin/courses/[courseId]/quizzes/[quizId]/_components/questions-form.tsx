@@ -17,6 +17,7 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
+import { apiErrorMessage } from "@/lib/api-error-message";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -60,8 +61,8 @@ export const QuestionsForm = ({
       toggleCreating();
       form.reset();
       router.refresh();
-    } catch {
-      toast.error("Something went wrong");
+    } catch (error) {
+      toast.error(apiErrorMessage(error, "Something went wrong"));
     }
   };
 
@@ -74,8 +75,8 @@ export const QuestionsForm = ({
       );
       toast.success("Questions reordered");
       router.refresh();
-    } catch {
-      toast.error("Something went wrong");
+    } catch (error) {
+      toast.error(apiErrorMessage(error, "Something went wrong"));
     } finally {
       setIsUpdating(false);
     }

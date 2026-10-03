@@ -10,6 +10,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 
+import { apiErrorMessage } from "@/lib/api-error-message";
 import { Button } from "@/components/ui/button"; 
 import { FileUpload } from "@/components/file-upload";
 
@@ -46,8 +47,8 @@ export const ImageForm = ({
             toast.success("Course updated!");
             toggleEdit();
             router.refresh();
-        } catch {
-            toast.error("Something went wrong");
+        } catch (error) {
+            toast.error(apiErrorMessage(error, "Something went wrong"));
         }
     };
 

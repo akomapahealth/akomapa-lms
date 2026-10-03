@@ -5,6 +5,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { Loader2 } from "lucide-react";
 
+import { apiErrorMessage } from "@/lib/api-error-message";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -32,8 +33,8 @@ export const SettingsForm = ({ initialSettings }: SettingsFormProps) => {
     try {
       await axios.patch("/api/settings", settings);
       toast.success("Settings saved");
-    } catch {
-      toast.error("Failed to save settings");
+    } catch (error) {
+      toast.error(apiErrorMessage(error, "Failed to save settings"));
     } finally {
       setIsSaving(false);
     }

@@ -70,6 +70,7 @@ export default defineConfig({
         "lib/rate-limit/key.ts",
         "lib/rate-limit/policies.ts",
         "lib/rate-limit/index.ts",
+        "lib/api-error-message.ts",
       ],
       thresholds: {
         // Per-file, so a well-covered module cannot mask a bare one.
@@ -121,6 +122,8 @@ export default defineConfig({
         "lib/rate-limit/key.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
         "lib/rate-limit/policies.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
         "lib/rate-limit/index.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
+        // What a learner reads after a 429 or 503: the retry guidance.
+        "lib/api-error-message.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
       },
     },
   },

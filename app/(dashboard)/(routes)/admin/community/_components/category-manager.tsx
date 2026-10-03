@@ -6,6 +6,7 @@ import { Plus, Pencil, Trash } from "lucide-react";
 import axios from "axios";
 import toast from "react-hot-toast";
 
+import { apiErrorMessage } from "@/lib/api-error-message";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -75,8 +76,8 @@ export const CategoryManager = ({ categories }: CategoryManagerProps) => {
       setIsOpen(false);
       resetForm();
       router.refresh();
-    } catch {
-      toast.error("Something went wrong");
+    } catch (error) {
+      toast.error(apiErrorMessage(error, "Something went wrong"));
     } finally {
       setIsLoading(false);
     }
@@ -88,8 +89,8 @@ export const CategoryManager = ({ categories }: CategoryManagerProps) => {
       await axios.delete(`/api/community/categories/${id}`);
       toast.success("Category deleted");
       router.refresh();
-    } catch {
-      toast.error("Cannot delete category with existing posts");
+    } catch (error) {
+      toast.error(apiErrorMessage(error, "Cannot delete category with existing posts"));
     } finally {
       setIsLoading(false);
     }

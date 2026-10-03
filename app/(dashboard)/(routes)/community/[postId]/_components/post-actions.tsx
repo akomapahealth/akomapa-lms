@@ -6,6 +6,7 @@ import { MoreHorizontal, Pencil, Trash, Pin, Lock } from "lucide-react";
 import axios from "axios";
 import toast from "react-hot-toast";
 
+import { apiErrorMessage } from "@/lib/api-error-message";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -39,8 +40,8 @@ export const PostActions = ({
       toast.success("Post deleted");
       router.push("/community");
       router.refresh();
-    } catch {
-      toast.error("Something went wrong");
+    } catch (error) {
+      toast.error(apiErrorMessage(error, "Something went wrong"));
     } finally {
       setIsLoading(false);
     }
@@ -52,8 +53,8 @@ export const PostActions = ({
       await axios.patch(`/api/community/posts/${postId}/pin`);
       toast.success(isPinned ? "Post unpinned" : "Post pinned");
       router.refresh();
-    } catch {
-      toast.error("Something went wrong");
+    } catch (error) {
+      toast.error(apiErrorMessage(error, "Something went wrong"));
     } finally {
       setIsLoading(false);
     }
@@ -65,8 +66,8 @@ export const PostActions = ({
       await axios.patch(`/api/community/posts/${postId}/lock`);
       toast.success(isLocked ? "Post unlocked" : "Post locked");
       router.refresh();
-    } catch {
-      toast.error("Something went wrong");
+    } catch (error) {
+      toast.error(apiErrorMessage(error, "Something went wrong"));
     } finally {
       setIsLoading(false);
     }

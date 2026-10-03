@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import axios from "axios";
 
 
+import { apiErrorMessage } from "@/lib/api-error-message";
 import { Button } from "@/components/ui/button";
 import { ConfirmModal } from "@/components/modals/confirm-modal";
 import { useRouter } from "next/navigation";
@@ -39,8 +40,8 @@ export const ChapterActions = ({
             }
 
             router.refresh();
-        } catch {
-            toast.error("Something went wrong");
+        } catch (error) {
+            toast.error(apiErrorMessage(error, "Something went wrong"));
         } finally {
             setIsLoading(false);
         }
@@ -55,8 +56,8 @@ export const ChapterActions = ({
             toast.success("Chapter deleted!");
             router.refresh();
             router.push(`/teacher/courses/${courseId}`);
-        } catch {
-            toast.error("Something went wrong");
+        } catch (error) {
+            toast.error(apiErrorMessage(error, "Something went wrong"));
         } finally {
             setIsLoading(false);
         }

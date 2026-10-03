@@ -5,6 +5,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { Award, Download, ExternalLink, Loader2 } from "lucide-react";
 
+import { apiErrorMessage } from "@/lib/api-error-message";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -36,8 +37,8 @@ export const CertificateSection = ({
       );
       setCertificate(response.data);
       toast.success("Certificate generated!");
-    } catch {
-      toast.error("Failed to generate certificate");
+    } catch (error) {
+      toast.error(apiErrorMessage(error, "Failed to generate certificate"));
     } finally {
       setIsGenerating(false);
     }

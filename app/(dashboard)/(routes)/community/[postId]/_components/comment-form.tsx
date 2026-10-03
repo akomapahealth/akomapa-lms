@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import toast from "react-hot-toast";
 
+import { apiErrorMessage } from "@/lib/api-error-message";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -39,8 +40,8 @@ export const CommentForm = ({
       onCancel?.();
       router.refresh();
       toast.success("Comment posted");
-    } catch {
-      toast.error("Something went wrong");
+    } catch (error) {
+      toast.error(apiErrorMessage(error, "Something went wrong"));
     } finally {
       setIsLoading(false);
     }
