@@ -69,6 +69,7 @@ export function handleRouteError(tag: string, error: unknown): NextResponse {
     return problem(error.code, {
       fields: error.fields,
       correlationId: error.correlationId,
+      retryAfterSeconds: error.retryAfterSeconds,
     });
   }
 

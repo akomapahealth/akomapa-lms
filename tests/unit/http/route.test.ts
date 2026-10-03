@@ -53,6 +53,16 @@ describe("handleRouteError", () => {
     });
   });
 
+  it("forwards an ApiError's retry delay as Retry-After", () => {
+    const response = handleRouteError(
+      "TAG",
+      new ApiError("rate_limited", { retryAfterSeconds: 42 })
+    );
+
+    expect(response.status).toBe(429);
+    expect(response.headers.get("retry-after")).toBe("42");
+  });
+
   it("preserves the ApiError's correlation id", async () => {
     const error = new ApiError("payload_too_large");
     const response = handleRouteError("TAG", error);
