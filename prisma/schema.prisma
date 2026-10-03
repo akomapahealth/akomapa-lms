@@ -57,7 +57,7 @@ model User {
 model Course {
   id          String  @id @default(uuid())
   userId      String
-  user        User    @relation(fields: [userId], references: [id])
+  user        User    @relation(fields: [userId], references: [id], onDelete: Restrict)
   title       String  @db.Text
   description String? @db.Text
   imageUrl    String? @db.Text
@@ -65,7 +65,7 @@ model Course {
   isPublished Boolean @default(false)
 
   categoryId String?
-  category   Category? @relation(fields: [categoryId], references: [id])
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
   modules        Module[]
   attachments    Attachment[]
@@ -100,7 +100,7 @@ model Module {
   course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   facultyId String?
-  faculty   User?   @relation("ModuleFaculty", fields: [facultyId], references: [id])
+  faculty   User?   @relation("ModuleFaculty", fields: [facultyId], references: [id], onDelete: Restrict)
 
   reflectionPrompt String? @db.Text
 
@@ -166,10 +166,10 @@ model MuxData {
 model UserProgress {
   id     String @id @default(uuid())
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   topicId String @map("chapterId")
-  topic   Topic  @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  topic   Topic  @relation(fields: [topicId], references: [id], onDelete: Restrict)
 
   isCompleted Boolean @default(false)
 
@@ -183,10 +183,10 @@ model UserProgress {
 model Purchase {
   id     String @id @default(uuid())
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   courseId String
-  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt()
@@ -198,10 +198,10 @@ model Purchase {
 model Enrollment {
   id     String @id @default(uuid())
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   courseId String
-  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Restrict)
 
   status     EnrollmentStatus @default(ACTIVE)
   enrolledAt DateTime         @default(now())
@@ -216,7 +216,7 @@ model Enrollment {
 model StripCustomer {
   id               String @default(uuid())
   userId           String @unique
-  user             User   @relation(fields: [userId], references: [id])
+  user             User   @relation(fields: [userId], references: [id], onDelete: Restrict)
   stripeCustomerId String @unique
 
   createdAt DateTime @default(now())
@@ -292,10 +292,10 @@ model QuizAttempt {
   completedAt DateTime?
 
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   quizId String
-  quiz   Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  quiz   Quiz   @relation(fields: [quizId], references: [id], onDelete: Restrict)
 
   answers QuizAnswer[]
 
@@ -313,10 +313,10 @@ model QuizAnswer {
   attempt   QuizAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
 
   questionId String
-  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Restrict)
 
   selectedOptionId String?
-  selectedOption   QuestionOption? @relation(fields: [selectedOptionId], references: [id])
+  selectedOption   QuestionOption? @relation(fields: [selectedOptionId], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -348,13 +348,13 @@ model ForumPost {
   isLocked Boolean @default(false)
 
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   categoryId String
-  category   ForumCategory @relation(fields: [categoryId], references: [id])
+  category   ForumCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
 
   courseId String?
-  course   Course? @relation(fields: [courseId], references: [id])
+  course   Course? @relation(fields: [courseId], references: [id], onDelete: SetNull)
 
   comments ForumComment[]
   likes    PostLike[]
@@ -372,7 +372,7 @@ model ForumComment {
   content String @db.Text
 
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   postId String
   post   ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
@@ -395,7 +395,7 @@ model PostLike {
   id String @id @default(uuid())
 
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   postId String
   post   ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
@@ -410,7 +410,7 @@ model CommentLike {
   id String @id @default(uuid())
 
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   commentId String
   comment   ForumComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
@@ -442,10 +442,10 @@ model UserBadge {
   earnedAt DateTime @default(now())
 
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   badgeId String
-  badge   Badge  @relation(fields: [badgeId], references: [id])
+  badge   Badge  @relation(fields: [badgeId], references: [id], onDelete: Restrict)
 
   @@unique([userId, badgeId])
   @@index([userId])
@@ -458,7 +458,7 @@ model LearningStreak {
   lastActivityDate DateTime?
 
   userId String @unique
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   updatedAt DateTime @updatedAt
 }
@@ -474,13 +474,13 @@ model JournalEntry {
   prompt String? @db.Text
 
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   moduleId String?
-  module   Module? @relation(fields: [moduleId], references: [id])
+  module   Module? @relation(fields: [moduleId], references: [id], onDelete: SetNull)
 
   courseId String?
-  course   Course? @relation(fields: [courseId], references: [id])
+  course   Course? @relation(fields: [courseId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -513,9 +513,9 @@ model CaseStudyAttempt {
   completed Boolean @default(false)
 
   userId      String
-  user        User      @relation(fields: [userId], references: [id])
+  user        User      @relation(fields: [userId], references: [id], onDelete: Restrict)
   caseStudyId String
-  caseStudy   CaseStudy @relation(fields: [caseStudyId], references: [id], onDelete: Cascade)
+  caseStudy   CaseStudy @relation(fields: [caseStudyId], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -532,10 +532,10 @@ model Certificate {
   issuedAt          DateTime @default(now())
 
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   courseId String
-  course   Course @relation(fields: [courseId], references: [id])
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Restrict)
 
   pdfUrl String? @db.Text
 
@@ -548,7 +548,7 @@ model Certificate {
 model UserSettings {
   id     String @id @default(uuid())
   userId String @unique
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   theme                  ThemePreference @default(light)
   defaultJournalPrivacy  Boolean         @default(true)

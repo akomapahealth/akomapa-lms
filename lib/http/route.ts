@@ -34,6 +34,23 @@ function prismaErrorCode(error: unknown): string | null {
 }
 
 /**
+ * Whether a foreign-key failure was a delete refused by RESTRICT (#51).
+ *
+ * Prisma reports both directions of a foreign-key violation as P2003: inserting
+ * a row whose parent is missing, and deleting a parent that rows still
+ * reference. Only PostgreSQL's own message tells them apart, and they deserve
+ * different answers -- the first is a bad request body (422), the second is the
+ * resource's current state (409), typically learners' records the author tried
+ * to delete content out from under. The message is read, never returned.
+ */
+function isRestrictedDelete(error: unknown): boolean {
+  const meta = (error as { meta?: { driverAdapterError?: { cause?: { originalMessage?: unknown } } } })
+    .meta;
+  const message = meta?.driverAdapterError?.cause?.originalMessage;
+  return typeof message === "string" && message.startsWith("update or delete on table");
+}
+
+/**
  * Database constraint failures that are really client errors.
  *
  * Without this they surfaced as 500s, which is both wrong and misleading: a
@@ -75,7 +92,8 @@ export function handleRouteError(tag: string, error: unknown): NextResponse {
 
   const prismaCode = prismaErrorCode(error);
   if (prismaCode !== null) {
-    const mapped = PRISMA_CODES[prismaCode];
+    const mapped =
+      prismaCode === "P2003" && isRestrictedDelete(error) ? "conflict" : PRISMA_CODES[prismaCode];
     if (mapped !== undefined) {
       // No fields: the constraint name would describe the schema.
       const correlationId = newCorrelationId();

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { authorizeQuestionInCourse, requirePrincipal } from "@/lib/auth";
 import { assertTrustedOrigin, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
+import { hasLearnerRecords, LEARNER_RECORDS_CONFLICT } from "@/lib/courses/learner-records";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { questionParams } from "@/lib/validations/ids";
 import { questionUpdateSchema } from "@/lib/validations/quiz";
@@ -52,6 +53,20 @@ export async function PATCH(
     // One transaction. A failure partway through used to leave a question whose
     // options had been deleted but not recreated, which is an unanswerable
     // question on a published quiz.
+    const incomingIds = new Set(
+      (body.options ?? []).flatMap((o) => (o.id === undefined ? [] : [o.id]))
+    );
+    const toDelete = body.options
+      ? [...existingIds].filter((id) => !incomingIds.has(id))
+      : [];
+
+    // Removing an option a learner chose would rewrite their graded answer
+    // (#51). Refused before anything changes; RESTRICT on QuizAnswer backs this
+    // up if an answer lands between this check and the delete.
+    if (await hasLearnerRecords({ kind: "options", optionIds: toDelete })) {
+      return problem("conflict", { message: LEARNER_RECORDS_CONFLICT.options });
+    }
+
     const updated = await db.$transaction(async (tx) => {
       await tx.question.update({
         where: { id: routeParams.questionId },
@@ -62,11 +77,6 @@ export async function PATCH(
       });
 
       if (body.options) {
-        const incomingIds = new Set(
-          body.options.flatMap((o) => (o.id === undefined ? [] : [o.id]))
-        );
-        const toDelete = [...existingIds].filter((id) => !incomingIds.has(id));
-
         if (toDelete.length > 0) {
           // Scoped to the question as well as the ids, so the delete cannot
           // reach further than the question being edited even if `existingIds`
@@ -131,6 +141,12 @@ export async function DELETE(
       routeParams.quizId,
       routeParams.questionId
     );
+
+    // Deleting an answered question would silently change learners' grades
+    // (#51). RESTRICT on QuizAnswer backs this up under a race.
+    if (await hasLearnerRecords({ kind: "question", questionId: routeParams.questionId })) {
+      return problem("conflict", { message: LEARNER_RECORDS_CONFLICT.question });
+    }
 
     const question = await db.question.delete({
       where: { id: routeParams.questionId },

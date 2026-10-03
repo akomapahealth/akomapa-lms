@@ -94,6 +94,48 @@ describe("handleRouteError", () => {
     await expect(response.json()).resolves.toMatchObject({ error: { code: expected } });
   });
 
+  describe("foreign-key failures (#51)", () => {
+    // PostgreSQL's wording is the only thing that tells the two directions of
+    // P2003 apart, as surfaced by the driver adapter.
+    function fkError(originalMessage: unknown) {
+      const error = prismaError("P2003");
+      Object.assign(error, {
+        meta: { driverAdapterError: { cause: { originalCode: "23503", originalMessage } } },
+      });
+      return error;
+    }
+
+    it("answers a delete refused by RESTRICT as a conflict", async () => {
+      const response = handleRouteError(
+        "TAG",
+        fkError('update or delete on table "Course" violates foreign key constraint "Enrollment_courseId_fkey" on table "Enrollment"')
+      );
+
+      expect(response.status).toBe(409);
+      const body = await response.json();
+      expect(body.error.code).toBe("conflict");
+      // The constraint and table names stay in the log.
+      expect(JSON.stringify(body)).not.toContain("Enrollment");
+    });
+
+    it.each([
+      ["a missing parent on insert", 'insert or update on table "Enrollment" violates foreign key constraint "Enrollment_courseId_fkey"'],
+      ["no driver message", undefined],
+      ["a non-string message", 42],
+    ])("keeps %s as validation_failed", async (_label, message) => {
+      const response = handleRouteError("TAG", fkError(message));
+
+      expect(response.status).toBe(422);
+    });
+
+    it("tolerates a P2003 with no meta at all", async () => {
+      const error = prismaError("P2003");
+      Object.assign(error, { meta: undefined });
+
+      expect(handleRouteError("TAG", error).status).toBe(422);
+    });
+  });
+
   it("never leaks the Prisma message, which names the table and column", async () => {
     const response = handleRouteError("TAG", prismaError("P2002"));
     const text = await response.text();

@@ -4,7 +4,8 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { authorizeCaseStudyInCourse, requirePrincipal } from "@/lib/auth";
 import { sanitizeScenario } from "@/lib/case-study-sanitize";
-import { assertTrustedOrigin, BODY_BYTES, handleRouteError, parseBody, parseParams } from "@/lib/http";
+import { assertTrustedOrigin, BODY_BYTES, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
+import { hasLearnerRecords, LEARNER_RECORDS_CONFLICT } from "@/lib/courses/learner-records";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { caseStudyParams } from "@/lib/validations/ids";
 import { caseStudyUpdateSchema } from "@/lib/validations/case-study";
@@ -54,6 +55,11 @@ export async function DELETE(
     const principal = await requirePrincipal();
     await enforceRateLimit(req, "write.default", { userId: principal.userId });
     await authorizeCaseStudyInCourse(principal, "caseStudy:delete", courseId, caseStudyId);
+
+    // Attempts are learning records (#51); RESTRICT backs this up.
+    if (await hasLearnerRecords({ kind: "caseStudy", caseStudyId })) {
+      return problem("conflict", { message: LEARNER_RECORDS_CONFLICT.caseStudy });
+    }
 
     await db.caseStudy.delete({ where: { id: caseStudyId } });
 

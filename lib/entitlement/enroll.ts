@@ -101,3 +101,25 @@ export async function markCourseCompleted(
 
   return result.count > 0;
 }
+
+/**
+ * Whether any Purchase or Enrollment references this Course (#51).
+ *
+ * Both are records the Course cannot be deleted out from under: a Purchase is
+ * payment evidence kept for seven years (policy 02), and an Enrollment is the
+ * learner's entitlement and its history (ADR 0002). Lives here because this
+ * module is the only one that reads those tables; it decides deletability, not
+ * access.
+ */
+export async function courseHasEntitlementRecords(
+  courseId: string,
+  tx?: Prisma.TransactionClient
+): Promise<boolean> {
+  const client = tx ?? db;
+  const [purchase, enrollment] = await Promise.all([
+    client.purchase.findFirst({ where: { courseId }, select: { id: true } }),
+    client.enrollment.findFirst({ where: { courseId }, select: { id: true } }),
+  ]);
+  return purchase !== null || enrollment !== null;
+}
+

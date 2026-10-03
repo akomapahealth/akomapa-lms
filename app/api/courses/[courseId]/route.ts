@@ -1,4 +1,3 @@
-import Mux from "@mux/mux-node";
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
@@ -6,14 +5,9 @@ import { authorizeCourse, requirePrincipal } from "@/lib/auth";
 import { assertTrustedOrigin, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { courseParams } from "@/lib/validations/ids";
+import { hasLearnerRecords, LEARNER_RECORDS_CONFLICT } from "@/lib/courses/learner-records";
+import { deleteMuxAssets } from "@/lib/courses/mux-cleanup";
 import { courseUpdateSchema } from "@/lib/validations/course";
-
-const mux = new Mux({
-    tokenId: process.env.MUX_TOKEN_ID,
-    tokenSecret: process.env.MUX_TOKEN_SECRET,
-});
-
-const Video  = mux.video;
 
 export async function DELETE(
     req: Request,
@@ -50,19 +44,29 @@ export async function DELETE(
             return problem("not_found");
         }
 
-        for (const courseModule of course.modules) {
-            for (const topic of courseModule.topics) {
-                if (topic.muxData?.assetId) {
-                    await Video.assets.delete(topic.muxData.assetId);
-                }
-            }
+        // Payments, enrollments, certificates, progress, and attempts outlive
+        // the Course (#51, policy 02). Checked before anything is touched: the
+        // Mux assets used to be deleted first, so a refused delete left a live
+        // Course with broken videos.
+        if (await hasLearnerRecords({ kind: "course", courseId: routeParams.courseId })) {
+            return problem("conflict", { message: LEARNER_RECORDS_CONFLICT.course });
         }
 
+        const assetIds = course.modules.flatMap((courseModule) =>
+            courseModule.topics.flatMap((topic) =>
+                topic.muxData?.assetId ? [topic.muxData.assetId] : []
+            )
+        );
+
+        // The database first. If a learner enrolled between the check and
+        // here, RESTRICT refuses this and nothing external has been deleted.
         const deletedCourse = await db.course.delete({
             where: {
                 id: routeParams.courseId,
             },
         });
+
+        await deleteMuxAssets(assetIds, "COURSE_ID_DELETE");
 
         return NextResponse.json(deletedCourse);
     } catch (error) {

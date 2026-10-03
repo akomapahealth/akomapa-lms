@@ -9,6 +9,7 @@
  * in `actions/get-analytics.ts` reads it, and should.
  */
 export {
+  courseHasEntitlementRecords,
   markCourseCompleted,
   recordFreeEnrollment,
   recordPaidEnrollment,
