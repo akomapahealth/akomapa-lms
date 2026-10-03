@@ -92,6 +92,9 @@ export default defineConfig({
         "lib/courses/topic-access.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
         // Completion decides certificate issuance.
         "lib/courses/completion.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
+        // The learning-completion command (#49, ADR 0004): every derived fact
+        // and event a Topic completion implies.
+        "lib/courses/complete-topic.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
         // Grading feeds certificates and analytics.
         "lib/assessments/grading.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
         // Excerpt generation from stored rich text; CodeQL flagged the previous
