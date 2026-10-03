@@ -27,6 +27,7 @@
     "role:check": "tsx scripts/manage-roles.ts check",
     "db:roles": "tsx scripts/check-database-roles.ts",
     "entitlement:reconcile": "tsx scripts/reconcile-entitlements.ts",
+    "db:states:preflight": "tsx scripts/check-domain-states.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "issues:next": "node scripts/next-issues.mjs",

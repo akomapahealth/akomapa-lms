@@ -1,3 +1,5 @@
+import type { UserRole } from "@/lib/domain/states";
+
 import { testDb } from "./db";
 
 /**
@@ -26,7 +28,7 @@ const uniqueUser = (prefix: string) => `${prefix}_${++sequence}`;
  */
 const unique = () => globalThis.crypto.randomUUID();
 
-export async function aUserRow(overrides: { id?: string; role?: string } = {}) {
+export async function aUserRow(overrides: { id?: string; role?: UserRole } = {}) {
   const id = overrides.id ?? uniqueUser("user");
   return testDb().user.create({
     data: { id, email: `${id}@example.test`, role: overrides.role ?? "STUDENT" },
