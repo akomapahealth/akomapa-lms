@@ -6,6 +6,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { PlusCircle } from "lucide-react";
 
+import { apiErrorMessage } from "@/lib/api-error-message";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -48,8 +49,8 @@ export const CreateQuizButton = ({ courseId }: CreateQuizButtonProps) => {
       setIsOpen(false);
       setTitle("");
       router.push(`/admin/courses/${courseId}/quizzes/${response.data.id}`);
-    } catch {
-      toast.error("Something went wrong");
+    } catch (error) {
+      toast.error(apiErrorMessage(error, "Something went wrong"));
     } finally {
       setIsLoading(false);
     }

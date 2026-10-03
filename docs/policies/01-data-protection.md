@@ -36,6 +36,7 @@ inventory is the input to the retention schedule in
 | Video | Course video assets and playback ids (`MuxData`) | Mux | Content, plus Mux-side viewing telemetry |
 | Preferences | `UserSettings` including theme and notification flags | Supabase | Personal, low sensitivity |
 | Operational logs | Request and error logs emitted by `lib/logger.ts` and captured by the platform | Vercel | May contain IP address and user agent |
+| Abuse-control counters | `RateLimitBucket`: one timestamp per HMAC-keyed bucket. No user id or IP address is stored; keys are HMACs under a server secret ([rate-limits.md](../security/rate-limits.md)) | Supabase | Pseudonymous, short-lived. Processed under the security and fraud-prevention basis below |
 
 **No analytics or product-telemetry SDK is installed.** There is no Vercel
 Analytics, Sentry, PostHog, or equivalent in `package.json`. The only telemetry

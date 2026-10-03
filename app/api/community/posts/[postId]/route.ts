@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { authorizePost, requirePrincipal } from "@/lib/auth";
 import { assertTrustedOrigin, BODY_BYTES, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { postParams } from "@/lib/validations/ids";
 import { postUpdateSchema } from "@/lib/validations/community";
 
@@ -93,6 +94,7 @@ export async function PATCH(
     // Author or moderator. The rule lives in lib/auth/policy.ts rather than
     // being re-derived at each of the call sites that used to inline it.
     const principal = await requirePrincipal();
+    await enforceRateLimit(req, "community.post", { userId: principal.userId });
     await authorizePost(principal, "post:update", postId);
 
     // Strict: the body used to be spread field by field with no bounds, and a
@@ -120,6 +122,7 @@ export async function DELETE(
     const { postId } = parseParams(postParams, await params);
 
     const principal = await requirePrincipal();
+    await enforceRateLimit(req, "write.default", { userId: principal.userId });
     await authorizePost(principal, "post:delete", postId);
 
     await db.forumPost.delete({ where: { id: postId } });

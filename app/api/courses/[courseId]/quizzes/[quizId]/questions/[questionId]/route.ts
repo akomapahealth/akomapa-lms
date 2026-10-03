@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { authorizeQuestionInCourse, requirePrincipal } from "@/lib/auth";
 import { assertTrustedOrigin, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { questionParams } from "@/lib/validations/ids";
 import { questionUpdateSchema } from "@/lib/validations/quiz";
 
@@ -16,6 +17,7 @@ export async function PATCH(
     const routeParams = parseParams(questionParams, await params);
 
     const principal = await requirePrincipal();
+    await enforceRateLimit(req, "write.default", { userId: principal.userId });
     await authorizeQuestionInCourse(
       principal,
       "question:update",
@@ -121,6 +123,7 @@ export async function DELETE(
     const routeParams = parseParams(questionParams, await params);
 
     const principal = await requirePrincipal();
+    await enforceRateLimit(req, "write.default", { userId: principal.userId });
     await authorizeQuestionInCourse(
       principal,
       "question:delete",

@@ -58,10 +58,21 @@ export const ERROR_CODES = {
   payload_too_large: 413,
   /** The Content-Type is not one this route accepts. 415. */
   unsupported_media_type: 415,
-  /** Abuse controls engaged. 429. Reserved for #46, which does the limiting. */
+  /**
+   * Abuse controls engaged (#46). 429, always with `Retry-After`.
+   *
+   * Keyed on the caller and the operation, never on the resource, so the
+   * answer is the same whether or not the resource the request named exists.
+   */
   rate_limited: 429,
   /** An unexpected fault. 500. Never carries detail. */
   internal: 500,
+  /**
+   * A dependency this operation will not run without is unavailable (#46): the
+   * rate-limit store, for an operation whose policy fails closed. 503, always
+   * with `Retry-After`. Never carries detail.
+   */
+  temporarily_unavailable: 503,
 } as const;
 
 export type ErrorCode = keyof typeof ERROR_CODES;
@@ -113,6 +124,7 @@ const MESSAGES: Record<ErrorCode, string> = {
   unsupported_media_type: "The request Content-Type is not supported.",
   rate_limited: "Too many requests. Try again shortly.",
   internal: "Something went wrong on our side.",
+  temporarily_unavailable: "This action is temporarily unavailable. Try again shortly.",
 };
 
 /**
@@ -121,15 +133,24 @@ const MESSAGES: Record<ErrorCode, string> = {
  * Throwing rather than returning lets validation live in a helper that a handler
  * calls in one line, while `handleRouteError` does the mapping in one place.
  */
+export interface ProblemOptions {
+  fields?: FieldProblem[];
+  message?: string;
+  correlationId?: string;
+  /**
+   * Seconds until a retry can succeed, sent as `Retry-After`. Set for
+   * `rate_limited` and `temporarily_unavailable`; a whole number of at least 1.
+   */
+  retryAfterSeconds?: number;
+}
+
 export class ApiError extends Error {
   readonly code: ErrorCode;
   readonly fields?: FieldProblem[];
   readonly correlationId: string;
+  readonly retryAfterSeconds?: number;
 
-  constructor(
-    code: ErrorCode,
-    options: { fields?: FieldProblem[]; message?: string; correlationId?: string } = {}
-  ) {
+  constructor(code: ErrorCode, options: ProblemOptions = {}) {
     // The message reaches server logs only. It names the code, never the
     // offending value.
     super(options.message ?? `api error: ${code}`);
@@ -137,6 +158,7 @@ export class ApiError extends Error {
     this.code = code;
     this.fields = options.fields;
     this.correlationId = options.correlationId ?? newCorrelationId();
+    this.retryAfterSeconds = options.retryAfterSeconds;
   }
 }
 
@@ -160,10 +182,7 @@ export function statusFor(code: ErrorCode): number {
 }
 
 /** The body for a code, without building a Response. Used by tests and by #102. */
-export function problemBody(
-  code: ErrorCode,
-  options: { fields?: FieldProblem[]; message?: string; correlationId?: string } = {}
-): ProblemBody {
+export function problemBody(code: ErrorCode, options: ProblemOptions = {}): ProblemBody {
   const body: ProblemBody = {
     error: {
       code,
@@ -189,15 +208,16 @@ export function problemBody(
  * imports `lib/auth/errors.ts` in turn. Keeping the builder free of that
  * dependency is what stops the two from forming a cycle.
  */
-export function problem(
-  code: ErrorCode,
-  options: { fields?: FieldProblem[]; message?: string; correlationId?: string } = {}
-): NextResponse {
+export function problem(code: ErrorCode, options: ProblemOptions = {}): NextResponse {
   const correlationId = options.correlationId ?? newCorrelationId();
   const body = problemBody(code, { ...options, correlationId });
 
-  return NextResponse.json(body, {
-    status: statusFor(code),
-    headers: { [CORRELATION_HEADER]: correlationId },
-  });
+  const headers: Record<string, string> = { [CORRELATION_HEADER]: correlationId };
+  if (options.retryAfterSeconds !== undefined) {
+    // RFC 9110 delay-seconds: a non-negative integer. Rounded up and floored at
+    // one, because "retry after 0 seconds" invites an immediate, futile retry.
+    headers["Retry-After"] = String(Math.max(1, Math.ceil(options.retryAfterSeconds)));
+  }
+
+  return NextResponse.json(body, { status: statusFor(code), headers });
 }

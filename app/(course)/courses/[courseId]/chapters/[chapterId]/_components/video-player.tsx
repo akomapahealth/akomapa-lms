@@ -7,6 +7,7 @@ import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { Loader2, Lock } from "lucide-react";
 
+import { apiErrorMessage } from "@/lib/api-error-message";
 import { cn } from "@/lib/utils";
 import { useConfettiStore } from "@/hooks/use-confetti-store";
 
@@ -51,8 +52,8 @@ export const VideoPlayer = ({
                     router.push(`/courses/${courseId}/chapters/${nextTopicId}`);
                 }
             }
-        } catch {
-            toast.error("Something went wrong");
+        } catch (error) {
+            toast.error(apiErrorMessage(error, "Something went wrong"));
         }
     };
 

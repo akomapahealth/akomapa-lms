@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { apiErrorMessage } from "@/lib/api-error-message";
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/lib/format";
 import toast from "react-hot-toast";
@@ -26,7 +27,7 @@ export const CourseEnrollButton = ({
 
             window.location.assign(response.data.url);
         } catch (error) {
-            toast.error("Something went wrong");
+            toast.error(apiErrorMessage(error, "Something went wrong"));
         } finally {
             setIsLoading(false);
         }

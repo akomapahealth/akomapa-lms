@@ -60,8 +60,9 @@ unexpected fault — is a JSON object:
 | `conflict` | 409 | The request contradicts current state: already submitted, already purchased, not publishable yet. |
 | `payload_too_large` | 413 | The body exceeds the route's declared limit. |
 | `unsupported_media_type` | 415 | The `Content-Type` is not JSON. |
-| `rate_limited` | 429 | Abuse controls engaged. Defined here; the limiting itself is [#46](https://github.com/akomapahealth/akomapa-lms/issues/46). |
+| `rate_limited` | 429 | A rate limit engaged. Always sent with `Retry-After`. Keyed on the caller and the operation, never the resource, so it reveals nothing about whether the resource exists. See [security/rate-limits.md](security/rate-limits.md). |
 | `internal` | 500 | An unexpected fault. Carries no detail. |
+| `temporarily_unavailable` | 503 | A dependency the operation will not run without is down: the rate-limit store, for a policy that fails closed. Always sent with `Retry-After`. |
 
 ### 400 versus 422
 
@@ -101,6 +102,14 @@ Taken from zod's issue vocabulary, so it is stable and machine-readable:
 `unrecognized_keys`, `custom`, and others. A handler may also emit a domain code
 for a check a schema cannot express — `not_in_quiz`, `not_in_post`, `max_depth`.
 
+## `Retry-After`
+
+Sent with every `rate_limited` and `temporarily_unavailable` response, as whole
+seconds (at least 1), and never with anything else. It is a header, not a body
+field, so the body keeps the shape above. A client should wait at least that
+long before retrying the same request; the web app tells the learner how long
+(`lib/api-error-message.ts`).
+
 ## Correlation ids
 
 Every response carries one, in the body and in the `x-correlation-id` header. For
@@ -136,8 +145,11 @@ guards. They still answer in this shape.
 - `POST /api/webhooks/clerk` — Clerk, verified by svix. Same convention.
 - `/api/uploadthing` — authenticates inside `core.ts`, and surfaces
   `UploadThingError` rather than this shape, because the client library expects
-  its own protocol. The one exception is a refusal by the origin guard, which
-  happens before the library runs and answers `untrusted_origin` in this shape.
+  its own protocol. The exceptions are refusals that happen before the library
+  runs -- the origin guard's `untrusted_origin` and the rate limiter's
+  `rate_limited` and `temporarily_unavailable` -- which answer in this shape,
+  plus a top-level `message` copied from `error.message`, because UploadThing's
+  client displays only that field.
 
 The two webhooks are also exempt from the origin guard, and so are
 UploadThing's signed server callbacks; browser upload requests are not. See

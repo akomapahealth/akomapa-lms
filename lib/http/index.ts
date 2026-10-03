@@ -20,6 +20,7 @@ export {
   type ErrorCode,
   type FieldProblem,
   type ProblemBody,
+  type ProblemOptions,
 } from "./problem";
 export { readBoundedText, readJson } from "./body";
 export { parseBody, parseParams, parseQuery, toFieldProblems } from "./validate";

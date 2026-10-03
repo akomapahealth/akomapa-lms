@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { authorizeCaseStudyInCourse, requirePrincipal } from "@/lib/auth";
 import { sanitizeScenario } from "@/lib/case-study-sanitize";
 import { assertTrustedOrigin, BODY_BYTES, handleRouteError, parseBody, parseParams } from "@/lib/http";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { caseStudyParams } from "@/lib/validations/ids";
 import { caseStudyUpdateSchema } from "@/lib/validations/case-study";
 
@@ -18,6 +19,7 @@ export async function PATCH(
     const { courseId, caseStudyId } = parseParams(caseStudyParams, await params);
 
     const principal = await requirePrincipal();
+    await enforceRateLimit(req, "write.default", { userId: principal.userId });
     await authorizeCaseStudyInCourse(principal, "caseStudy:update", courseId, caseStudyId);
 
     const body = await parseBody(caseStudyUpdateSchema, req, BODY_BYTES.document);
@@ -50,6 +52,7 @@ export async function DELETE(
     const { courseId, caseStudyId } = parseParams(caseStudyParams, await params);
 
     const principal = await requirePrincipal();
+    await enforceRateLimit(req, "write.default", { userId: principal.userId });
     await authorizeCaseStudyInCourse(principal, "caseStudy:delete", courseId, caseStudyId);
 
     await db.caseStudy.delete({ where: { id: caseStudyId } });

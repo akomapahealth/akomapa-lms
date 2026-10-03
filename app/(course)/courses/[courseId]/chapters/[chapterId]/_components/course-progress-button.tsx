@@ -1,5 +1,6 @@
 "use client";
 
+import { apiErrorMessage } from "@/lib/api-error-message";
 import { Button } from "@/components/ui/button";
 import { useConfettiStore } from "@/hooks/use-confetti-store";
 import { ReflectionPromptModal } from "@/components/modals/reflection-prompt-modal";
@@ -78,8 +79,8 @@ export const CourseProgressButton = ({
             }
 
             router.refresh();
-        } catch {
-            toast.error("Something went wrong");
+        } catch (error) {
+            toast.error(apiErrorMessage(error, "Something went wrong"));
         } finally {
             setIsLoading(false);
         }

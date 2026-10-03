@@ -560,3 +560,23 @@ model UserSettings {
 
   updatedAt DateTime @updatedAt
 }
+
+// ─── Abuse controls (#46) ───
+
+/// One rate-limit bucket: a GCRA "theoretical arrival time" per hashed key.
+///
+/// `key` is an HMAC of the policy, the dimension (user or IP), and the subject,
+/// so neither a user id nor an IP address is stored in the clear. `tat` is the
+/// time, in epoch milliseconds, at which the bucket would be full again.
+/// `expiresAt` equals `tat`: past it, the row is indistinguishable from an absent
+/// one and may be deleted. See lib/rate-limit and docs/security/rate-limits.md.
+model RateLimitBucket {
+  key       String   @id
+  tat       BigInt
+  /// Whether the most recent consume against this bucket was allowed. Written in
+  /// the same statement as `tat` so one round trip returns the decision.
+  allowed   Boolean
+  expiresAt DateTime
+
+  @@index([expiresAt])
+}

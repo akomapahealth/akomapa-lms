@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { authorizeCourse, requirePrincipal } from "@/lib/auth";
 import { assertTrustedOrigin, handleRouteError, parseBody, parseParams } from "@/lib/http";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { courseParams } from "@/lib/validations/ids";
 import {
     attachmentCreateSchema,
@@ -19,6 +20,7 @@ export async function POST(
         const routeParams = parseParams(courseParams, await params);
 
         const principal = await requirePrincipal();
+        await enforceRateLimit(req, "write.default", { userId: principal.userId });
         await authorizeCourse(principal, "attachment:create", routeParams.courseId);
 
         // A real http(s) URL. The bare body allowed any string, so `url` could be

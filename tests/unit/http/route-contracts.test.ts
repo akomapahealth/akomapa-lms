@@ -9,6 +9,10 @@ const clerkAuth = vi.hoisted(() => vi.fn());
 vi.mock("@clerk/nextjs/server", () => ({ auth: clerkAuth, currentUser: vi.fn() }));
 vi.mock("@/lib/db", async () => ({ db: (await import("../support/db")).dbMock }));
 vi.mock("@/lib/badge-service", () => ({ evaluateBadges: vi.fn().mockResolvedValue([]) }));
+// These tests are about the request contract. Rate limiting has its own suite
+// (tests/unit/rate-limit, tests/integration/rate-limit-*.test.ts); here it is a
+// no-op so a limit can never be what a contract assertion observes.
+vi.mock("@/lib/rate-limit", () => ({ enforceRateLimit: vi.fn().mockResolvedValue(undefined) }));
 
 // Two route modules build a Mux client at import time from env that the unit
 // harness deliberately does not set. Mocked rather than given fake credentials,

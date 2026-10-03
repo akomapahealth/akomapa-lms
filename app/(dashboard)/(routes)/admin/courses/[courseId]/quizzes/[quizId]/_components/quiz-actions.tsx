@@ -6,6 +6,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { Trash } from "lucide-react";
 
+import { apiErrorMessage } from "@/lib/api-error-message";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -50,8 +51,8 @@ export const QuizActions = ({
         toast.success("Quiz published");
       }
       router.refresh();
-    } catch {
-      toast.error("Something went wrong");
+    } catch (error) {
+      toast.error(apiErrorMessage(error, "Something went wrong"));
     } finally {
       setIsLoading(false);
     }
@@ -64,8 +65,8 @@ export const QuizActions = ({
       toast.success("Quiz deleted");
       router.push(`/admin/courses/${courseId}/quizzes`);
       router.refresh();
-    } catch {
-      toast.error("Something went wrong");
+    } catch (error) {
+      toast.error(apiErrorMessage(error, "Something went wrong"));
     } finally {
       setIsLoading(false);
     }

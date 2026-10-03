@@ -36,13 +36,15 @@ describe("ERROR_CODES", () => {
       unsupported_media_type: 415,
       rate_limited: 429,
       internal: 500,
+      temporarily_unavailable: 503,
     });
   });
 
   it("uses only statuses the issue requires", () => {
     // #44 names 400/401/403/404/409/422/429; 413, 415, and 500 complete the set.
+    // 503 is #46's, for an operation whose rate-limit store is unavailable.
     for (const status of Object.values(ERROR_CODES)) {
-      expect([400, 401, 403, 404, 409, 413, 415, 422, 429, 500]).toContain(status);
+      expect([400, 401, 403, 404, 409, 413, 415, 422, 429, 500, 503]).toContain(status);
     }
   });
 });
@@ -123,6 +125,31 @@ describe("problem", () => {
     const body = await response.json();
 
     expect(response.headers.get(CORRELATION_HEADER)).toBe(body.error.correlationId);
+  });
+
+  it("sends no Retry-After unless asked to", () => {
+    expect(problem("internal").headers.get("retry-after")).toBeNull();
+  });
+
+  it.each([
+    [30, "30"],
+    // Rounded up: retrying a fraction of a second early fails again.
+    [2.1, "3"],
+    // Floored at one: "retry after 0 seconds" invites an immediate retry.
+    [0, "1"],
+    [-5, "1"],
+  ])("sends Retry-After %s as %s", (seconds, header) => {
+    const response = problem("rate_limited", { retryAfterSeconds: seconds });
+
+    expect(response.status).toBe(429);
+    expect(response.headers.get("retry-after")).toBe(header);
+  });
+
+  it("keeps the retry delay out of the body", async () => {
+    // The header is the contract; the body keeps its documented shape.
+    const body = await problem("rate_limited", { retryAfterSeconds: 9 }).json();
+
+    expect(Object.keys(body.error).sort()).toEqual(["code", "correlationId", "message"]);
   });
 
   it("honours a supplied correlation id in both places", async () => {

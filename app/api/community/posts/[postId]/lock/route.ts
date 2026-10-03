@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireCapability, requirePrincipal } from "@/lib/auth";
 import { assertTrustedOrigin, handleRouteError, parseParams, problem } from "@/lib/http";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { postParams } from "@/lib/validations/ids";
 
 export async function PATCH(
@@ -13,6 +14,7 @@ export async function PATCH(
     assertTrustedOrigin(req);
 
     const principal = await requirePrincipal();
+    await enforceRateLimit(req, "write.default", { userId: principal.userId });
     requireCapability(principal, "community:moderate");
 
     const { postId } = parseParams(postParams, await params);

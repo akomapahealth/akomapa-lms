@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requirePrincipal } from "@/lib/auth";
 import { assertTrustedOrigin, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { caseStudyAttemptParams } from "@/lib/validations/ids";
 import { caseStudyAttemptSchema } from "@/lib/validations/case-study";
 
@@ -19,6 +20,7 @@ export async function POST(
     );
 
     const { userId } = await requirePrincipal();
+    await enforceRateLimit(req, "write.default", { userId: userId });
 
     // `choices` was an unvalidated JSON blob of any shape and any size, written
     // straight to a `Json` column.

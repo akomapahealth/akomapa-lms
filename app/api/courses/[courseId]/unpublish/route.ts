@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { requirePrincipal } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { assertTrustedOrigin, handleRouteError, parseParams, problem } from "@/lib/http";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { courseParams } from "@/lib/validations/ids";
 
 export async function PATCH(
@@ -14,6 +15,7 @@ export async function PATCH(
         const routeParams = parseParams(courseParams, await params);
 
         const { userId } = await requirePrincipal();
+        await enforceRateLimit(req, "write.default", { userId: userId });
 
         const course = await db.course.findUnique({
             where: {

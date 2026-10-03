@@ -62,6 +62,15 @@ export default defineConfig({
         "lib/streak-service.ts",
         "lib/badge-service.ts",
         "lib/certificate-service.ts",
+        // Abuse controls (#46). store.ts is deliberately absent: its job is
+        // one SQL statement and its concurrency, which only the integration
+        // suite can observe (tests/integration/rate-limit-store.test.ts).
+        "lib/rate-limit/gcra.ts",
+        "lib/rate-limit/client-ip.ts",
+        "lib/rate-limit/key.ts",
+        "lib/rate-limit/policies.ts",
+        "lib/rate-limit/index.ts",
+        "lib/api-error-message.ts",
       ],
       thresholds: {
         // Per-file, so a well-covered module cannot mask a bare one.
@@ -106,6 +115,15 @@ export default defineConfig({
         // Cross-site request protection (#45). Every cookie-authenticated
         // mutation calls it first, so an untested branch is an untested way in.
         "lib/http/origin.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
+        // Abuse controls (#46): the arithmetic, the trusted-address rule, the
+        // key derivation, and the failure behaviour all decide who is refused.
+        "lib/rate-limit/gcra.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
+        "lib/rate-limit/client-ip.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
+        "lib/rate-limit/key.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
+        "lib/rate-limit/policies.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
+        "lib/rate-limit/index.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
+        // What a learner reads after a 429 or 503: the retry guidance.
+        "lib/api-error-message.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
       },
     },
   },

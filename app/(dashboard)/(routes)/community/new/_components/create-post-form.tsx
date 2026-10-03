@@ -8,6 +8,7 @@ import * as z from "zod";
 import axios from "axios";
 import toast from "react-hot-toast";
 
+import { apiErrorMessage } from "@/lib/api-error-message";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -80,8 +81,8 @@ export const CreatePostForm = ({
       });
       toast.success("Post created!");
       router.push(`/community/${response.data.id}`);
-    } catch {
-      toast.error("Something went wrong");
+    } catch (error) {
+      toast.error(apiErrorMessage(error, "Something went wrong"));
     } finally {
       setIsLoading(false);
     }

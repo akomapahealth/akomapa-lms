@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireCapability, requirePrincipal } from "@/lib/auth";
 import { assertTrustedOrigin, handleRouteError, parseBody } from "@/lib/http";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { categoryCreateSchema } from "@/lib/validations/community";
 
 export async function GET() {
@@ -22,6 +23,7 @@ export async function POST(req: Request) {
     assertTrustedOrigin(req);
 
     const principal = await requirePrincipal();
+    await enforceRateLimit(req, "write.default", { userId: principal.userId });
     requireCapability(principal, "community:moderate");
 
     // Bounded and strict before the write. The body used to be destructured

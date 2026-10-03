@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requirePrincipal } from "@/lib/auth";
 import { assertTrustedOrigin, handleRouteError, parseParams } from "@/lib/http";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { postParams } from "@/lib/validations/ids";
 
 export async function POST(
@@ -13,6 +14,7 @@ export async function POST(
     assertTrustedOrigin(req);
 
     const { userId } = await requirePrincipal();
+    await enforceRateLimit(req, "community.react", { userId: userId });
 
     const { postId } = parseParams(postParams, await params);
 

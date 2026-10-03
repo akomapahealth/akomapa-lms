@@ -4,8 +4,9 @@ import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { recordPaidEnrollment } from "@/lib/entitlement";
 import { requireEnv } from "@/lib/env";
-import { problem } from "@/lib/http";
+import { handleRouteError, problem } from "@/lib/http";
 import { logError } from "@/lib/logger";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { checkoutMetadataSchema } from "@/lib/validations/webhooks";
 
 /**
@@ -21,6 +22,16 @@ import { checkoutMetadataSchema } from "@/lib/validations/webhooks";
  * Purchase/Enrollment pair idempotent, which #48 requires.
  */
 export async function POST(req: Request) {
+    // Limited by sender address before the body is read or the signature is
+    // checked, so a flood of forged deliveries costs a counter increment rather
+    // than a signature computation each (#46). Fails open: a lost provider
+    // event is worse than a briefly unlimited one, and a 429 is retried.
+    try {
+        await enforceRateLimit(req, "webhook.stripe");
+    } catch (error) {
+        return handleRouteError("STRIPE_WEBHOOK", error);
+    }
+
     const body = await req.text();
     // Read from the request itself rather than `next/headers`, which needs a
     // Next.js request scope and so cannot be exercised by a route-level test of

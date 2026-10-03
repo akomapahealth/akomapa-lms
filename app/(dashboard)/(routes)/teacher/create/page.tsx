@@ -17,6 +17,7 @@ import {
     FormItem,
 } from "@/components/ui/form";
 
+import { apiErrorMessage } from "@/lib/api-error-message";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
@@ -44,8 +45,8 @@ const CreatePage = () => {
             const response = await axios.post("/api/courses", values);
             router.push(`/teacher/courses/${response.data.id}`);
             toast.success("Course created!");
-        } catch {
-            toast.error("Something went wrong");
+        } catch (error) {
+            toast.error(apiErrorMessage(error, "Something went wrong"));
         }
     };
 

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requirePrincipal } from "@/lib/auth";
 import { assertTrustedOrigin, BODY_BYTES, handleRouteError, parseBody } from "@/lib/http";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { journalCreateSchema } from "@/lib/validations/journal";
 
 export async function POST(req: Request) {
@@ -10,6 +11,7 @@ export async function POST(req: Request) {
     assertTrustedOrigin(req);
 
     const { userId } = await requirePrincipal();
+    await enforceRateLimit(req, "write.default", { userId: userId });
 
     const body = await parseBody(journalCreateSchema, req, BODY_BYTES.richText);
 

@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 import { Question, QuestionOption } from "@prisma/client";
 import { PlusCircle, Trash2, X } from "lucide-react";
 
+import { apiErrorMessage } from "@/lib/api-error-message";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -99,8 +100,8 @@ export const QuestionForm = ({
       toast.success("Question updated!");
       onClose();
       router.refresh();
-    } catch {
-      toast.error("Something went wrong");
+    } catch (error) {
+      toast.error(apiErrorMessage(error, "Something went wrong"));
     } finally {
       setIsLoading(false);
     }
@@ -115,8 +116,8 @@ export const QuestionForm = ({
       toast.success("Question deleted!");
       onClose();
       router.refresh();
-    } catch {
-      toast.error("Something went wrong");
+    } catch (error) {
+      toast.error(apiErrorMessage(error, "Something went wrong"));
     } finally {
       setIsLoading(false);
     }

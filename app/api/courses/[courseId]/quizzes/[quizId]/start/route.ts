@@ -5,6 +5,7 @@ import { requirePrincipal } from "@/lib/auth";
 import { courseEntitlement, LOCKED_STATE_MESSAGE } from "@/lib/entitlement";
 import { isPostTestUnlocked } from "@/actions/check-post-test-lock";
 import { assertTrustedOrigin, handleRouteError, parseParams, problem } from "@/lib/http";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { quizParams } from "@/lib/validations/ids";
 
 export async function POST(
@@ -17,6 +18,7 @@ export async function POST(
     const routeParams = parseParams(quizParams, await params);
 
     const principal = await requirePrincipal();
+    await enforceRateLimit(req, "quiz.start", { userId: principal.userId });
     const { userId } = principal;
 
     // Entitlement, not payment history. Reading `Purchase` here let a suspended

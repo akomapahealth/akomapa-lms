@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requirePrincipal } from "@/lib/auth";
 import { assertTrustedOrigin, handleRouteError, parseBody } from "@/lib/http";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { settingsUpdateSchema } from "@/lib/validations/settings";
 
 export async function GET() {
@@ -31,6 +32,7 @@ export async function PATCH(req: Request) {
     assertTrustedOrigin(req);
 
     const { userId } = await requirePrincipal();
+    await enforceRateLimit(req, "write.default", { userId: userId });
 
     const values = await parseBody(settingsUpdateSchema, req);
 

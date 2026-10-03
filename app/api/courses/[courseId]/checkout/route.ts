@@ -6,6 +6,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { assertTrustedOrigin, handleRouteError, parseParams, problem } from "@/lib/http";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { courseParams } from "@/lib/validations/ids";
 
 export async function POST(
@@ -21,6 +22,7 @@ export async function POST(
         // `currentUser` is used only for the email address Stripe needs. This
         // is a money path, so it must not resolve who is paying a second way.
         const principal = await requirePrincipal();
+        await enforceRateLimit(req, "checkout.create", { userId: principal.userId });
         const { userId } = principal;
 
         const user = await currentUser();

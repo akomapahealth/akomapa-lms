@@ -9,6 +9,7 @@ import { Attachment, Course } from "@prisma/client";
 import { useRouter } from "next/navigation";
 
 
+import { apiErrorMessage } from "@/lib/api-error-message";
 import { Button } from "@/components/ui/button"; 
 import { FileUpload } from "@/components/file-upload";
 
@@ -44,8 +45,8 @@ export const AttachmentForm = ({
             toast.success("Course updated!");
             toggleEdit();
             router.refresh();
-        } catch {
-            toast.error("Something went wrong");
+        } catch (error) {
+            toast.error(apiErrorMessage(error, "Something went wrong"));
         }
     };
 
@@ -55,8 +56,8 @@ export const AttachmentForm = ({
             await axios.delete(`/api/courses/${courseId}/attachments/${id}`);
             toast.success("Attachment deleted!");
             router.refresh();
-        } catch {
-            toast.error("Something went wrong");
+        } catch (error) {
+            toast.error(apiErrorMessage(error, "Something went wrong"));
         } finally {
             setDeletingId(null);
         }

@@ -9,6 +9,7 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { Topic } from "@prisma/client";
 
+import { apiErrorMessage } from "@/lib/api-error-message";
 import { Form, FormControl, FormDescription, FormField, FormItem } from "@/components/ui/form";
 import { Button } from "@/components/ui/button"; 
 import { useRouter } from "next/navigation";
@@ -52,8 +53,8 @@ export const ChapterAccessForm = ({
             toast.success("Chapter updated!");
             toggleEdit();
             router.refresh();
-        } catch {
-            toast.error("Something went wrong");
+        } catch (error) {
+            toast.error(apiErrorMessage(error, "Something went wrong"));
         }
     };
 

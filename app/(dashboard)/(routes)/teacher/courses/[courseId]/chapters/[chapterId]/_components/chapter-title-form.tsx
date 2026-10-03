@@ -15,6 +15,7 @@ import {
     FormItem,
     FormMessage
 } from "@/components/ui/form";
+import { apiErrorMessage } from "@/lib/api-error-message";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button"; 
 import { useRouter } from "next/navigation";
@@ -56,8 +57,8 @@ export const ChapterTitleForm = ({
             toast.success("Chapter updated!");
             toggleEdit();
             router.refresh();
-        } catch {
-            toast.error("Something went wrong");
+        } catch (error) {
+            toast.error(apiErrorMessage(error, "Something went wrong"));
         }
     };
 

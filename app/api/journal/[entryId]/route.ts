@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requirePrincipal } from "@/lib/auth";
 import { assertTrustedOrigin, BODY_BYTES, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { journalEntryParams } from "@/lib/validations/ids";
 import { journalUpdateSchema } from "@/lib/validations/journal";
 
@@ -14,6 +15,7 @@ export async function PATCH(
     assertTrustedOrigin(req);
 
     const { userId } = await requirePrincipal();
+    await enforceRateLimit(req, "write.default", { userId: userId });
 
     const { entryId } = parseParams(journalEntryParams, await params);
     // Strict: `values` was the raw body, and every field was copied across if
@@ -56,6 +58,7 @@ export async function DELETE(
     assertTrustedOrigin(req);
 
     const { userId } = await requirePrincipal();
+    await enforceRateLimit(req, "write.default", { userId: userId });
 
     const { entryId } = parseParams(journalEntryParams, await params);
 

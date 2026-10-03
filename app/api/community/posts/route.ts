@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requirePrincipal } from "@/lib/auth";
 import { assertTrustedOrigin, BODY_BYTES, handleRouteError, parseBody } from "@/lib/http";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { postCreateSchema } from "@/lib/validations/community";
 import { evaluateBadges } from "@/lib/badge-service";
 
@@ -11,6 +12,7 @@ export async function POST(req: Request) {
     assertTrustedOrigin(req);
 
     const { userId } = await requirePrincipal();
+    await enforceRateLimit(req, "community.post", { userId: userId });
 
     // Rich text, so the larger body ceiling. The previous check was
     // `if (!title || !content || !categoryId)`, which accepted a title of any

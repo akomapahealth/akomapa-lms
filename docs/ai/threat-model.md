@@ -179,7 +179,9 @@ learners.
 reaches a provider, attributed to a principal; there is no unmetered path.
 Every AI route requires an authenticated principal with a current AI
 entitlement. Rate limits ([#46](https://github.com/akomapahealth/akomapa-lms/issues/46))
-apply. Cost alerts and the kill switch are in
+apply: the reserved `ai.request` policy (5 at once, 50 an hour per learner) fails
+closed, and #71 must apply it to every AI route
+([rate-limits.md](../security/rate-limits.md)). Cost alerts and the kill switch are in
 [#79](https://github.com/akomapahealth/akomapa-lms/issues/79). Owner:
 [#73](https://github.com/akomapahealth/akomapa-lms/issues/73).
 

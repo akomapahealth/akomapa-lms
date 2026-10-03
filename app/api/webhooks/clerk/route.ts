@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { Webhook } from "svix";
 
 import { db } from "@/lib/db";
-import { problem } from "@/lib/http";
+import { handleRouteError, problem } from "@/lib/http";
 import { logError } from "@/lib/logger";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { clerkUserDataSchema, primaryEmailOf } from "@/lib/validations/webhooks";
 
 /**
@@ -21,6 +22,16 @@ import { clerkUserDataSchema, primaryEmailOf } from "@/lib/validations/webhooks"
  * delivery.
  */
 export async function POST(req: Request) {
+  // Limited by sender address before the body is read or the signature is
+  // checked, so a flood of forged deliveries costs a counter increment rather
+  // than a signature computation each (#46). Fails open: a lost provider
+  // event is worse than a briefly unlimited one, and a 429 is retried.
+  try {
+    await enforceRateLimit(req, "webhook.clerk");
+  } catch (error) {
+    return handleRouteError("CLERK_WEBHOOK", error);
+  }
+
   try {
     const payload = await req.text();
     // From the request rather than `next/headers`, for the same reason as the
