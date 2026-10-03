@@ -1,3 +1,5 @@
+import type { PrismaClient } from "@prisma/client";
+
 import { db } from "@/lib/db";
 import { logError } from "@/lib/logger";
 
@@ -47,7 +49,21 @@ interface Row {
  * deterministic. Serverless instances are NTP-synchronised; a skew of a few
  * milliseconds moves a limit by a few milliseconds.
  */
-export function postgresStore(random: () => number = Math.random): RateLimitStore {
+export interface PostgresStoreOptions {
+  /**
+   * The client to run against. Production uses the shared one; the
+   * integration suite passes a second client to stand in for a second
+   * serverless instance with its own connection pool.
+   */
+  client?: Pick<PrismaClient, "$queryRaw" | "$executeRaw">;
+  /** Source for the sweep decision. Injected for deterministic tests. */
+  random?: () => number;
+}
+
+export function postgresStore(options: PostgresStoreOptions = {}): RateLimitStore {
+  const random = options.random ?? Math.random;
+  const client = () => options.client ?? db;
+
   return {
     async consume(key, now, rate, cost) {
       const increment = cost * rate.emissionMs;
@@ -56,7 +72,7 @@ export function postgresStore(random: () => number = Math.random): RateLimitStor
       // allowed one.
       const first = now + increment;
 
-      const rows = await db.$queryRaw<Row[]>`
+      const rows = await client().$queryRaw<Row[]>`
         INSERT INTO "RateLimitBucket" ("key", "tat", "allowed", "expiresAt")
         VALUES (
           ${key},
@@ -86,7 +102,7 @@ export function postgresStore(random: () => number = Math.random): RateLimitStor
       `;
 
       if (random() < SWEEP_PROBABILITY) {
-        await sweepExpired(now);
+        await sweepExpired(now, client());
       }
 
       const [row] = rows;
@@ -114,9 +130,12 @@ export function postgresStore(random: () => number = Math.random): RateLimitStor
  * Deletes a bounded batch of expired buckets. Failures are logged and
  * swallowed: housekeeping must never decide a request.
  */
-export async function sweepExpired(now: number): Promise<void> {
+export async function sweepExpired(
+  now: number,
+  client: Pick<PrismaClient, "$executeRaw"> = db
+): Promise<void> {
   try {
-    await db.$executeRaw`
+    await client.$executeRaw`
       DELETE FROM "RateLimitBucket"
       WHERE "key" IN (
         SELECT "key" FROM "RateLimitBucket"
