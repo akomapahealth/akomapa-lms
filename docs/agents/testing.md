@@ -97,6 +97,19 @@ handler does anything. Build handler requests with `SAME_ORIGIN_HEADERS` from
 files, so your `.env.local` cannot change the result. A new mutating handler
 that skips the guard fails `tests/unit/http/origin-coverage.test.ts`.
 
+### Mutations are rate limited
+
+Every mutating handler awaits `enforceRateLimit` right after `requirePrincipal()`
+(#46, [docs/security/rate-limits.md](../security/rate-limits.md)), and
+`tests/unit/rate-limit/coverage.test.ts` fails the build on a route without one.
+In the unit suite the database double cannot run the limiter's SQL, so a
+handler test either mocks `@/lib/rate-limit` (as the contract tests do) or
+passes an in-memory store from `tests/unit/support/rate-limit-store.ts` to
+`enforceRateLimit` directly. That store exists only in the test tree on purpose:
+per-process memory is the wrong store for serverless. Limits engaging,
+concurrency across instances, and store failure are proven against real
+PostgreSQL in `tests/integration/rate-limit-*.test.ts`.
+
 ### Write the negative case first
 
 The failure that matters is rarely "the feature did not work"; it is "the guard

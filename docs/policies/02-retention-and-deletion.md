@@ -32,6 +32,7 @@ the link to a person while keeping the record for aggregate reporting.
 | Video assets | Mux | Course archived | 12 months | Delete the asset and `MuxData` row |
 | Preferences | `UserSettings` | Account deletion request | 30 days | Delete |
 | Operational logs | Vercel | Log write | Platform default retention | Expire. Never exported into another store |
+| Abuse-control counters | `RateLimitBucket` | The bucket's last allowed request | Until the bucket refills: at most 1 hour for every current policy | Expired rows are inert and are deleted by the limiter's sweep. Not linked to an account, so an account deletion request has nothing to find |
 
 The 30 day window on deletion requests is a grace period that lets a learner
 reverse an accidental deletion and lets the Foundation resolve a payment

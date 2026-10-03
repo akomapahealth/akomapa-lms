@@ -6,6 +6,8 @@ import {
   type RateLimitPolicy,
 } from "@/lib/rate-limit/policies";
 
+import { read } from "../support/source-scan";
+
 const entries = Object.entries(RATE_LIMIT_POLICIES) as [string, RateLimitPolicy][];
 
 describe("RATE_LIMIT_POLICIES", () => {
@@ -78,5 +80,19 @@ describe("RATE_LIMIT_POLICIES", () => {
 
   it.each(entries)("%s describes itself", (_name, policy) => {
     expect(policy.description.length).toBeGreaterThan(10);
+  });
+
+  it("matches the table in docs/security/rate-limits.md, number for number", () => {
+    // Operators tune limits from the document; it must say what the code does.
+    const doc = read("docs/security/rate-limits.md");
+    const describeLimit = (limit?: RateLimitPolicy["ip"]) =>
+      limit === undefined
+        ? "none"
+        : `${limit.burst}, ${limit.sustained.limit}/${limit.sustained.periodSeconds === 3600 ? "hour" : `${limit.sustained.periodSeconds}s`}`;
+
+    for (const [name, policy] of entries) {
+      const row = `| \`${name}\` | ${describeLimit(policy.user)} | ${describeLimit(policy.ip)} | ${policy.onStoreFailure} |`;
+      expect(doc).toContain(row);
+    }
   });
 });
