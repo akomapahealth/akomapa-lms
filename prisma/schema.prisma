@@ -665,3 +665,16 @@ enum ThemePreference {
   dark
   system
 }
+
+/// The last Certificate number issued in each year (#51).
+///
+/// Certificate numbers are `GHELP-<year>-<5 digits>`. They used to be computed
+/// as "highest number this year + 1", so two learners finishing at once got the
+/// same number and one Certificate failed. lib/certificate-service.ts now
+/// allocates from this row with one atomic statement. A number allocated for a
+/// Certificate that then fails to save is never reused: gaps are harmless,
+/// duplicates are not.
+model CertificateNumberSequence {
+  year      Int @id
+  lastValue Int
+}

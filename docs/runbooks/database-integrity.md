@@ -8,7 +8,7 @@ migration, not by convention.
 - **Retention source:** [policy 02](../policies/02-retention-and-deletion.md)
 - **Migrations:** `20261003020000_restrict_learner_record_deletes`,
   `20261003030000_unique_positions`, `20261003040000_query_indexes`,
-  `20261003050000_integrity_constraints`
+  `20261003050000_integrity_constraints`, `20261003060000_certificate_number_sequence`
 - **Rules as code:** `lib/db/integrity.ts` (read by the migration, the preflight, and the tests)
 - **Preflight:** `npm run db:integrity:preflight`
 
@@ -141,6 +141,25 @@ Then `npx prisma migrate resolve --rolled-back 20261003050000_integrity_constrai
 and redeploy. Production at 2026-10 held no Courses or Quizzes; expect a clean
 preflight.
 
+## Certificate numbers
+
+`GHELP-<year>-<nnnnn>`, unique and permanently verifiable. They were computed
+as "highest this year + 1", so two learners finishing together got the same
+number (one Certificate failed), and a learner's double click could store one
+number while the PDF showed another.
+
+- **Allocation** is one statement against `CertificateNumberSequence`
+  (`INSERT ... ON CONFLICT DO UPDATE ... RETURNING`), one row per UTC year.
+  Concurrent allocations never collide.
+- **Reserve, then render.** The Certificate row is created with its number
+  before the PDF is rendered; when two requests for one learner race, the
+  loser adopts the stored number. The PDF always shows the number the database
+  holds.
+- **Gaps are expected.** A number allocated for a request that then loses the
+  race, or fails, is never reused. Gaps are harmless; duplicates are not.
+- **The migration** seeded each year's counter from the highest number already
+  issued in the generated format.
+
 ## Indexes
 
 Each index serves a query the application runs. `tests/integration/query-plans.test.ts`
@@ -222,6 +241,9 @@ Forward-fix is preferred. Each migration's inverse:
   indexes and re-create `Module_courseId_idx`, `Chapter_moduleId_idx`,
   `Question_quizId_idx`, and `QuestionOption_questionId_idx`. The renumbering
   is not reverted; the previous order was ambiguous.
+- **`20261003060000_certificate_number_sequence`.** Deploy the previous code,
+  then `DROP TABLE "CertificateNumberSequence";`. The previous code numbers from
+  existing Certificates and does not need it.
 - **`20261003050000_integrity_constraints`.** `ALTER TABLE … DROP CONSTRAINT`
   for each CHECK in `lib/db/integrity.ts`, `DROP TRIGGER` for each
   `<table>_identifiers_immutable`, `DROP FUNCTION akomapa_refuse_identifier_change()`,

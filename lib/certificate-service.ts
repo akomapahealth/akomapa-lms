@@ -3,28 +3,56 @@ import React from "react";
 
 import { db } from "@/lib/db";
 import { CertificateTemplate } from "@/lib/certificate-template";
+import { isUniqueViolation } from "@/lib/courses/ordering";
 import { enrollmentStatusFor } from "@/lib/entitlement";
 
-async function getNextCertificateNumber(): Promise<string> {
-  const year = new Date().getFullYear();
-  const prefix = `GHELP-${year}-`;
+/** The prefix every generated Certificate number shares. */
+const CERTIFICATE_PREFIX = "GHELP";
 
-  const latest = await db.certificate.findFirst({
-    where: { certificateNumber: { startsWith: prefix } },
-    orderBy: { certificateNumber: "desc" },
-    select: { certificateNumber: true },
-  });
+/** `GHELP-2026-00042`: the year, then the year's sequence, five digits wide. */
+export function formatCertificateNumber(year: number, sequence: number): string {
+  return `${CERTIFICATE_PREFIX}-${year}-${sequence.toString().padStart(5, "0")}`;
+}
 
-  let nextNum = 1;
-  if (latest) {
-    const parts = latest.certificateNumber.split("-");
-    const lastNum = parseInt(parts[2], 10);
-    if (!isNaN(lastNum)) {
-      nextNum = lastNum + 1;
-    }
+/**
+ * Allocates the next number for a year, atomically (#51).
+ *
+ * One statement: the first allocation in a year inserts 1, every later one
+ * increments under the row lock, so concurrent Certificates can never share a
+ * number. A number whose Certificate then fails to save is not reused; gaps are
+ * harmless, duplicates are not.
+ */
+export async function allocateCertificateNumber(now: Date = new Date()): Promise<string> {
+  const year = now.getUTCFullYear();
+  const [row] = await db.$queryRaw<{ lastValue: number }[]>`
+    INSERT INTO "CertificateNumberSequence" ("year", "lastValue")
+    VALUES (${year}, 1)
+    ON CONFLICT ("year") DO UPDATE
+      SET "lastValue" = "CertificateNumberSequence"."lastValue" + 1
+    RETURNING "lastValue"
+  `;
+  return formatCertificateNumber(year, Number(row.lastValue));
+}
+
+/**
+ * The learner's Certificate row for a Course, created if absent, with its
+ * permanent number. Created *before* the PDF is rendered, so the PDF always
+ * shows the number the database holds: when two requests race, the one whose
+ * insert loses adopts the winner's number instead of rendering its own.
+ */
+async function reserveCertificateNumber(userId: string, courseId: string): Promise<string> {
+  const where = { userId_courseId: { userId, courseId } };
+  const certificateNumber = await allocateCertificateNumber();
+
+  try {
+    await db.certificate.create({ data: { userId, courseId, certificateNumber } });
+    return certificateNumber;
+  } catch (error) {
+    if (!isUniqueViolation(error)) throw error;
+    const winner = await db.certificate.findUnique({ where, select: { certificateNumber: true } });
+    if (winner === null) throw error;
+    return winner.certificateNumber;
   }
-
-  return `${prefix}${nextNum.toString().padStart(5, "0")}`;
 }
 
 export async function generateCertificate(
@@ -100,7 +128,7 @@ export async function generateCertificate(
       : null;
 
   const certificateNumber =
-    existing?.certificateNumber ?? (await getNextCertificateNumber());
+    existing?.certificateNumber ?? (await reserveCertificateNumber(userId, courseId));
   const issuedDate = new Date().toLocaleDateString("en-GB", {
     day: "numeric",
     month: "long",
@@ -127,18 +155,11 @@ export async function generateCertificate(
   const base64 = Buffer.from(pdfBuffer).toString("base64");
   const pdfUrl = `data:application/pdf;base64,${base64}`;
 
-  // Upsert certificate record
-  await db.certificate.upsert({
+  // The row and its number exist already (reserved above, or found); only the
+  // rendered PDF is new.
+  await db.certificate.update({
     where: { userId_courseId: { userId, courseId } },
-    create: {
-      userId,
-      courseId,
-      certificateNumber,
-      pdfUrl,
-    },
-    update: {
-      pdfUrl,
-    },
+    data: { pdfUrl },
   });
 
   return { certificateNumber, pdfUrl };
