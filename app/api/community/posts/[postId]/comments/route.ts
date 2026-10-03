@@ -7,6 +7,7 @@ import { enforceRateLimit } from "@/lib/rate-limit";
 import { postParams } from "@/lib/validations/ids";
 import { commentCreateSchema } from "@/lib/validations/community";
 import { evaluateBadges } from "@/lib/badge-service";
+import { appendEvents } from "@/lib/outbox/events";
 
 export async function POST(
   req: Request,
@@ -58,29 +59,43 @@ export async function POST(
       }
     }
 
-    const comment = await db.forumComment.create({
-      data: {
-        content: body.content,
-        userId,
-        postId,
-        parentId: body.parentId ?? null,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            imageUrl: true,
-            role: true,
+    // The comment, the badges it earns, and their events commit together
+    // (ADR 0004).
+    const { comment, awardedBadges } = await db.$transaction(async (tx) => {
+      const comment = await tx.forumComment.create({
+        data: {
+          content: body.content,
+          userId,
+          postId,
+          parentId: body.parentId ?? null,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              imageUrl: true,
+              role: true,
+            },
           },
         },
-      },
-    });
+      });
 
-    const awardedBadges = await evaluateBadges(userId, {
-      type: "comment_created",
-      commentId: comment.id,
+      const awardedBadges = await evaluateBadges(
+        userId,
+        { type: "comment_created", commentId: comment.id },
+        tx
+      );
+      await appendEvents(
+        tx,
+        awardedBadges.map((badge) => ({
+          type: "BADGE_AWARDED" as const,
+          payload: { userId, badgeId: badge.id },
+        }))
+      );
+
+      return { comment, awardedBadges };
     });
 
     return NextResponse.json({
