@@ -35,7 +35,6 @@ function listMarkdown(dir) {
 
 // Paths the documents deliberately name as absent.
 const KNOWN_ABSENT = new Set([
-  "vercel.json",        // policy 02 and 08 name it as not configured
   "loading.tsx",        // the matrix records that none exists, which is the finding
   "dataset.v2.jsonl",   // evals/README.md describes the future major-version filename
 ]);

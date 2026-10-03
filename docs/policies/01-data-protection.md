@@ -36,6 +36,7 @@ inventory is the input to the retention schedule in
 | Video | Course video assets and playback ids (`MuxData`) | Mux | Content, plus Mux-side viewing telemetry |
 | Preferences | `UserSettings` including theme and notification flags | Supabase | Personal, low sensitivity |
 | Operational logs | Request and error logs emitted by `lib/logger.ts` and captured by the platform | Vercel | May contain IP address and user agent |
+| Domain events | `OutboxEvent`: what happened (a Topic completed, a Certificate issued) with the learner's and the record's identifiers; never content, scores, or answers ([runbooks/outbox.md](../runbooks/outbox.md)) | Supabase | Personal identifiers, short-lived. Processed to deliver the product's own effects (contract) |
 | Abuse-control counters | `RateLimitBucket`: one timestamp per HMAC-keyed bucket. No user id or IP address is stored; keys are HMACs under a server secret ([rate-limits.md](../security/rate-limits.md)) | Supabase | Pseudonymous, short-lived. Processed under the security and fraud-prevention basis below |
 
 **No analytics or product-telemetry SDK is installed.** There is no Vercel

@@ -32,6 +32,7 @@ the link to a person while keeping the record for aggregate reporting.
 | Video assets | Mux | Course archived | 12 months | Delete the asset and `MuxData` row |
 | Preferences | `UserSettings` | Account deletion request | 30 days | Delete |
 | Operational logs | Vercel | Log write | Platform default retention | Expire. Never exported into another store |
+| Domain events | `OutboxEvent` | Delivery | 30 days after delivery; an undeliverable (parked) event is kept until an operator replays or discards it | Deleted by the daily outbox run ([runbooks/outbox.md](../runbooks/outbox.md)). Events carry identifiers only, never content |
 | Abuse-control counters | `RateLimitBucket` | The bucket's last allowed request | Until the bucket refills: at most 1 hour for every current policy | Expired rows are inert and are deleted by the limiter's sweep. Not linked to an account, so an account deletion request has nothing to find |
 
 The 30 day window on deletion requests is a grace period that lets a learner
@@ -71,8 +72,10 @@ Answer keys, other learners' data, and internal moderation notes are excluded.
 ## Current capability gap
 
 **Deletion and export are manual operations today.** There is no self-service
-flow ([#117](https://github.com/akomapahealth/akomapa-lms/issues/117)), no scheduled job to enforce these periods
-([#118](https://github.com/akomapahealth/akomapa-lms/issues/118)), and no `vercel.json` cron configured. The public page still
+flow ([#117](https://github.com/akomapahealth/akomapa-lms/issues/117)), and no scheduled job enforces these periods
+([#118](https://github.com/akomapahealth/akomapa-lms/issues/118)). A daily `vercel.json` cron now exists (the outbox processor,
+[#69](https://github.com/akomapahealth/akomapa-lms/issues/69)), but it enforces only the abuse-control and domain-event rows
+below; #118 adds the rest of this schedule to it. The public page still
 says "a reasonable period" and is corrected by [#119](https://github.com/akomapahealth/akomapa-lms/issues/119). Certificate
 revocation, offered above as the alternative to deletion, is not implemented
 ([#120](https://github.com/akomapahealth/akomapa-lms/issues/120)). Until those land, retention is enforced by a named person

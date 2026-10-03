@@ -11,6 +11,8 @@ const isPublicRoute = createRouteMatcher([
   "/api/webhook(.*)",
   "/api/webhooks/clerk(.*)",
   "/api/uploadthing(.*)",
+  // Scheduled jobs authenticate themselves with CRON_SECRET (lib/http/cron.ts).
+  "/api/cron(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
