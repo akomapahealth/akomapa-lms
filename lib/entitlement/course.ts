@@ -4,9 +4,9 @@ import { can, Denied, type Principal } from "@/lib/auth";
 import { db } from "@/lib/db";
 
 import {
+  EnrollmentStatus,
   normalizeEnrollmentStatus,
   type CourseEntitlement,
-  type EnrollmentStatus,
   type TopicEntitlement,
 } from "./types";
 
@@ -91,7 +91,7 @@ export async function courseEntitlement(
   const status = enrollment === null ? null : normalizeEnrollmentStatus(enrollment.status);
   if (enrollment !== null && status === null) return none("course_not_found");
 
-  if (status === "SUSPENDED") return none("suspended", status);
+  if (status === EnrollmentStatus.SUSPENDED) return none("suspended", status);
 
   if (isStaffFor(principal, facts)) {
     return { level: "full", reason: "staff_access", canLearn: true, enrollmentStatus: status };
@@ -104,7 +104,7 @@ export async function courseEntitlement(
   if (status !== null && can(principal, "course:learn", { kind: "enrollment", status })) {
     return {
       level: "full",
-      reason: status === "COMPLETED" ? "completed_enrollment" : "active_enrollment",
+      reason: status === EnrollmentStatus.COMPLETED ? "completed_enrollment" : "active_enrollment",
       canLearn: true,
       enrollmentStatus: status,
     };
@@ -162,7 +162,10 @@ export async function entitledCourseIds(
   if (!principal) return [];
 
   const enrollments = await db.enrollment.findMany({
-    where: { userId: principal.userId, status: { in: ["ACTIVE", "COMPLETED"] } },
+    where: {
+      userId: principal.userId,
+      status: { in: [EnrollmentStatus.ACTIVE, EnrollmentStatus.COMPLETED] },
+    },
     select: { courseId: true },
   });
 

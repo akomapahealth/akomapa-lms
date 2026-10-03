@@ -102,7 +102,8 @@ describe("markCourseCompleted", () => {
     await markCourseCompleted("user_1", "course_1");
 
     expect(dbMock.enrollment.updateMany).toHaveBeenCalledWith({
-      where: { userId: "user_1", courseId: "course_1", status: "ACTIVE" },
+      // The source statuses come from the transition table (#50): only ACTIVE.
+      where: { userId: "user_1", courseId: "course_1", status: { in: ["ACTIVE"] } },
       data: { status: "COMPLETED" },
     });
   });

@@ -1,5 +1,8 @@
-import { db } from "@/lib/db";
 import type { Badge } from "@prisma/client";
+import { z } from "zod";
+
+import { db } from "@/lib/db";
+import { logWarn } from "@/lib/logger";
 
 export type BadgeEvent =
   | { type: "topic_completed"; topicId: string }
@@ -10,14 +13,34 @@ export type BadgeEvent =
   | { type: "comment_created"; commentId: string }
   | { type: "streak_updated"; currentStreak: number };
 
-interface BadgeCriteria {
-  type: string;
-  count?: number;
-  score?: number;
-  minImprovement?: number;
-  category?: string;
-  scope?: string;
-}
+const count = z.number().int().positive().optional();
+
+/**
+ * The closed set of badge rules, validated rather than cast (#50).
+ *
+ * `Badge.criteria` is JSON, so the database cannot constrain it. It used to be
+ * read with `as unknown as BadgeCriteria` and switched on a free-form `type`, so
+ * a typo in a seeded rule silently made a badge unearnable, and a malformed
+ * count was compared as whatever it happened to be. Each rule is now a member of
+ * a discriminated union; anything else is skipped and logged, never awarded.
+ */
+export const badgeCriteriaSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("topics_completed"), count }).strict(),
+  z.object({ type: z.literal("modules_completed"), count }).strict(),
+  z.object({ type: z.literal("courses_completed"), count }).strict(),
+  z.object({ type: z.literal("category_completed"), category: z.string().min(1) }).strict(),
+  z.object({ type: z.literal("quiz_score"), score: z.number().min(0).max(100).optional() }).strict(),
+  z
+    .object({ type: z.literal("score_improvement"), minImprovement: z.number().min(0).max(100).optional() })
+    .strict(),
+  z.object({ type: z.literal("all_quizzes_passed"), scope: z.literal("course").optional() }).strict(),
+  z.object({ type: z.literal("streak_days"), count }).strict(),
+  z.object({ type: z.literal("posts_created"), count }).strict(),
+  z.object({ type: z.literal("post_likes_received"), count }).strict(),
+  z.object({ type: z.literal("comments_created"), count }).strict(),
+]);
+
+export type BadgeCriteria = z.infer<typeof badgeCriteriaSchema>;
 
 /**
  * Evaluates all badge criteria for a user given an event.
@@ -40,8 +63,13 @@ export async function evaluateBadges(
   const newlyEarned: Badge[] = [];
 
   for (const badge of unearnedBadges) {
-    const criteria = badge.criteria as unknown as BadgeCriteria;
-    const met = await checkCriteria(userId, criteria, event);
+    const parsed = badgeCriteriaSchema.safeParse(badge.criteria);
+    if (!parsed.success) {
+      // The badge id is a safe identifier; the criteria JSON is not echoed.
+      logWarn("BADGE_CRITERIA_INVALID", { badgeId: badge.id });
+      continue;
+    }
+    const met = await checkCriteria(userId, parsed.data, event);
     if (met) {
       newlyEarned.push(badge);
     }
@@ -88,7 +116,7 @@ async function checkCriteria(
 
     case "category_completed": {
       if (event.type !== "module_completed" && event.type !== "course_completed") return false;
-      return checkCategoryCompleted(userId, criteria.category ?? "");
+      return checkCategoryCompleted(userId, criteria.category);
     }
 
     case "quiz_score": {
@@ -133,8 +161,11 @@ async function checkCriteria(
       return commentCount >= (criteria.count ?? 10);
     }
 
-    default:
-      return false;
+    default: {
+      // Exhaustive: a rule added to the schema without a case fails to compile.
+      const unhandled: never = criteria;
+      return unhandled;
+    }
   }
 }
 

@@ -1,3 +1,4 @@
+import { QuizType } from "@/lib/domain/states";
 import type { Principal } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { entitledCourseIds } from "@/lib/entitlement";
@@ -31,7 +32,7 @@ export const getGradesOverview = async (
         quizzes: {
           where: {
             isPublished: true,
-            type: { in: ["PRE_TEST", "POST_TEST"] },
+            type: { in: [QuizType.PRE_TEST, QuizType.POST_TEST] },
           },
           select: {
             id: true,
