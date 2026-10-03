@@ -57,7 +57,7 @@ unexpected fault — is a JSON object:
 | `invalid_parameter` | 400 | A path or query segment is missing or the wrong shape, e.g. a non-uuid id. |
 | `malformed_json` | 400 | The body is not parseable JSON, or is not valid UTF-8. |
 | `validation_failed` | 422 | The body parsed but failed the schema: a bound, an enum, an unknown field. |
-| `conflict` | 409 | The request contradicts current state: already submitted, already purchased, not publishable yet. |
+| `conflict` | 409 | The request contradicts current state: already submitted, already purchased, not publishable yet, or content learners have used (delete refused; see [runbooks/database-integrity.md](runbooks/database-integrity.md)). |
 | `payload_too_large` | 413 | The body exceeds the route's declared limit. |
 | `unsupported_media_type` | 415 | The `Content-Type` is not JSON. |
 | `rate_limited` | 429 | A rate limit engaged. Always sent with `Retry-After`. Keyed on the caller and the operation, never the resource, so it reveals nothing about whether the resource exists. See [security/rate-limits.md](security/rate-limits.md). |
