@@ -4,7 +4,12 @@ import { dbMock } from "../support/db";
 
 vi.mock("@/lib/db", async () => ({ db: (await import("../support/db")).dbMock }));
 
-const { markCourseCompleted, recordFreeEnrollment, recordPaidEnrollment } =
+const {
+  courseHasEntitlementRecords,
+  markCourseCompleted,
+  recordFreeEnrollment,
+  recordPaidEnrollment,
+} =
   await import("@/lib/entitlement/enroll");
 
 beforeEach(() => {
@@ -125,3 +130,30 @@ describe("markCourseCompleted", () => {
     expect(dbMock.enrollment.updateMany).not.toHaveBeenCalled();
   });
 });
+
+describe("courseHasEntitlementRecords (#51)", () => {
+  it("is false when no Purchase or Enrollment references the Course", async () => {
+    await expect(courseHasEntitlementRecords("course_1")).resolves.toBe(false);
+  });
+
+  it.each([["purchase"], ["enrollment"]] as const)("is true when a %s exists", async (model) => {
+    dbMock[model].findFirst.mockResolvedValue({ id: "row" });
+
+    await expect(courseHasEntitlementRecords("course_1")).resolves.toBe(true);
+    expect(dbMock[model].findFirst).toHaveBeenCalledWith({
+      where: { courseId: "course_1" },
+      select: { id: true },
+    });
+  });
+
+  it("uses the transaction client when given one", async () => {
+    const tx = {
+      purchase: { findFirst: vi.fn().mockResolvedValue(null) },
+      enrollment: { findFirst: vi.fn().mockResolvedValue({ id: "e" }) },
+    };
+
+    await expect(courseHasEntitlementRecords("course_1", tx as never)).resolves.toBe(true);
+    expect(dbMock.enrollment.findFirst).not.toHaveBeenCalled();
+  });
+});
+

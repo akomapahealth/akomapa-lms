@@ -3,7 +3,9 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { authorizeTopicInCourse, requirePrincipal } from "@/lib/auth";
-import { assertTrustedOrigin, BODY_BYTES, handleRouteError, parseBody, parseParams } from "@/lib/http";
+import { assertTrustedOrigin, BODY_BYTES, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
+import { hasLearnerRecords, LEARNER_RECORDS_CONFLICT } from "@/lib/courses/learner-records";
+import { deleteMuxAssets } from "@/lib/courses/mux-cleanup";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { topicParams } from "@/lib/validations/ids";
 import { topicUpdateSchema } from "@/lib/validations/topic";
@@ -37,28 +39,29 @@ export async function DELETE(
             routeParams.chapterId
         );
 
-        if (topic.videoUrl) {
-            const existingMuxData = await db.muxData.findFirst({
-                where: {
-                    topicId: routeParams.chapterId,
-                }
-            });
-
-            if (existingMuxData) {
-                await Video.assets.delete(existingMuxData.assetId);
-                await db.muxData.delete({
-                    where: {
-                        id: existingMuxData.id,
-                    }
-                });
-            }
+        // Learners' progress and case study attempts outlive the Topic (#51).
+        // Checked before anything is touched, for the same reason as the
+        // Course delete: the Mux asset used to go first.
+        if (await hasLearnerRecords({ kind: "topic", topicId: routeParams.chapterId })) {
+            return problem("conflict", { message: LEARNER_RECORDS_CONFLICT.topic });
         }
 
+        const existingMuxData = topic.videoUrl
+            ? await db.muxData.findFirst({ where: { topicId: routeParams.chapterId } })
+            : null;
+
+        // MuxData cascades with the Topic. The database goes first; if
+        // RESTRICT refuses it, the video is untouched.
         const deletedTopic = await db.topic.delete({
             where: {
                 id: routeParams.chapterId,
             }
         });
+
+        await deleteMuxAssets(
+            existingMuxData ? [existingMuxData.assetId] : [],
+            "CHAPTER_ID_DELETE"
+        );
 
         const publishedTopicsInCourse = await db.topic.findMany({
             where: {

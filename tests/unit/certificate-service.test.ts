@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 import { aCertificate, anEnrollment } from "./support/builders";
 import { dbMock } from "./support/db";
@@ -28,6 +28,9 @@ function renderedProps(): Record<string, unknown> {
 
 const { generateCertificate } = await import("@/lib/certificate-service");
 
+/** The raw allocation statement, typed as the plain mock it is. */
+const queryRaw = () => dbMock.$queryRaw as unknown as Mock;
+
 /**
  * A certificate is the product's only externally verifiable claim, so the rule
  * that matters most is the negative one: it must be impossible to obtain
@@ -41,7 +44,9 @@ const EXPECTED_PDF_URL = `data:application/pdf;base64,${Buffer.from("pdf-bytes")
 
 beforeEach(() => {
   freezeTimeAt("2026-06-15T09:00:00.000Z");
-  dbMock.certificate.upsert.mockResolvedValue(aCertificate());
+  dbMock.certificate.create.mockResolvedValue(aCertificate());
+  dbMock.certificate.update.mockResolvedValue(aCertificate());
+  queryRaw().mockResolvedValue([{ lastValue: 1 }]);
   dbMock.course.findUnique.mockResolvedValue({ title: "Research Ethics", quizzes: [] });
 });
 
@@ -51,7 +56,8 @@ describe("eligibility", () => {
 
     await expect(generateCertificate("user_1", "course_1")).resolves.toBeNull();
     expect(renderToBuffer).not.toHaveBeenCalled();
-    expect(dbMock.certificate.upsert).not.toHaveBeenCalled();
+    expect(dbMock.certificate.create).not.toHaveBeenCalled();
+    expect(queryRaw()).not.toHaveBeenCalled();
   });
 
   it("checks completion for the exact learner and Course pair", async () => {
@@ -73,7 +79,7 @@ describe("eligibility", () => {
     dbMock.course.findUnique.mockResolvedValue(null);
 
     await expect(generateCertificate("user_1", "course_1")).resolves.toBeNull();
-    expect(dbMock.certificate.upsert).not.toHaveBeenCalled();
+    expect(dbMock.certificate.create).not.toHaveBeenCalled();
   });
 
   it("refuses to regenerate a half-written certificate without completion", async () => {
@@ -111,66 +117,95 @@ describe("idempotency", () => {
     // Allocating a fresh number here would leave the learner holding two
     // identifiers for one achievement.
     expect(result?.certificateNumber).toBe("GHELP-2026-00042");
-    expect(dbMock.certificate.findFirst).not.toHaveBeenCalled();
+    expect(queryRaw()).not.toHaveBeenCalled();
+    expect(dbMock.certificate.create).not.toHaveBeenCalled();
   });
 });
 
-describe("certificate numbering", () => {
+describe("certificate numbering (#51)", () => {
   beforeEach(() => {
     dbMock.enrollment.findUnique.mockResolvedValue(anEnrollment({ status: "COMPLETED" }));
   });
 
-  it("starts at one for the first certificate of the year", async () => {
-    dbMock.certificate.findFirst.mockResolvedValue(null);
+  function uniqueViolation() {
+    const error = new Error("Unique constraint failed");
+    error.name = "PrismaClientKnownRequestError";
+    Object.assign(error, { code: "P2002" });
+    return error;
+  }
 
-    const result = await generateCertificate("user_1", "course_1");
+  it.each([
+    [1, "GHELP-2026-00001"],
+    [8, "GHELP-2026-00008"],
+    [1000, "GHELP-2026-01000"],
+    [123456, "GHELP-2026-123456"],
+  ])("formats allocated value %i as %s", async (lastValue, number) => {
+    queryRaw().mockResolvedValue([{ lastValue }]);
 
-    expect(result?.certificateNumber).toBe("GHELP-2026-00001");
-    expect(dbMock.certificate.findFirst).toHaveBeenCalledWith({
-      where: { certificateNumber: { startsWith: "GHELP-2026-" } },
-      orderBy: { certificateNumber: "desc" },
-      select: { certificateNumber: true },
+    await expect(generateCertificate("user_1", "course_1")).resolves.toMatchObject({
+      certificateNumber: number,
     });
   });
 
-  it("continues from the highest number already issued", async () => {
-    dbMock.certificate.findFirst.mockResolvedValue({ certificateNumber: "GHELP-2026-00007" });
+  it("allocates from the current UTC year's sequence", async () => {
+    freezeTimeAt("2027-01-01T00:00:00.000Z");
+
+    const result = await generateCertificate("user_1", "course_1");
+
+    expect(result?.certificateNumber).toBe("GHELP-2027-00001");
+    // The tagged template's first interpolated value is the year.
+    expect(queryRaw().mock.calls[0][1]).toBe(2027);
+  });
+
+  it("reserves the row with its number before rendering the PDF, then stores the PDF", async () => {
+    await generateCertificate("user_1", "course_1");
+
+    expect(dbMock.certificate.create).toHaveBeenCalledWith({
+      data: { userId: "user_1", courseId: "course_1", certificateNumber: "GHELP-2026-00001" },
+    });
+    expect(dbMock.certificate.create.mock.invocationCallOrder[0]).toBeLessThan(
+      renderToBuffer.mock.invocationCallOrder[0]
+    );
+    expect(dbMock.certificate.update).toHaveBeenCalledWith({
+      where: { userId_courseId: { userId: "user_1", courseId: "course_1" } },
+      data: { pdfUrl: EXPECTED_PDF_URL },
+    });
+    expect(renderedProps()).toMatchObject({ certificateNumber: "GHELP-2026-00001" });
+  });
+
+  it("adopts the winner's number when a concurrent request issued it first", async () => {
+    // A double click: both requests allocate, one insert wins. The PDF must
+    // carry the stored number, not the loser's allocation.
+    queryRaw().mockResolvedValue([{ lastValue: 9 }]);
+    dbMock.certificate.create.mockRejectedValue(uniqueViolation());
+    dbMock.certificate.findUnique
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ certificateNumber: "GHELP-2026-00008" });
 
     const result = await generateCertificate("user_1", "course_1");
 
     expect(result?.certificateNumber).toBe("GHELP-2026-00008");
+    expect(renderedProps()).toMatchObject({ certificateNumber: "GHELP-2026-00008" });
   });
 
-  it("keeps five-digit padding as numbers grow", async () => {
-    dbMock.certificate.findFirst.mockResolvedValue({ certificateNumber: "GHELP-2026-00999" });
+  it("does not swallow a conflict it cannot explain", async () => {
+    dbMock.certificate.create.mockRejectedValue(uniqueViolation());
+    dbMock.certificate.findUnique.mockResolvedValue(null);
 
-    await expect(generateCertificate("user_1", "course_1")).resolves.toMatchObject({
-      certificateNumber: "GHELP-2026-01000",
-    });
+    await expect(generateCertificate("user_1", "course_1")).rejects.toMatchObject({ code: "P2002" });
+    expect(renderToBuffer).not.toHaveBeenCalled();
   });
 
-  it("scopes the sequence to the current year", async () => {
-    freezeTimeAt("2027-01-01T00:00:00.000Z");
-    dbMock.certificate.findFirst.mockResolvedValue(null);
+  it("does not swallow other failures", async () => {
+    dbMock.certificate.create.mockRejectedValue(new Error("connection lost"));
 
-    await expect(generateCertificate("user_1", "course_1")).resolves.toMatchObject({
-      certificateNumber: "GHELP-2027-00001",
-    });
-  });
-
-  it("restarts at one rather than emitting NaN when the latest number is malformed", async () => {
-    dbMock.certificate.findFirst.mockResolvedValue({ certificateNumber: "GHELP-2026-legacy" });
-
-    await expect(generateCertificate("user_1", "course_1")).resolves.toMatchObject({
-      certificateNumber: "GHELP-2026-00001",
-    });
+    await expect(generateCertificate("user_1", "course_1")).rejects.toThrow("connection lost");
   });
 });
 
 describe("pre-test and post-test scores", () => {
   beforeEach(() => {
     dbMock.enrollment.findUnique.mockResolvedValue(anEnrollment({ status: "COMPLETED" }));
-    dbMock.certificate.findFirst.mockResolvedValue(null);
   });
 
   async function propsAfterIssuing(): Promise<Record<string, unknown>> {
@@ -237,7 +272,6 @@ describe("pre-test and post-test scores", () => {
 describe("the rendered certificate", () => {
   beforeEach(() => {
     dbMock.enrollment.findUnique.mockResolvedValue(anEnrollment({ status: "COMPLETED" }));
-    dbMock.certificate.findFirst.mockResolvedValue(null);
   });
 
   it("names the learner and formats the issue date unambiguously", async () => {
@@ -277,15 +311,12 @@ describe("the rendered certificate", () => {
       pdfUrl: EXPECTED_PDF_URL,
     });
 
-    expect(dbMock.certificate.upsert).toHaveBeenCalledWith({
+    expect(dbMock.certificate.create).toHaveBeenCalledWith({
+      data: { userId: "user_1", courseId: "course_1", certificateNumber: "GHELP-2026-00001" },
+    });
+    expect(dbMock.certificate.update).toHaveBeenCalledWith({
       where: { userId_courseId: { userId: "user_1", courseId: "course_1" } },
-      create: {
-        userId: "user_1",
-        courseId: "course_1",
-        certificateNumber: "GHELP-2026-00001",
-        pdfUrl: EXPECTED_PDF_URL,
-      },
-      update: { pdfUrl: EXPECTED_PDF_URL },
+      data: { pdfUrl: EXPECTED_PDF_URL },
     });
   });
 });

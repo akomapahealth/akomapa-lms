@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { authorizeQuizInCourse, requirePrincipal } from "@/lib/auth";
 import { assertTrustedOrigin, BODY_BYTES, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
+import { applyPlacements } from "@/lib/courses/ordering";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { quizParams } from "@/lib/validations/ids";
 import { reorderSchema } from "@/lib/validations/reorder";
@@ -39,13 +40,10 @@ export async function PUT(
       return problem("not_found");
     }
 
-    // One transaction: a partial reorder leaves two questions sharing a position.
-    await db.$transaction(
-      list.map((item) =>
-        db.question.update({
-          where: { id: item.id },
-          data: { position: item.position },
-        })
+    // One transaction, two phases (#51): positions are unique per Quiz.
+    await db.$transaction((tx) =>
+      applyPlacements(list, (id, position) =>
+        tx.question.update({ where: { id }, data: { position } })
       )
     );
 

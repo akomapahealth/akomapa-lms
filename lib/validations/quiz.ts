@@ -77,6 +77,11 @@ export const questionUpdateSchema = z
         },
         { message: "duplicate_option_id" }
       )
+      // Options are unique per question and position (#51).
+      .refine(
+        (options) => new Set(options.map((o) => o.position)).size === options.length,
+        { message: "duplicate_option_position" }
+      )
       .optional(),
   })
   .strict()

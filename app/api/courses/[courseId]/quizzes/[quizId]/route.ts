@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
 import { authorizeQuizInCourse, requirePrincipal } from "@/lib/auth";
-import { assertTrustedOrigin, handleRouteError, parseBody, parseParams } from "@/lib/http";
+import { assertTrustedOrigin, handleRouteError, parseBody, parseParams, problem } from "@/lib/http";
+import { growthQuizConflict } from "@/lib/assessments/growth-quiz";
+import { hasLearnerRecords, LEARNER_RECORDS_CONFLICT } from "@/lib/courses/learner-records";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { quizParams } from "@/lib/validations/ids";
 import { quizUpdateSchema } from "@/lib/validations/quiz";
@@ -26,6 +28,13 @@ export async function PATCH(
     );
 
     const values = await parseBody(quizUpdateSchema, req);
+
+    const conflict = await growthQuizConflict(
+      routeParams.courseId,
+      values.type,
+      routeParams.quizId
+    );
+    if (conflict !== null) return problem("conflict", { message: conflict });
 
     const quiz = await db.quiz.update({
       where: {
@@ -58,6 +67,12 @@ export async function DELETE(
       routeParams.courseId,
       routeParams.quizId
     );
+
+    // Attempts are learning records and grades (#51); a Quiz learners have
+    // taken is unpublished, not deleted. RESTRICT backs this up under a race.
+    if (await hasLearnerRecords({ kind: "quiz", quizId: routeParams.quizId })) {
+      return problem("conflict", { message: LEARNER_RECORDS_CONFLICT.quiz });
+    }
 
     const quiz = await db.quiz.delete({
       where: {

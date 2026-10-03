@@ -121,6 +121,17 @@ describe("questionUpdateSchema", () => {
     expect(questionUpdateSchema.safeParse({ options }).success).toBe(false);
   });
 
+  it("refuses two options at one position (#51)", () => {
+    const options = [
+      { id: A, text: "a", isCorrect: true, position: 1 },
+      { text: "b", isCorrect: false, position: 1 },
+    ];
+
+    const result = questionUpdateSchema.safeParse({ options });
+    expect(result.success).toBe(false);
+    expect(JSON.stringify(result.error?.issues)).toContain("duplicate_option_position");
+  });
+
   it("refuses the same option id twice", () => {
     const options = [
       { id: A, text: "a", isCorrect: true, position: 0 },
@@ -208,6 +219,29 @@ describe("reorderSchema", () => {
     ];
 
     expect(reorderSchema.safeParse({ list }).success).toBe(false);
+  });
+
+  it("refuses two rows at one position, which the unique index would refuse (#51)", () => {
+    const result = reorderSchema.safeParse({
+      list: [
+        { id: A, position: 1 },
+        { id: B, position: 1 },
+      ],
+    });
+
+    expect(result.success).toBe(false);
+    expect(JSON.stringify(result.error?.issues)).toContain("duplicate_position");
+  });
+
+  it("accepts a swap", () => {
+    expect(
+      reorderSchema.safeParse({
+        list: [
+          { id: A, position: 2 },
+          { id: B, position: 1 },
+        ],
+      }).success
+    ).toBe(true);
   });
 
   it("refuses a non-integer or negative position", () => {

@@ -52,12 +52,16 @@ model User {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Index evidence (#51): docs/runbooks/database-integrity.md#indexes.
+  // Admin student list: by role, newest first.
+  @@index([role, createdAt])
 }
 
 model Course {
   id          String  @id @default(uuid())
   userId      String
-  user        User    @relation(fields: [userId], references: [id])
+  user        User    @relation(fields: [userId], references: [id], onDelete: Restrict)
   title       String  @db.Text
   description String? @db.Text
   imageUrl    String? @db.Text
@@ -65,7 +69,7 @@ model Course {
   isPublished Boolean @default(false)
 
   categoryId String?
-  category   Category? @relation(fields: [categoryId], references: [id])
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
   modules        Module[]
   attachments    Attachment[]
@@ -79,7 +83,10 @@ model Course {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Index evidence (#51): docs/runbooks/database-integrity.md#indexes.
   @@index([categoryId])
+  // Author dashboards: courses by owner, newest first.
+  @@index([userId, createdAt])
 }
 
 model Category {
@@ -100,7 +107,7 @@ model Module {
   course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   facultyId String?
-  faculty   User?   @relation("ModuleFaculty", fields: [facultyId], references: [id])
+  faculty   User?   @relation("ModuleFaculty", fields: [facultyId], references: [id], onDelete: Restrict)
 
   reflectionPrompt String? @db.Text
 
@@ -111,7 +118,9 @@ model Module {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([courseId])
+  // Unique per parent (#51): two rows at one position made the order
+  // non-deterministic. Reorders move rows in two phases so this always holds.
+  @@unique([courseId, position])
 }
 
 model Attachment {
@@ -150,7 +159,9 @@ model Topic {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([moduleId])
+  // Unique per parent (#51): two rows at one position made the order
+  // non-deterministic. Reorders move rows in two phases so this always holds.
+  @@unique([moduleId, position])
   @@map("Chapter")
 }
 
@@ -166,10 +177,10 @@ model MuxData {
 model UserProgress {
   id     String @id @default(uuid())
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   topicId String @map("chapterId")
-  topic   Topic  @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  topic   Topic  @relation(fields: [topicId], references: [id], onDelete: Restrict)
 
   isCompleted Boolean @default(false)
 
@@ -178,15 +189,18 @@ model UserProgress {
 
   @@unique([userId, topicId], map: "UserProgress_userId_chapterId_key")
   @@index([topicId], map: "UserProgress_chapterId_idx")
+  // Index evidence (#51): docs/runbooks/database-integrity.md#indexes.
+  // Completion timelines and analytics over completion dates.
+  @@index([isCompleted, updatedAt])
 }
 
 model Purchase {
   id     String @id @default(uuid())
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   courseId String
-  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt()
@@ -198,10 +212,10 @@ model Purchase {
 model Enrollment {
   id     String @id @default(uuid())
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   courseId String
-  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Restrict)
 
   status     EnrollmentStatus @default(ACTIVE)
   enrolledAt DateTime         @default(now())
@@ -211,12 +225,15 @@ model Enrollment {
 
   @@unique([userId, courseId])
   @@index([courseId])
+  // Index evidence (#51): docs/runbooks/database-integrity.md#indexes.
+  // Admin analytics over enrolment dates.
+  @@index([enrolledAt])
 }
 
 model StripCustomer {
   id               String @default(uuid())
   userId           String @unique
-  user             User   @relation(fields: [userId], references: [id])
+  user             User   @relation(fields: [userId], references: [id], onDelete: Restrict)
   stripeCustomerId String @unique
 
   createdAt DateTime @default(now())
@@ -264,7 +281,9 @@ model Question {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([quizId])
+  // Unique per parent (#51): two rows at one position made the order
+  // non-deterministic. Reorders move rows in two phases so this always holds.
+  @@unique([quizId, position])
 }
 
 model QuestionOption {
@@ -281,7 +300,9 @@ model QuestionOption {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([questionId])
+  // Unique per parent (#51): two rows at one position made the order
+  // non-deterministic. Reorders move rows in two phases so this always holds.
+  @@unique([questionId, position])
 }
 
 model QuizAttempt {
@@ -292,17 +313,21 @@ model QuizAttempt {
   completedAt DateTime?
 
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   quizId String
-  quiz   Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  quiz   Quiz   @relation(fields: [quizId], references: [id], onDelete: Restrict)
 
   answers QuizAnswer[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([userId])
+  // Index evidence (#51): docs/runbooks/database-integrity.md#indexes.
+  // Best attempt per learner per quiz; the post-test lock.
+  @@index([userId, quizId])
+  // Admin analytics over completion dates.
+  @@index([completedAt])
   @@index([quizId])
 }
 
@@ -313,10 +338,10 @@ model QuizAnswer {
   attempt   QuizAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
 
   questionId String
-  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Restrict)
 
   selectedOptionId String?
-  selectedOption   QuestionOption? @relation(fields: [selectedOptionId], references: [id])
+  selectedOption   QuestionOption? @relation(fields: [selectedOptionId], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -348,13 +373,13 @@ model ForumPost {
   isLocked Boolean @default(false)
 
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   categoryId String
-  category   ForumCategory @relation(fields: [categoryId], references: [id])
+  category   ForumCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
 
   courseId String?
-  course   Course? @relation(fields: [courseId], references: [id])
+  course   Course? @relation(fields: [courseId], references: [id], onDelete: SetNull)
 
   comments ForumComment[]
   likes    PostLike[]
@@ -364,7 +389,12 @@ model ForumPost {
 
   @@index([categoryId])
   @@index([courseId])
-  @@index([userId])
+  // Index evidence (#51): docs/runbooks/database-integrity.md#indexes.
+  // Profile feed: a member's posts, newest first.
+  @@index([userId, createdAt])
+  // Community feed: pinned first, then newest.
+  @@index([isPinned, createdAt])
+  @@index([createdAt])
 }
 
 model ForumComment {
@@ -372,7 +402,7 @@ model ForumComment {
   content String @db.Text
 
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   postId String
   post   ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
@@ -395,7 +425,7 @@ model PostLike {
   id String @id @default(uuid())
 
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   postId String
   post   ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
@@ -410,7 +440,7 @@ model CommentLike {
   id String @id @default(uuid())
 
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   commentId String
   comment   ForumComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
@@ -442,13 +472,13 @@ model UserBadge {
   earnedAt DateTime @default(now())
 
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   badgeId String
-  badge   Badge  @relation(fields: [badgeId], references: [id])
+  badge   Badge  @relation(fields: [badgeId], references: [id], onDelete: Restrict)
 
+  // Also serves lookups by userId alone, as its leading column (#51).
   @@unique([userId, badgeId])
-  @@index([userId])
 }
 
 model LearningStreak {
@@ -458,7 +488,7 @@ model LearningStreak {
   lastActivityDate DateTime?
 
   userId String @unique
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   updatedAt DateTime @updatedAt
 }
@@ -474,18 +504,20 @@ model JournalEntry {
   prompt String? @db.Text
 
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   moduleId String?
-  module   Module? @relation(fields: [moduleId], references: [id])
+  module   Module? @relation(fields: [moduleId], references: [id], onDelete: SetNull)
 
   courseId String?
-  course   Course? @relation(fields: [courseId], references: [id])
+  course   Course? @relation(fields: [courseId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([userId])
+  // Index evidence (#51): docs/runbooks/database-integrity.md#indexes.
+  // A learner's journal, most recently edited first.
+  @@index([userId, updatedAt])
   @@index([moduleId])
   @@index([courseId])
 }
@@ -513,9 +545,9 @@ model CaseStudyAttempt {
   completed Boolean @default(false)
 
   userId      String
-  user        User      @relation(fields: [userId], references: [id])
+  user        User      @relation(fields: [userId], references: [id], onDelete: Restrict)
   caseStudyId String
-  caseStudy   CaseStudy @relation(fields: [caseStudyId], references: [id], onDelete: Cascade)
+  caseStudy   CaseStudy @relation(fields: [caseStudyId], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -532,15 +564,15 @@ model Certificate {
   issuedAt          DateTime @default(now())
 
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   courseId String
-  course   Course @relation(fields: [courseId], references: [id])
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Restrict)
 
   pdfUrl String? @db.Text
 
+  // Also serves lookups by userId alone, as its leading column (#51).
   @@unique([userId, courseId])
-  @@index([userId])
 }
 
 // ─── Phase 5: User Settings ───
@@ -548,7 +580,7 @@ model Certificate {
 model UserSettings {
   id     String @id @default(uuid())
   userId String @unique
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   theme                  ThemePreference @default(light)
   defaultJournalPrivacy  Boolean         @default(true)
@@ -632,4 +664,17 @@ enum ThemePreference {
   light
   dark
   system
+}
+
+/// The last Certificate number issued in each year (#51).
+///
+/// Certificate numbers are `GHELP-<year>-<5 digits>`. They used to be computed
+/// as "highest number this year + 1", so two learners finishing at once got the
+/// same number and one Certificate failed. lib/certificate-service.ts now
+/// allocates from this row with one atomic statement. A number allocated for a
+/// Certificate that then fails to save is never reused: gaps are harmless,
+/// duplicates are not.
+model CertificateNumberSequence {
+  year      Int @id
+  lastValue Int
 }

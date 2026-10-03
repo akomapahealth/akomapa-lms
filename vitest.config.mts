@@ -58,6 +58,7 @@ export default defineConfig({
         "lib/assessments/*.ts",
         "lib/text/*.ts",
         "lib/db/roles.ts",
+        "lib/db/integrity.ts",
         "lib/case-study-sanitize.ts",
         "lib/streak-service.ts",
         "lib/badge-service.ts",
@@ -101,6 +102,8 @@ export default defineConfig({
         "lib/case-study-sanitize.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
         // The guard that keeps row-level security from being silently absent.
         "lib/db/roles.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
+        // The integrity rules the migration, the preflight, and the tests share (#51).
+        "lib/db/integrity.ts": { lines: 100, functions: 100, branches: 100, statements: 100 },
         // Course entitlement (#48, ADR 0002). One module decides whether a
         // learner may open a Course, so every branch of it is exercised -- the
         // suspension path above all, which is the one that used to be unreachable.
