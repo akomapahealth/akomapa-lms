@@ -38,7 +38,11 @@ export const ChapterAccessForm = ({
 
     const router = useRouter();
 
-    const form = useForm<z.infer<typeof formSchema>>({
+    const form = useForm<
+        z.input<typeof formSchema>,
+        unknown,
+        z.output<typeof formSchema>
+    >({
         resolver: zodResolver(formSchema),
         defaultValues: {
             isFree: !!initialData?.isFree
@@ -47,7 +51,7 @@ export const ChapterAccessForm = ({
 
     const { isSubmitting, isValid } = form.formState;
 
-    const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    const onSubmit = async (values: z.output<typeof formSchema>) => {
         try {
             await axios.patch(`/api/courses/${courseId}/chapters/${chapterId}`, values);
             toast.success("Chapter updated!");
