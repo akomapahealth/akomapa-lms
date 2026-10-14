@@ -226,7 +226,7 @@ Metadata is centralized in `lib/site-config.ts` and the root layout: title templ
 
 ## Deployment
 
-Deployed on Vercel. The build runs `prisma generate` and `prisma migrate deploy` before `next build`. Configure all environment variables in the Vercel project, and set `NEXT_PUBLIC_SITE_URL` plus the Clerk fallback redirect URLs (`/dashboard`) for production.
+Deployed on Vercel. Production builds run `prisma generate` and `prisma migrate deploy` before `next build`. Preview builds generate the client and build the app without applying migrations. Configure all environment variables in the Vercel project, and set `NEXT_PUBLIC_SITE_URL` plus the Clerk fallback redirect URLs (`/dashboard`) for production.
 
 ## Webhooks
 
