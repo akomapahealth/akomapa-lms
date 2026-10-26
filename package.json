@@ -38,7 +38,7 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@clerk/nextjs": "^7.9.16",
+    "@clerk/nextjs": "^7.9.19",
     "@hello-pangea/dnd": "^18.0.1",
     "@hookform/resolvers": "^5.9.1",
     "@mux/mux-node": "^8.7.1",
@@ -69,9 +69,9 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
-    "dotenv": "^18.0.8",
+    "dotenv": "^18.0.9",
     "framer-motion": "^12.14.0",
-    "lucide-react": "^1.58.0",
+    "lucide-react": "^1.61.0",
     "next": "^16.4.2",
     "next-themes": "^0.4.6",
     "pg": "^8.23.1",
@@ -87,16 +87,16 @@
     "recharts": "^3.10.1",
     "sanitize-html": "^2.18.1",
     "stripe": "^15.12.0",
-    "svix": "^1.33.0",
+    "svix": "^1.99.1",
     "tailwind-merge": "^3.7.0",
     "tailwindcss-animate": "^1.0.7",
     "uploadthing": "^7.7.4",
     "zod": "^3.25.76",
-    "zustand": "^5.0.15"
+    "zustand": "^5.0.16"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
-    "@commitlint/config-conventional": "^21.2.3",
+    "@commitlint/config-conventional": "^21.2.4",
     "@playwright/test": "^1.64.1",
     "@semantic-release/commit-analyzer": "^13.0.1",
     "@semantic-release/github": "^11.0.6",
@@ -106,7 +106,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@types/sanitize-html": "^2.16.2",
-    "@typescript-eslint/eslint-plugin": "^8.71.2",
+    "@typescript-eslint/eslint-plugin": "^8.72.0",
     "@typescript-eslint/parser": "^8.61.0",
     "@vitest/coverage-v8": "^4.1.11",
     "autoprefixer": "^10.6.1",
@@ -122,7 +122,7 @@
     "tailwindcss": "^3.4.1",
     "tsx": "^4.23.15",
     "typescript": "^5",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.12"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
