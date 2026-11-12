@@ -186,7 +186,7 @@ export async function generateCertificate(
     postTestScore,
     certificateNumber,
     issuedDate,
-  }) as unknown as React.ReactElement;
+  }) as unknown as Parameters<typeof renderToBuffer>[0];
 
   const pdfBuffer = await renderToBuffer(pdfElement);
 
