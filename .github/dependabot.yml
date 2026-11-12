@@ -22,6 +22,12 @@ updates:
         update-types:
           - minor
           - patch
+    ignore:
+      # Workflows install Node 20. A major @types/node bump types APIs that
+      # runtime does not have, so those PRs stay closed until Node itself moves.
+      - dependency-name: "@types/node"
+        update-types:
+          - version-update:semver-major
 
   - package-ecosystem: github-actions
     directory: "/"
