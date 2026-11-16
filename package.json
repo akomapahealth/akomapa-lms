@@ -40,7 +40,7 @@
   "dependencies": {
     "@clerk/nextjs": "^7.9.25",
     "@hello-pangea/dnd": "^18.0.1",
-    "@hookform/resolvers": "^6.0.0",
+    "@hookform/resolvers": "^7.0.6",
     "@mux/mux-node": "^8.7.1",
     "@mux/mux-player-react": "^3.14.1",
     "@prisma/adapter-pg": "7.10.1",
